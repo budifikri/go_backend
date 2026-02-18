@@ -28,7 +28,7 @@ type Company struct {
 	Website         *string       `gorm:"column:website;type:varchar(255)" json:"website,omitempty"`
 	TaxID           *string       `gorm:"column:tax_id;type:varchar(50)" json:"tax_id,omitempty"`
 	BusinessLicense *string       `gorm:"column:business_license;type:varchar(100)" json:"business_license,omitempty"`
-	Status          CompanyStatus `gorm:"column:status;type:company_status;notNull;default:'active'" json:"status"`
+	Status          CompanyStatus `gorm:"column:status;type:varchar(20);notNull;default:'active'" json:"status"`
 	CreatedAt       time.Time     `gorm:"column:created_at;autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time     `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 }

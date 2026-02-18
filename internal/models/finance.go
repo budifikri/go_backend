@@ -43,7 +43,7 @@ type IncomingInvoice struct {
 	CompanyID      uuid.UUID     `gorm:"column:company_id;type:uuid;notNull;index" json:"company_id"`
 	InvoiceDate    time.Time     `gorm:"column:invoice_date;notNull;index" json:"invoice_date"`
 	DueDate        *time.Time    `gorm:"column:due_date" json:"due_date,omitempty"`
-	Status         InvoiceStatus `gorm:"column:status;type:invoice_status;notNull;default:'DRAFT';index" json:"status"`
+	Status         InvoiceStatus `gorm:"column:status;type:varchar(20);notNull;default:'DRAFT';index" json:"status"`
 	Subtotal       float64       `gorm:"column:subtotal;type:decimal(15,2);notNull;default:0" json:"subtotal"`
 	TaxAmount      float64       `gorm:"column:tax_amount;type:decimal(15,2);notNull;default:0" json:"tax_amount"`
 	DiscountAmount float64       `gorm:"column:discount_amount;type:decimal(15,2);notNull;default:0" json:"discount_amount"`
@@ -74,7 +74,7 @@ type OutgoingInvoice struct {
 	CompanyID      uuid.UUID     `gorm:"column:company_id;type:uuid;notNull;index" json:"company_id"`
 	InvoiceDate    time.Time     `gorm:"column:invoice_date;notNull;index" json:"invoice_date"`
 	DueDate        *time.Time    `gorm:"column:due_date" json:"due_date,omitempty"`
-	Status         InvoiceStatus `gorm:"column:status;type:invoice_status;notNull;default:'DRAFT';index" json:"status"`
+	Status         InvoiceStatus `gorm:"column:status;type:varchar(20);notNull;default:'DRAFT';index" json:"status"`
 	Subtotal       float64       `gorm:"column:subtotal;type:decimal(15,2);notNull;default:0" json:"subtotal"`
 	TaxAmount      float64       `gorm:"column:tax_amount;type:decimal(15,2);notNull;default:0" json:"tax_amount"`
 	DiscountAmount float64       `gorm:"column:discount_amount;type:decimal(15,2);notNull;default:0" json:"discount_amount"`
@@ -99,7 +99,7 @@ func (OutgoingInvoice) TableName() string { return "invoices_outgoing" }
 
 type InvoiceItem struct {
 	ID             uuid.UUID   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	InvoiceType    InvoiceType `gorm:"column:invoice_type;type:invoice_type;notNull;index" json:"invoice_type"`
+	InvoiceType    InvoiceType `gorm:"column:invoice_type;type:varchar(20);notNull;index" json:"invoice_type"`
 	InvoiceID      uuid.UUID   `gorm:"column:invoice_id;type:uuid;notNull;index" json:"invoice_id"`
 	ProductID      *uuid.UUID  `gorm:"column:product_id;type:uuid;index" json:"product_id,omitempty"`
 	Description    string      `gorm:"column:description;type:text;notNull" json:"description"`
@@ -125,11 +125,11 @@ func (InvoiceItem) TableName() string { return "invoice_items" }
 
 type InvoicePayment struct {
 	ID              uuid.UUID            `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	InvoiceType     InvoiceType          `gorm:"column:invoice_type;type:invoice_type;notNull;index" json:"invoice_type"`
+	InvoiceType     InvoiceType          `gorm:"column:invoice_type;type:varchar(20);notNull;index" json:"invoice_type"`
 	InvoiceID       uuid.UUID            `gorm:"column:invoice_id;type:uuid;notNull;index" json:"invoice_id"`
 	PaymentDate     time.Time            `gorm:"column:payment_date;notNull" json:"payment_date"`
 	Amount          float64              `gorm:"column:amount;type:decimal(15,2);notNull" json:"amount"`
-	PaymentMethod   PaymentMethodFinance `gorm:"column:payment_method;type:payment_method_finance;notNull" json:"payment_method"`
+	PaymentMethod   PaymentMethodFinance `gorm:"column:payment_method;type:varchar(30);notNull" json:"payment_method"`
 	ReferenceNumber *string              `gorm:"column:reference_number;type:varchar(100)" json:"reference_number,omitempty"`
 	Notes           *string              `gorm:"column:notes;type:text" json:"notes,omitempty"`
 	CreatedBy       uuid.UUID            `gorm:"column:created_by;type:uuid;notNull" json:"created_by"`

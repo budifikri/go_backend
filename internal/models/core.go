@@ -33,8 +33,8 @@ type User struct {
 	Email     string     `gorm:"type:varchar(100);uniqueIndex;notNull" json:"email"`
 	Password  string     `gorm:"type:text;notNull" json:"-"`
 	FullName  string     `gorm:"type:varchar(100);notNull" json:"full_name"`
-	Role      UserRole   `gorm:"type:user_role;notNull;default:'staff'" json:"role"`
-	Status    UserStatus `gorm:"type:user_status;notNull;default:'active'" json:"status"`
+	Role      UserRole   `gorm:"type:varchar(20);notNull;default:'staff'" json:"role"`
+	Status    UserStatus `gorm:"type:varchar(20);notNull;default:'active'" json:"status"`
 	CompanyID uuid.UUID  `gorm:"type:uuid;notNull" json:"company_id"`
 	CreatedAt time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time  `gorm:"autoUpdateTime" json:"updated_at"`

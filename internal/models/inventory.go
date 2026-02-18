@@ -58,7 +58,7 @@ type StockMovement struct {
 	ID            uuid.UUID    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	ProductID     uuid.UUID    `gorm:"type:uuid;notNull;index" json:"product_id"`
 	WarehouseID   uuid.UUID    `gorm:"type:uuid;notNull;index" json:"warehouse_id"`
-	MovementType  MovementType `gorm:"type:movement_type;notNull" json:"movement_type"`
+	MovementType  MovementType `gorm:"type:varchar(30);notNull" json:"movement_type"`
 	Quantity      int          `gorm:"notNull" json:"quantity"`
 	ReferenceType string       `gorm:"type:varchar(50)" json:"reference_type,omitempty"`
 	ReferenceID   *uuid.UUID   `gorm:"type:uuid" json:"reference_id,omitempty"`
@@ -100,7 +100,7 @@ type StockTransfer struct {
 	UserID          uuid.UUID           `gorm:"type:uuid;notNull" json:"user_id"`
 	ExpectedArrival *time.Time          `json:"expected_arrival,omitempty"`
 	ActualArrival   *time.Time          `json:"actual_arrival,omitempty"`
-	Status          StockTransferStatus `gorm:"type:stock_transfer_status;notNull;default:'pending'" json:"status"`
+	Status          StockTransferStatus `gorm:"type:varchar(20);notNull;default:'pending'" json:"status"`
 	Notes           string              `gorm:"type:text" json:"notes,omitempty"`
 	CreatedAt       time.Time           `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time           `gorm:"autoUpdateTime" json:"updated_at"`
@@ -161,7 +161,7 @@ type StockOpname struct {
 	WarehouseID  uuid.UUID         `gorm:"type:uuid;notNull" json:"warehouse_id"`
 	UserID       uuid.UUID         `gorm:"type:uuid;notNull" json:"user_id"`
 	OpnameDate   time.Time         `gorm:"notNull" json:"opname_date"`
-	Status       StockOpnameStatus `gorm:"type:stock_opname_status;notNull;default:'draft'" json:"status"`
+	Status       StockOpnameStatus `gorm:"type:varchar(20);notNull;default:'draft'" json:"status"`
 	Notes        string            `gorm:"type:text" json:"notes,omitempty"`
 	CreatedAt    time.Time         `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time         `gorm:"autoUpdateTime" json:"updated_at"`

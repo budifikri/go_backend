@@ -85,8 +85,8 @@ type Warehouse struct {
 	ID        uuid.UUID       `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Code      string          `gorm:"type:varchar(20);uniqueIndex;notNull" json:"code"`
 	Name      string          `gorm:"type:varchar(100);notNull" json:"name"`
-	Type      WarehouseType   `gorm:"type:warehouse_type;notNull" json:"type"`
-	Status    WarehouseStatus `gorm:"type:warehouse_status;notNull;default:'active'" json:"status"`
+	Type      WarehouseType   `gorm:"type:varchar(20);notNull" json:"type"`
+	Status    WarehouseStatus `gorm:"type:varchar(20);notNull;default:'active'" json:"status"`
 	Address   string          `gorm:"type:text" json:"address,omitempty"`
 	City      string          `gorm:"type:varchar(50)" json:"city,omitempty"`
 	Phone     string          `gorm:"type:varchar(20)" json:"phone,omitempty"`
@@ -118,7 +118,7 @@ type Product struct {
 	UnitID       uuid.UUID     `gorm:"type:uuid;notNull" json:"unit_id"`
 	CostPrice    float64       `gorm:"type:decimal(15,2);notNull" json:"cost_price"`
 	RetailPrice  float64       `gorm:"type:decimal(15,2);notNull" json:"retail_price"`
-	Status       ProductStatus `gorm:"type:product_status;notNull;default:'active'" json:"status"`
+	Status       ProductStatus `gorm:"type:varchar(20);notNull;default:'active'" json:"status"`
 	TaxRate      float64       `gorm:"type:decimal(5,2);default:0;notNull" json:"tax_rate"`
 	IsTrackable  bool          `gorm:"default:false;notNull" json:"is_trackable"`
 	ReorderPoint int           `gorm:"default:0;notNull" json:"reorder_point"`

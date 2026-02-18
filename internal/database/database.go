@@ -41,6 +41,12 @@ func Connect(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
+	// Ensure UUID generator function is available for AutoMigrate defaults.
+	// Most models use DEFAULT gen_random_uuid(), which requires the pgcrypto extension.
+	if err := ensureUUIDExtension(DB); err != nil {
+		return nil, err
+	}
+
 	sqlDB, err := DB.DB()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database instance: %w", err)
@@ -52,6 +58,18 @@ func Connect(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 
 	log.Println("Database connected successfully!")
 	return DB, nil
+}
+
+func ensureUUIDExtension(db *gorm.DB) error {
+	// Best-effort create pgcrypto; if not permitted, fail early with a clear message.
+	_ = db.Exec(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`).Error
+
+	var probe string
+	if err := db.Raw("SELECT gen_random_uuid()::text").Scan(&probe).Error; err == nil && probe != "" {
+		return nil
+	}
+
+	return fmt.Errorf("missing PostgreSQL function gen_random_uuid(); enable extension with: CREATE EXTENSION IF NOT EXISTS pgcrypto;")
 }
 
 func AutoMigrate(models ...interface{}) error {
