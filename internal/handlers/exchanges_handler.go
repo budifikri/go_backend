@@ -16,6 +16,18 @@ func NewExchangesHandler(exchangesService *services.ExchangesService) *Exchanges
 	return &ExchangesHandler{exchangesService: exchangesService}
 }
 
+// CreateExchange godoc
+// @Summary Create exchange
+// @Tags Exchanges
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.CreateExchangeRequest true "Exchange payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/exchanges [post]
 func (h *ExchangesHandler) CreateExchange(c *fiber.Ctx) error {
 	var req request.CreateExchangeRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -60,6 +72,17 @@ func (h *ExchangesHandler) CreateExchange(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// GetExchange godoc
+// @Summary Get exchange
+// @Tags Exchanges
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Exchange ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/exchanges/{id} [get]
 func (h *ExchangesHandler) GetExchange(c *fiber.Ctx) error {
 	result := h.exchangesService.GetExchangeByID(c.Params("id"))
 	if !result.Success {
@@ -68,6 +91,20 @@ func (h *ExchangesHandler) GetExchange(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetExchanges godoc
+// @Summary List exchanges
+// @Tags Exchanges
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param warehouse_id query string false "Warehouse ID"
+// @Param sale_id query string false "Sale ID"
+// @Param status query string false "Exchange status"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/exchanges [get]
 func (h *ExchangesHandler) GetExchanges(c *fiber.Ctx) error {
 	filters := map[string]string{}
 	filters["warehouse_id"] = c.Query("warehouse_id")

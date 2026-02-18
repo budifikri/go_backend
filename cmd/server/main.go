@@ -1,3 +1,11 @@
+// @title POS Retail Backend API
+// @version 1.0
+// @description Go (Fiber) implementation of POS Retail Backend.
+// @BasePath /
+//
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 package main
 
 import (
@@ -11,11 +19,13 @@ import (
 
 	"github.com/pos-retail/go_backend/internal/config"
 	"github.com/pos-retail/go_backend/internal/database"
+	apidocs "github.com/pos-retail/go_backend/internal/docs"
 	"github.com/pos-retail/go_backend/internal/handlers"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/services"
+	"github.com/pos-retail/go_backend/internal/types/request"
 	"github.com/pos-retail/go_backend/internal/utils"
 )
 
@@ -65,6 +75,12 @@ func main() {
 		&models.PromotionProduct{},
 		&models.PromotionCategory{},
 		&models.PromotionCustomer{},
+		&models.IncomingInvoice{},
+		&models.OutgoingInvoice{},
+		&models.InvoiceItem{},
+		&models.InvoicePayment{},
+		&models.CashDrawer{},
+		&models.CashDrawerTransaction{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -85,6 +101,8 @@ func main() {
 	supplierRepo := repository.NewSupplierRepository(db)
 	purchaseRepo := repository.NewPurchaseRepository(db)
 	promotionRepo := repository.NewPromotionRepository(db)
+	financeRepo := repository.NewFinanceRepository(db)
+	cashDrawerRepo := repository.NewCashDrawerRepository(db)
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
@@ -98,6 +116,9 @@ func main() {
 	grnService := services.NewGrnService(db)
 	promotionService := services.NewPromotionService(db, promotionRepo)
 	priceTierService := services.NewPriceTierService(db)
+	financeService := services.NewFinanceService(db, financeRepo)
+	cashDrawerService := services.NewCashDrawerService(db, cashDrawerRepo, financeService)
+	companyService := services.NewCompanyService(db)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -112,6 +133,9 @@ func main() {
 	grnHandler := handlers.NewGrnHandler(grnService)
 	promotionHandler := handlers.NewPromotionHandler(promotionService)
 	priceTierHandler := handlers.NewPriceTierHandler(priceTierService)
+	financeHandler := handlers.NewFinanceHandler(financeService)
+	cashDrawerHandler := handlers.NewCashDrawerHandler(cashDrawerService)
+	companyHandler := handlers.NewCompanyHandler(companyService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -130,6 +154,9 @@ func main() {
 	app.Use(recover.New())
 	app.Use(logger.New())
 	app.Use(cors.New())
+
+	// API docs (public)
+	apidocs.Register(app)
 
 	// Public routes
 	api := app.Group("/api")
@@ -248,6 +275,49 @@ func main() {
 	priceTiers.Post("/", priceTierHandler.CreatePriceTier)
 	priceTiers.Put("/:id", priceTierHandler.UpdatePriceTier)
 	priceTiers.Delete("/:id", priceTierHandler.DeletePriceTier)
+
+	// Company routes
+	companies := protected.Group("/companies")
+	companies.Get("/current", companyHandler.GetCurrentCompany)
+	companies.Get("/:id", companyHandler.GetCompany)
+	companiesAdmin := companies.Group("", middleware.RoleMiddleware("admin"))
+	companiesAdmin.Get("/", companyHandler.GetCompanies)
+	companiesAdmin.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateCompanyRequest{} }), companyHandler.CreateCompany)
+	companiesAdmin.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateCompanyRequest{} }), companyHandler.UpdateCompany)
+	companiesAdmin.Delete("/:id", companyHandler.DeleteCompany)
+	companiesAdmin.Post("/:id/logo", middleware.ValidateBody(func() interface{} { return &request.UploadCompanyLogoRequest{} }), companyHandler.UploadCompanyLogo)
+
+	// Finance routes
+	invoices := protected.Group("/invoices")
+	invoices.Get("/incoming", financeHandler.GetIncomingInvoices)
+	invoices.Get("/incoming/:id", financeHandler.GetIncomingInvoice)
+	invoices.Post("/incoming", middleware.ValidateBody(func() interface{} { return &request.CreateIncomingInvoiceRequest{} }), financeHandler.CreateIncomingInvoice)
+	invoices.Put("/incoming/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateIncomingInvoiceRequest{} }), financeHandler.UpdateIncomingInvoice)
+	invoices.Post("/incoming/:id/send", financeHandler.SendIncomingInvoice)
+	invoices.Post("/incoming/:id/payments", middleware.ValidateBody(func() interface{} { return &request.CreateInvoicePaymentRequest{} }), financeHandler.AddIncomingInvoicePayment)
+	invoices.Post("/incoming/:id/cancel", financeHandler.CancelIncomingInvoice)
+
+	invoices.Get("/outgoing", financeHandler.GetOutgoingInvoices)
+	invoices.Get("/outgoing/:id", financeHandler.GetOutgoingInvoice)
+	invoices.Post("/outgoing", middleware.ValidateBody(func() interface{} { return &request.CreateOutgoingInvoiceRequest{} }), financeHandler.CreateOutgoingInvoice)
+	invoices.Put("/outgoing/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateOutgoingInvoiceRequest{} }), financeHandler.UpdateOutgoingInvoice)
+	invoices.Post("/outgoing/:id/send", financeHandler.SendOutgoingInvoice)
+	invoices.Post("/outgoing/:id/payments", middleware.ValidateBody(func() interface{} { return &request.CreateInvoicePaymentRequest{} }), financeHandler.AddOutgoingInvoicePayment)
+	invoices.Post("/outgoing/:id/cancel", financeHandler.CancelOutgoingInvoice)
+
+	invoices.Get("/summary", financeHandler.GetInvoiceSummary)
+
+	// Cash drawer routes
+	drawers := protected.Group("/cash-drawers")
+	drawers.Post("/open", middleware.ValidateBody(func() interface{} { return &request.OpenCashDrawerRequest{} }), cashDrawerHandler.OpenCashDrawer)
+	drawers.Get("/current", cashDrawerHandler.GetCurrentDrawer)
+	drawers.Post("/:id/cash-in", middleware.ValidateBody(func() interface{} { return &request.CashInOutRequest{} }), cashDrawerHandler.CashIn)
+	drawers.Post("/:id/cash-out", middleware.ValidateBody(func() interface{} { return &request.CashInOutRequest{} }), cashDrawerHandler.CashOut)
+	drawers.Get("/:id/transactions", cashDrawerHandler.GetTransactions)
+	drawers.Post("/:id/close", middleware.ValidateBody(func() interface{} { return &request.CloseCashDrawerRequest{} }), cashDrawerHandler.CloseCashDrawer)
+	drawers.Get("/:id/summary", cashDrawerHandler.GetSummary)
+	drawers.Get("/", cashDrawerHandler.ListCashDrawers)
+	drawers.Get("/:id", cashDrawerHandler.GetCashDrawer)
 
 	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {

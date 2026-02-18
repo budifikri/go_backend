@@ -18,6 +18,18 @@ func NewCustomerHandler(customerService *services.CustomerService) *CustomerHand
 	return &CustomerHandler{customerService: customerService}
 }
 
+// CreateCustomer godoc
+// @Summary Create customer
+// @Tags Customers
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.CreateCustomerRequest true "Customer payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/customers [post]
 func (h *CustomerHandler) CreateCustomer(c *fiber.Ctx) error {
 	var req request.CreateCustomerRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -77,6 +89,22 @@ func (h *CustomerHandler) CreateCustomer(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// GetCustomers godoc
+// @Summary List customers
+// @Tags Customers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param tier query string false "Tier"
+// @Param status query string false "Status"
+// @Param search query string false "Search"
+// @Param min_loyalty_points query int false "Min points"
+// @Param max_loyalty_points query int false "Max points"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/customers [get]
 func (h *CustomerHandler) GetCustomers(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	if user == nil {
@@ -110,6 +138,17 @@ func (h *CustomerHandler) GetCustomers(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetCustomer godoc
+// @Summary Get customer
+// @Tags Customers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Customer ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/customers/{id} [get]
 func (h *CustomerHandler) GetCustomer(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	if user == nil {
@@ -122,6 +161,20 @@ func (h *CustomerHandler) GetCustomer(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// UpdateCustomer godoc
+// @Summary Update customer
+// @Tags Customers
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Customer ID"
+// @Param body body request.UpdateCustomerRequest true "Update payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/customers/{id} [put]
 func (h *CustomerHandler) UpdateCustomer(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	if user == nil {
@@ -177,6 +230,17 @@ func (h *CustomerHandler) UpdateCustomer(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// DeleteCustomer godoc
+// @Summary Delete customer (deactivate)
+// @Tags Customers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Customer ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/customers/{id} [delete]
 func (h *CustomerHandler) DeleteCustomer(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	if user == nil {
@@ -189,6 +253,18 @@ func (h *CustomerHandler) DeleteCustomer(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// SearchCustomers godoc
+// @Summary Search customers
+// @Tags Customers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param term path string true "Search term"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/customers/search/{term} [get]
 func (h *CustomerHandler) SearchCustomers(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	if user == nil {
@@ -201,6 +277,18 @@ func (h *CustomerHandler) SearchCustomers(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetCustomersByTier godoc
+// @Summary List customers by tier
+// @Tags Customers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param tier path string true "Tier"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/customers/tier/{tier} [get]
 func (h *CustomerHandler) GetCustomersByTier(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	if user == nil {
@@ -213,6 +301,18 @@ func (h *CustomerHandler) GetCustomersByTier(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetCustomersByStatus godoc
+// @Summary List customers by status
+// @Tags Customers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param status path string true "Status"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/customers/status/{status} [get]
 func (h *CustomerHandler) GetCustomersByStatus(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	if user == nil {

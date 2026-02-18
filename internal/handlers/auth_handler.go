@@ -19,7 +19,17 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 	}
 }
 
-// Login POST /api/auth/login
+// Login godoc
+// @Summary Login
+// @Description Authenticate user and return token/session
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param body body request.LoginRequest true "Login payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Router /api/auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req request.LoginRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -35,7 +45,16 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(result)
 }
 
-// Register POST /api/auth/register
+// Register godoc
+// @Summary Register
+// @Description Register a new user
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param body body request.RegisterRequest true "Register payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Router /api/auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	var req request.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -63,7 +82,16 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
-// Logout POST /api/auth/logout
+// Logout godoc
+// @Summary Logout
+// @Description Invalidate session/token
+// @Tags Authentication
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/auth/logout [post]
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {

@@ -16,6 +16,18 @@ func NewGrnHandler(grnService *services.GrnService) *GrnHandler {
 	return &GrnHandler{grnService: grnService}
 }
 
+// CreateGrn godoc
+// @Summary Create GRN
+// @Tags GRN
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.CreateGrnRequest true "GRN payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/grn [post]
 func (h *GrnHandler) CreateGrn(c *fiber.Ctx) error {
 	var req request.CreateGrnRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -34,6 +46,17 @@ func (h *GrnHandler) CreateGrn(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// GetGrn godoc
+// @Summary Get GRN
+// @Tags GRN
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "GRN ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/grn/{id} [get]
 func (h *GrnHandler) GetGrn(c *fiber.Ctx) error {
 	result := h.grnService.GetGrnByID(c.Params("id"))
 	if !result.Success {
@@ -42,6 +65,22 @@ func (h *GrnHandler) GetGrn(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// ListGrns godoc
+// @Summary List GRNs
+// @Tags GRN
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param page query int false "Page" default(1)
+// @Param limit query int false "Limit" default(10)
+// @Param status query string false "Status"
+// @Param poId query string false "PO ID"
+// @Param warehouseId query string false "Warehouse ID"
+// @Param startDate query string false "Start date"
+// @Param endDate query string false "End date"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/grn [get]
 func (h *GrnHandler) ListGrns(c *fiber.Ctx) error {
 	filter := services.GrnFilter{
 		Page:        c.QueryInt("page", 1),
@@ -56,6 +95,19 @@ func (h *GrnHandler) ListGrns(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// UpdateGrn godoc
+// @Summary Update GRN
+// @Tags GRN
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "GRN ID"
+// @Param body body request.UpdateGrnRequest true "Update payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/grn/{id} [put]
 func (h *GrnHandler) UpdateGrn(c *fiber.Ctx) error {
 	var req request.UpdateGrnRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -92,6 +144,17 @@ func (h *GrnHandler) UpdateGrn(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// CancelGrn godoc
+// @Summary Cancel GRN
+// @Tags GRN
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "GRN ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/grn/{id} [delete]
 func (h *GrnHandler) CancelGrn(c *fiber.Ctx) error {
 	result := h.grnService.CancelGrn(c.Params("id"))
 	if !result.Success {
@@ -100,6 +163,17 @@ func (h *GrnHandler) CancelGrn(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// VerifyGrn godoc
+// @Summary Verify GRN
+// @Tags GRN
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "GRN ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/grn/{id}/verify [put]
 func (h *GrnHandler) VerifyGrn(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	if user == nil {

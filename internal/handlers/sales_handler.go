@@ -16,6 +16,18 @@ func NewSalesHandler(salesService *services.SalesService) *SalesHandler {
 	return &SalesHandler{salesService: salesService}
 }
 
+// CreateSale godoc
+// @Summary Create sale
+// @Tags Sales
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.CreateSaleRequest true "Sale payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/sales [post]
 func (h *SalesHandler) CreateSale(c *fiber.Ctx) error {
 	var req request.CreateSaleRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -62,6 +74,17 @@ func (h *SalesHandler) CreateSale(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// GetSale godoc
+// @Summary Get sale
+// @Tags Sales
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Sale ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/sales/{id} [get]
 func (h *SalesHandler) GetSale(c *fiber.Ctx) error {
 	result := h.salesService.GetSaleByID(c.Params("id"))
 	if !result.Success {
@@ -70,6 +93,24 @@ func (h *SalesHandler) GetSale(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetSales godoc
+// @Summary List sales
+// @Tags Sales
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param warehouse_id query string false "Warehouse ID"
+// @Param customer_id query string false "Customer ID"
+// @Param cashier_id query string false "Cashier ID"
+// @Param status query string false "Sale status"
+// @Param date_from query string false "From date (YYYY-MM-DD)"
+// @Param date_to query string false "To date (YYYY-MM-DD)"
+// @Param sale_number query string false "Sale number search"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/sales [get]
 func (h *SalesHandler) GetSales(c *fiber.Ctx) error {
 	filters := map[string]string{}
 

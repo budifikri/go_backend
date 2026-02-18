@@ -18,6 +18,20 @@ func NewPurchaseHandler(purchaseService *services.PurchaseService) *PurchaseHand
 	return &PurchaseHandler{purchaseService: purchaseService}
 }
 
+// GetPurchaseOrders godoc
+// @Summary List purchase orders
+// @Tags Purchases
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param status query string false "PO status"
+// @Param supplier_id query string false "Supplier ID"
+// @Param warehouse_id query string false "Warehouse ID"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases [get]
 func (h *PurchaseHandler) GetPurchaseOrders(c *fiber.Ctx) error {
 	filters := map[string]string{}
 	filters["status"] = c.Query("status")
@@ -30,6 +44,17 @@ func (h *PurchaseHandler) GetPurchaseOrders(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetPurchaseOrder godoc
+// @Summary Get purchase order
+// @Tags Purchases
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id} [get]
 func (h *PurchaseHandler) GetPurchaseOrder(c *fiber.Ctx) error {
 	result := h.purchaseService.GetPurchaseOrderByID(c.Params("id"))
 	if !result.Success {
@@ -38,6 +63,18 @@ func (h *PurchaseHandler) GetPurchaseOrder(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// CreatePurchaseOrder godoc
+// @Summary Create purchase order
+// @Tags Purchases
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.CreatePurchaseOrderRequest true "Purchase order payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases [post]
 func (h *PurchaseHandler) CreatePurchaseOrder(c *fiber.Ctx) error {
 	var req request.CreatePurchaseOrderRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -81,6 +118,20 @@ func (h *PurchaseHandler) CreatePurchaseOrder(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// UpdatePurchaseOrderStatus godoc
+// @Summary Update purchase order status
+// @Tags Purchases
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Param body body request.UpdatePurchaseOrderStatusRequest true "Status payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id}/status [put]
 func (h *PurchaseHandler) UpdatePurchaseOrderStatus(c *fiber.Ctx) error {
 	var req request.UpdatePurchaseOrderStatusRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -93,6 +144,17 @@ func (h *PurchaseHandler) UpdatePurchaseOrderStatus(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// CancelPurchaseOrder godoc
+// @Summary Cancel purchase order
+// @Tags Purchases
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id} [delete]
 func (h *PurchaseHandler) CancelPurchaseOrder(c *fiber.Ctx) error {
 	result := h.purchaseService.CancelPurchaseOrder(c.Params("id"))
 	if !result.Success {

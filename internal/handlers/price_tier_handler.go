@@ -14,6 +14,16 @@ func NewPriceTierHandler(priceTierService *services.PriceTierService) *PriceTier
 	return &PriceTierHandler{priceTierService: priceTierService}
 }
 
+// GetPriceTiers godoc
+// @Summary List price tiers
+// @Tags PriceTiers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param product_id query string false "Product ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/price-tiers [get]
 func (h *PriceTierHandler) GetPriceTiers(c *fiber.Ctx) error {
 	var pid *string
 	if v := c.Query("product_id"); v != "" {
@@ -23,6 +33,17 @@ func (h *PriceTierHandler) GetPriceTiers(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetPriceTier godoc
+// @Summary Get price tier
+// @Tags PriceTiers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Price Tier ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/price-tiers/{id} [get]
 func (h *PriceTierHandler) GetPriceTier(c *fiber.Ctx) error {
 	result := h.priceTierService.GetPriceTierByID(c.Params("id"))
 	if !result.Success {
@@ -31,6 +52,18 @@ func (h *PriceTierHandler) GetPriceTier(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// CreatePriceTier godoc
+// @Summary Create price tier
+// @Tags PriceTiers
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body object true "Price tier payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/price-tiers [post]
 func (h *PriceTierHandler) CreatePriceTier(c *fiber.Ctx) error {
 	var body struct {
 		ProductID   string  `json:"product_id"`
@@ -55,6 +88,20 @@ func (h *PriceTierHandler) CreatePriceTier(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// UpdatePriceTier godoc
+// @Summary Update price tier
+// @Tags PriceTiers
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Price Tier ID"
+// @Param body body object true "Update payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/price-tiers/{id} [put]
 func (h *PriceTierHandler) UpdatePriceTier(c *fiber.Ctx) error {
 	var body map[string]interface{}
 	if err := c.BodyParser(&body); err != nil {
@@ -91,6 +138,17 @@ func (h *PriceTierHandler) UpdatePriceTier(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// DeletePriceTier godoc
+// @Summary Delete price tier
+// @Tags PriceTiers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Price Tier ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/price-tiers/{id} [delete]
 func (h *PriceTierHandler) DeletePriceTier(c *fiber.Ctx) error {
 	result := h.priceTierService.DeletePriceTier(c.Params("id"))
 	if !result.Success {

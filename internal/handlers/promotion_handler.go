@@ -16,6 +16,20 @@ func NewPromotionHandler(promotionService *services.PromotionService) *Promotion
 	return &PromotionHandler{promotionService: promotionService}
 }
 
+// GetPromotions godoc
+// @Summary List promotions
+// @Tags Promotions
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param is_active query bool false "Is active"
+// @Param type query string false "Promotion type"
+// @Param scope query string false "Scope"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/promotions [get]
 func (h *PromotionHandler) GetPromotions(c *fiber.Ctx) error {
 	var isActive *bool
 	if v := c.Query("is_active"); v != "" {
@@ -36,6 +50,17 @@ func (h *PromotionHandler) GetPromotions(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetPromotion godoc
+// @Summary Get promotion
+// @Tags Promotions
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Promotion ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/promotions/{id} [get]
 func (h *PromotionHandler) GetPromotion(c *fiber.Ctx) error {
 	result := h.promotionService.GetPromotionByID(c.Params("id"))
 	if !result.Success {
@@ -44,6 +69,18 @@ func (h *PromotionHandler) GetPromotion(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// CreatePromotion godoc
+// @Summary Create promotion
+// @Tags Promotions
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body object true "Promotion payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/promotions [post]
 func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 	var body map[string]interface{}
 	if err := c.BodyParser(&body); err != nil {
@@ -124,6 +161,20 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// UpdatePromotion godoc
+// @Summary Update promotion
+// @Tags Promotions
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Promotion ID"
+// @Param body body object true "Update payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/promotions/{id} [put]
 func (h *PromotionHandler) UpdatePromotion(c *fiber.Ctx) error {
 	var body map[string]interface{}
 	if err := c.BodyParser(&body); err != nil {
@@ -191,6 +242,17 @@ func (h *PromotionHandler) UpdatePromotion(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// DeletePromotion godoc
+// @Summary Delete promotion
+// @Tags Promotions
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Promotion ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/promotions/{id} [delete]
 func (h *PromotionHandler) DeletePromotion(c *fiber.Ctx) error {
 	result := h.promotionService.DeletePromotion(c.Params("id"))
 	if !result.Success {

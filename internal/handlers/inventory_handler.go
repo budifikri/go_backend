@@ -18,6 +18,19 @@ func NewInventoryHandler(inventoryService *services.InventoryService) *Inventory
 	}
 }
 
+// GetInventory godoc
+// @Summary List inventory
+// @Tags Inventory
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param warehouse_id query string false "Warehouse ID"
+// @Param product_id query string false "Product ID"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/inventory [get]
 func (h *InventoryHandler) GetInventory(c *fiber.Ctx) error {
 	filters := make(map[string]interface{})
 	if warehouseID := c.Query("warehouse_id"); warehouseID != "" {
@@ -32,6 +45,20 @@ func (h *InventoryHandler) GetInventory(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetStockCard godoc
+// @Summary Get stock card
+// @Tags Inventory
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param product_id query string true "Product ID"
+// @Param warehouse_id query string true "Warehouse ID"
+// @Param from_date query string false "From date"
+// @Param to_date query string false "To date"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/inventory/stock-card [get]
 func (h *InventoryHandler) GetStockCard(c *fiber.Ctx) error {
 	productID := c.Query("product_id")
 	warehouseID := c.Query("warehouse_id")
@@ -42,6 +69,18 @@ func (h *InventoryHandler) GetStockCard(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// AdjustInventory godoc
+// @Summary Adjust inventory
+// @Tags Inventory
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.InventoryAdjustmentRequest true "Adjustment payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/inventory/adjust [post]
 func (h *InventoryHandler) AdjustInventory(c *fiber.Ctx) error {
 	var req request.InventoryAdjustmentRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -53,15 +92,15 @@ func (h *InventoryHandler) AdjustInventory(c *fiber.Ctx) error {
 		userID = user.UserID
 	}
 	result := h.inventoryService.AdjustInventory(struct {
-		ProductID       string
-		WarehouseID     string
+		ProductID      string
+		WarehouseID    string
 		AdjustmentType string
 		Quantity       int
 		Reason         string
 		Notes          string
 	}{
-		ProductID:       req.ProductID,
-		WarehouseID:     req.WarehouseID,
+		ProductID:      req.ProductID,
+		WarehouseID:    req.WarehouseID,
 		AdjustmentType: req.AdjustmentType,
 		Quantity:       req.Quantity,
 		Reason:         req.Reason,
@@ -73,6 +112,18 @@ func (h *InventoryHandler) AdjustInventory(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// CreateStockTransfer godoc
+// @Summary Create stock transfer
+// @Tags StockTransfers
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.StockTransferRequest true "Transfer payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/stock-transfers [post]
 func (h *InventoryHandler) CreateStockTransfer(c *fiber.Ctx) error {
 	var req request.StockTransferRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -106,8 +157,8 @@ func (h *InventoryHandler) CreateStockTransfer(c *fiber.Ctx) error {
 		FromWarehouseID: req.FromWarehouseID,
 		ToWarehouseID:   req.ToWarehouseID,
 		ExpectedArrival: req.ExpectedArrival,
-		Items:          items,
-		Notes:          req.Notes,
+		Items:           items,
+		Notes:           req.Notes,
 	}, userID)
 	if !result.Success {
 		return c.Status(fiber.StatusBadRequest).JSON(result)
@@ -115,6 +166,19 @@ func (h *InventoryHandler) CreateStockTransfer(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// ReceiveStockTransfer godoc
+// @Summary Receive stock transfer
+// @Tags StockTransfers
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Transfer ID"
+// @Param body body request.ReceiveTransferRequest true "Receive payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/stock-transfers/{id}/receive [put]
 func (h *InventoryHandler) ReceiveStockTransfer(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var req request.ReceiveTransferRequest
@@ -129,13 +193,13 @@ func (h *InventoryHandler) ReceiveStockTransfer(c *fiber.Ctx) error {
 	items := make([]struct {
 		TransferItemID   string
 		ReceivedQuantity int
-		Notes           string
+		Notes            string
 	}, len(req.Items))
 	for i, item := range req.Items {
 		items[i] = struct {
 			TransferItemID   string
 			ReceivedQuantity int
-			Notes           string
+			Notes            string
 		}{TransferItemID: item.TransferItemID, ReceivedQuantity: item.ReceivedQuantity, Notes: item.Notes}
 	}
 	result := h.inventoryService.ReceiveStockTransfer(id, items, userID)
@@ -145,6 +209,18 @@ func (h *InventoryHandler) ReceiveStockTransfer(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// CreateStockOpname godoc
+// @Summary Create stock opname
+// @Tags StockOpname
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.StockOpnameRequest true "Opname payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/stock-opname [post]
 func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 	var req request.StockOpnameRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -191,6 +267,21 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// GetStockOpnames godoc
+// @Summary List stock opnames
+// @Tags StockOpname
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param warehouse_id query string false "Warehouse ID"
+// @Param status query string false "Status"
+// @Param from_date query string false "From date"
+// @Param to_date query string false "To date"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/stock-opname [get]
 func (h *InventoryHandler) GetStockOpnames(c *fiber.Ctx) error {
 	filters := make(map[string]interface{})
 	if warehouseID := c.Query("warehouse_id"); warehouseID != "" {
@@ -211,6 +302,17 @@ func (h *InventoryHandler) GetStockOpnames(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// GetStockOpname godoc
+// @Summary Get stock opname
+// @Tags StockOpname
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Opname ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/stock-opname/{id} [get]
 func (h *InventoryHandler) GetStockOpname(c *fiber.Ctx) error {
 	id := c.Params("id")
 	result := h.inventoryService.GetStockOpnameByID(id)
@@ -220,6 +322,19 @@ func (h *InventoryHandler) GetStockOpname(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// UpdateStockOpnameStatus godoc
+// @Summary Update stock opname status
+// @Tags StockOpname
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Opname ID"
+// @Param body body request.StockOpnameStatusRequest true "Status payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/stock-opname/{id}/status [put]
 func (h *InventoryHandler) UpdateStockOpnameStatus(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var req request.StockOpnameStatusRequest
