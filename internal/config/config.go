@@ -15,12 +15,30 @@ type Config struct {
 	Email    EmailConfig
 	CORS     CORSConfig
 	Log      LogConfig
+	Security SecurityConfig
+	Perf     PerformanceConfig
 }
 
 type ServerConfig struct {
 	Host string
 	Port int
 	Env  string
+
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	IdleTimeout  time.Duration
+	BodyLimit    int
+}
+
+type SecurityConfig struct {
+	SecureHeadersEnabled bool
+	RateLimitEnabled     bool
+	RateLimitMax         int
+	RateLimitWindow      time.Duration
+}
+
+type PerformanceConfig struct {
+	CompressionEnabled bool
 }
 
 type DatabaseConfig struct {
@@ -64,9 +82,13 @@ func Load() (*Config, error) {
 
 	return &Config{
 		Server: ServerConfig{
-			Host: getEnv("APP_HOST", "0.0.0.0"),
-			Port: getEnvAsInt("APP_PORT", 3000),
-			Env:  getEnv("APP_ENV", "development"),
+			Host:         getEnv("APP_HOST", "0.0.0.0"),
+			Port:         getEnvAsInt("APP_PORT", 3000),
+			Env:          getEnv("APP_ENV", "development"),
+			ReadTimeout:  getEnvAsDuration("APP_READ_TIMEOUT", 15*time.Second),
+			WriteTimeout: getEnvAsDuration("APP_WRITE_TIMEOUT", 15*time.Second),
+			IdleTimeout:  getEnvAsDuration("APP_IDLE_TIMEOUT", 60*time.Second),
+			BodyLimit:    getEnvAsInt("APP_BODY_LIMIT", 10*1024*1024),
 		},
 		Database: DatabaseConfig{
 			Host:           getEnv("DB_HOST", "localhost"),
@@ -97,6 +119,15 @@ func Load() (*Config, error) {
 			Level:  getEnv("LOG_LEVEL", "info"),
 			Format: getEnv("LOG_FORMAT", "json"),
 		},
+		Security: SecurityConfig{
+			SecureHeadersEnabled: getEnvAsBool("SECURE_HEADERS_ENABLED", true),
+			RateLimitEnabled:     getEnvAsBool("RATE_LIMIT_ENABLED", false),
+			RateLimitMax:         getEnvAsInt("RATE_LIMIT_MAX", 120),
+			RateLimitWindow:      getEnvAsDuration("RATE_LIMIT_WINDOW", 1*time.Minute),
+		},
+		Perf: PerformanceConfig{
+			CompressionEnabled: getEnvAsBool("COMPRESSION_ENABLED", true),
+		},
 	}, nil
 }
 
@@ -121,6 +152,21 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 		return value
 	}
 	return defaultValue
+}
+
+func getEnvAsBool(key string, defaultValue bool) bool {
+	valueStr := getEnv(key, "")
+	if valueStr == "" {
+		return defaultValue
+	}
+	switch valueStr {
+	case "1", "true", "TRUE", "yes", "YES", "y", "Y", "on", "ON":
+		return true
+	case "0", "false", "FALSE", "no", "NO", "n", "N", "off", "OFF":
+		return false
+	default:
+		return defaultValue
+	}
 }
 
 func getEnvAsSlice(key, separator string) []string {

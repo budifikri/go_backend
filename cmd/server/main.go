@@ -9,11 +9,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
@@ -142,6 +150,10 @@ func main() {
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+		IdleTimeout:  cfg.Server.IdleTimeout,
+		BodyLimit:    cfg.Server.BodyLimit,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"success": false,
@@ -154,6 +166,15 @@ func main() {
 	app.Use(recover.New())
 	app.Use(logger.New())
 	app.Use(cors.New())
+	if cfg.Security.SecureHeadersEnabled {
+		app.Use(helmet.New())
+	}
+	if cfg.Perf.CompressionEnabled {
+		app.Use(compress.New(compress.Config{Level: compress.LevelBestSpeed}))
+	}
+	if cfg.Security.RateLimitEnabled {
+		app.Use(limiter.New(limiter.Config{Max: cfg.Security.RateLimitMax, Expiration: cfg.Security.RateLimitWindow}))
+	}
 
 	// API docs (public)
 	apidocs.Register(app)
@@ -326,7 +347,30 @@ func main() {
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Server starting on %s", addr)
-	if err := app.Listen(addr); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	listenErr := make(chan error, 1)
+	go func() {
+		err := app.Listen(addr)
+		listenErr <- err
+	}()
+
+	select {
+	case <-ctx.Done():
+		log.Printf("Shutdown signal received")
+	case err := <-listenErr:
+		if err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+		return
+	}
+
+	if err := app.ShutdownWithTimeout(10 * time.Second); err != nil {
+		log.Printf("Server shutdown error: %v", err)
+	}
+	if err := database.Close(); err != nil {
+		log.Printf("Database close error: %v", err)
 	}
 }
