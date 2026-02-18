@@ -1,0 +1,399 @@
+package services
+
+import (
+	"fmt"
+	"math"
+	"math/rand"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/pos-retail/go_backend/internal/models"
+	"github.com/pos-retail/go_backend/internal/repository"
+	"github.com/pos-retail/go_backend/internal/types/response"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
+
+type SalesService struct {
+	db        *gorm.DB
+	salesRepo *repository.SalesRepository
+}
+
+func NewSalesService(db *gorm.DB, salesRepo *repository.SalesRepository) *SalesService {
+	return &SalesService{db: db, salesRepo: salesRepo}
+}
+
+type CreateSaleItemInput struct {
+	ProductID     string
+	Quantity      int
+	PromotionCode string
+}
+
+type CreateSalePaymentInput struct {
+	Method          string
+	Amount          float64
+	ReferenceNumber string
+	CardLast4       string
+}
+
+type CreateSaleInput struct {
+	WarehouseID         string
+	CustomerID          string
+	Items               []CreateSaleItemInput
+	Payments            []CreateSalePaymentInput
+	LoyaltyPointsRedeem int
+	Notes               string
+	CompanyID           string
+}
+
+type ProcessedSaleItem struct {
+	ProductID      uuid.UUID  `json:"product_id"`
+	Quantity       int        `json:"quantity"`
+	UnitPrice      float64    `json:"unit_price"`
+	OriginalPrice  float64    `json:"original_price"`
+	DiscountAmount float64    `json:"discount_amount"`
+	TaxRate        float64    `json:"tax_rate"`
+	LineTotal      float64    `json:"line_total"`
+	PromotionID    *uuid.UUID `json:"promotion_id,omitempty"`
+	PriceTierID    *uuid.UUID `json:"price_tier_id,omitempty"`
+}
+
+type promotionRow struct {
+	ID            uuid.UUID `gorm:"column:id"`
+	PromotionType string    `gorm:"column:promotion_type"`
+	DiscountValue float64   `gorm:"column:discount_value"`
+	EndDate       time.Time `gorm:"column:end_date"`
+	IsActive      bool      `gorm:"column:is_active"`
+}
+
+func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) response.ApiResponse {
+	warehouseID, err := uuid.Parse(input.WarehouseID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid warehouse ID")
+	}
+
+	var customerID *uuid.UUID
+	if input.CustomerID != "" {
+		cid, err := uuid.Parse(input.CustomerID)
+		if err != nil {
+			return response.NewErrorResponse("Invalid customer ID")
+		}
+		customerID = &cid
+	}
+
+	companyID, err := uuid.Parse(input.CompanyID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid company ID")
+	}
+
+	cashierUUID, err := uuid.Parse(cashierID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid cashier ID")
+	}
+
+	if len(input.Items) == 0 {
+		return response.NewErrorResponse("Items are required")
+	}
+	if len(input.Payments) == 0 {
+		return response.NewErrorResponse("Payments are required")
+	}
+
+	var createdSale models.Sale
+	processed := make([]ProcessedSaleItem, 0, len(input.Items))
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		var warehouse models.Warehouse
+		if err := tx.First(&warehouse, "id = ?", warehouseID).Error; err != nil {
+			return fmt.Errorf("Invalid warehouse")
+		}
+		if warehouse.Status != models.WarehouseStatusActive {
+			return fmt.Errorf("Invalid warehouse")
+		}
+
+		subtotal := 0.0
+		discountTotal := 0.0
+		taxTotal := 0.0
+
+		for _, item := range input.Items {
+			pid, err := uuid.Parse(item.ProductID)
+			if err != nil {
+				return fmt.Errorf("Invalid product ID")
+			}
+			if item.Quantity <= 0 {
+				return fmt.Errorf("Invalid quantity")
+			}
+
+			var product models.Product
+			if err := tx.First(&product, "id = ?", pid).Error; err != nil {
+				return fmt.Errorf("Product %s not found or inactive", item.ProductID)
+			}
+			if product.Status != models.ProductStatusActive {
+				return fmt.Errorf("Product %s not found or inactive", item.ProductID)
+			}
+
+			// Lock inventory row to avoid oversell
+			var inv models.Inventory
+			invErr := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&inv, "product_id = ? AND warehouse_id = ?", pid, warehouseID).Error
+			if invErr != nil {
+				return fmt.Errorf("Insufficient stock for product %s", product.Name)
+			}
+			available := inv.Quantity - inv.ReservedQuantity
+			if available < item.Quantity {
+				return fmt.Errorf("Insufficient stock for product %s", product.Name)
+			}
+
+			unitPrice := product.RetailPrice
+			var priceTierID *uuid.UUID
+			var tier models.PriceTier
+			_ = tx.
+				Where("product_id = ? AND is_active = true AND min_quantity <= ? AND (max_quantity IS NULL OR max_quantity >= ?)", pid, item.Quantity, item.Quantity).
+				Order("min_quantity DESC").
+				Limit(1).
+				Find(&tier).Error
+			if tier.ID != uuid.Nil {
+				unitPrice = tier.UnitPrice
+				tid := tier.ID
+				priceTierID = &tid
+			}
+
+			discountPerUnit := 0.0
+			var promotionID *uuid.UUID
+			if item.PromotionCode != "" {
+				var promo promotionRow
+				pErr := tx.Raw(
+					"SELECT id, promotion_type, discount_value, end_date, is_active FROM promotions WHERE code = ? LIMIT 1",
+					item.PromotionCode,
+				).Scan(&promo).Error
+				if pErr == nil && promo.ID != uuid.Nil {
+					if promo.IsActive && (promo.EndDate.IsZero() || !promo.EndDate.Before(time.Now())) {
+						switch promo.PromotionType {
+						case "PERCENTAGE":
+							discountPerUnit = unitPrice * (promo.DiscountValue / 100.0)
+						case "FIXED_AMOUNT":
+							discountPerUnit = promo.DiscountValue
+						}
+						pid := promo.ID
+						promotionID = &pid
+					}
+				}
+			}
+
+			if discountPerUnit < 0 {
+				discountPerUnit = 0
+			}
+			netUnit := unitPrice - discountPerUnit
+			if netUnit < 0 {
+				netUnit = 0
+			}
+
+			lineNet := netUnit * float64(item.Quantity)
+			lineTax := lineNet * (product.TaxRate / 100.0)
+			lineTotal := lineNet + lineTax
+
+			subtotal += lineNet
+			discountTotal += discountPerUnit * float64(item.Quantity)
+			taxTotal += lineTax
+
+			processed = append(processed, ProcessedSaleItem{
+				ProductID:      pid,
+				Quantity:       item.Quantity,
+				UnitPrice:      unitPrice,
+				OriginalPrice:  unitPrice,
+				DiscountAmount: discountPerUnit,
+				TaxRate:        product.TaxRate,
+				LineTotal:      lineTotal,
+				PromotionID:    promotionID,
+				PriceTierID:    priceTierID,
+			})
+		}
+
+		totalAmount := subtotal + taxTotal
+		paidAmount := 0.0
+		for _, p := range input.Payments {
+			paidAmount += p.Amount
+		}
+
+		changeAmount := paidAmount - totalAmount
+		saleNumber := fmt.Sprintf("SLS-%s-%03d", time.Now().Format("20060102"), rand.Intn(1000))
+		loyaltyEarned := int(math.Floor(totalAmount / 10000.0))
+
+		createdSale = models.Sale{
+			ID:                    uuid.New(),
+			SaleNumber:            saleNumber,
+			WarehouseID:           warehouseID,
+			CustomerID:            customerID,
+			CashierID:             cashierUUID,
+			CompanyID:             companyID,
+			SaleDate:              time.Now(),
+			Status:                models.SaleStatusDone,
+			Subtotal:              subtotal,
+			DiscountAmount:        discountTotal,
+			TaxAmount:             taxTotal,
+			TotalAmount:           totalAmount,
+			PaidAmount:            paidAmount,
+			ChangeAmount:          changeAmount,
+			LoyaltyPointsEarned:   loyaltyEarned,
+			LoyaltyPointsRedeemed: input.LoyaltyPointsRedeem,
+			Notes:                 input.Notes,
+		}
+
+		if err := tx.Create(&createdSale).Error; err != nil {
+			return err
+		}
+
+		for _, item := range processed {
+			si := models.SaleItem{
+				ID:             uuid.New(),
+				SaleID:         createdSale.ID,
+				ProductID:      item.ProductID,
+				Quantity:       item.Quantity,
+				UnitPrice:      item.UnitPrice,
+				OriginalPrice:  item.OriginalPrice,
+				DiscountAmount: item.DiscountAmount,
+				TaxRate:        item.TaxRate,
+				PriceTierID:    item.PriceTierID,
+				PromotionID:    item.PromotionID,
+			}
+			if err := tx.Create(&si).Error; err != nil {
+				return err
+			}
+		}
+
+		for _, p := range input.Payments {
+			sp := models.SalePayment{
+				ID:              uuid.New(),
+				SaleID:          createdSale.ID,
+				PaymentMethod:   models.PaymentMethod(p.Method),
+				Amount:          p.Amount,
+				ReferenceNumber: p.ReferenceNumber,
+				CardLast4:       p.CardLast4,
+				CreatedAt:       time.Now(),
+			}
+			if err := tx.Create(&sp).Error; err != nil {
+				return err
+			}
+		}
+
+		// Decrease inventory and create stock movement records
+		for _, item := range processed {
+			if err := tx.Model(&models.Inventory{}).
+				Where("product_id = ? AND warehouse_id = ?", item.ProductID, warehouseID).
+				Updates(map[string]interface{}{
+					"quantity":           gorm.Expr("quantity - ?", item.Quantity),
+					"available_quantity": gorm.Expr("available_quantity - ?", item.Quantity),
+				}).Error; err != nil {
+				return err
+			}
+
+			movement := models.StockMovement{
+				ID:            uuid.New(),
+				ProductID:     item.ProductID,
+				WarehouseID:   warehouseID,
+				MovementType:  models.MovementTypeSale,
+				Quantity:      item.Quantity,
+				ReferenceType: "SALE",
+				ReferenceID:   &createdSale.ID,
+				Notes:         fmt.Sprintf("Penjualan produk %d pcs", item.Quantity),
+				CreatedAt:     time.Now(),
+			}
+			if err := tx.Create(&movement).Error; err != nil {
+				return err
+			}
+		}
+
+		if customerID != nil {
+			if err := tx.Model(&models.Customer{}).
+				Where("id = ?", *customerID).
+				Update("loyalty_points", gorm.Expr("loyalty_points + ? - ?", createdSale.LoyaltyPointsEarned, input.LoyaltyPointsRedeem)).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return response.NewErrorResponse(err.Error())
+	}
+
+	return response.NewSuccessResponse(map[string]interface{}{
+		"sale_id":                 createdSale.ID,
+		"sale_number":             createdSale.SaleNumber,
+		"sale_date":               createdSale.SaleDate,
+		"subtotal":                createdSale.Subtotal,
+		"discount_amount":         createdSale.DiscountAmount,
+		"tax_amount":              createdSale.TaxAmount,
+		"total_amount":            createdSale.TotalAmount,
+		"paid_amount":             createdSale.PaidAmount,
+		"change_amount":           createdSale.ChangeAmount,
+		"loyalty_points_earned":   createdSale.LoyaltyPointsEarned,
+		"loyalty_points_redeemed": createdSale.LoyaltyPointsRedeemed,
+		"items":                   processed,
+	}, "Sale created successfully")
+}
+
+func (s *SalesService) GetSales(filters map[string]string, limit, offset int) response.PaginatedResponse {
+	rows, total, err := s.salesRepo.FindSales(filters, limit, offset)
+	if err != nil {
+		return response.PaginatedResponse{
+			Success: false,
+			Data:    []interface{}{},
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
+		}
+	}
+
+	return response.NewPaginatedResponse(rows, total, limit, offset)
+}
+
+func (s *SalesService) GetSaleByID(id string) response.ApiResponse {
+	saleID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid sale ID")
+	}
+
+	sale, err := s.salesRepo.GetSaleByID(saleID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to get sale")
+	}
+	if sale == nil {
+		return response.NewErrorResponse("Sale not found")
+	}
+
+	items, _ := s.salesRepo.GetSaleItems(saleID)
+	payments, _ := s.salesRepo.GetSalePayments(saleID)
+
+	data := map[string]interface{}{}
+	data["id"] = sale.ID
+	data["sale_number"] = sale.SaleNumber
+	data["warehouse_id"] = sale.WarehouseID
+	data["customer_id"] = sale.CustomerID
+	data["cashier_id"] = sale.CashierID
+	data["company_id"] = sale.CompanyID
+	data["cash_drawer_id"] = sale.CashDrawerID
+	data["sale_date"] = sale.SaleDate
+	data["status"] = sale.Status
+	data["subtotal"] = sale.Subtotal
+	data["discount_amount"] = sale.DiscountAmount
+	data["tax_amount"] = sale.TaxAmount
+	data["total_amount"] = sale.TotalAmount
+	data["paid_amount"] = sale.PaidAmount
+	data["change_amount"] = sale.ChangeAmount
+	data["loyalty_points_earned"] = sale.LoyaltyPointsEarned
+	data["loyalty_points_redeemed"] = sale.LoyaltyPointsRedeemed
+	data["notes"] = sale.Notes
+	data["created_at"] = sale.CreatedAt
+	data["updated_at"] = sale.UpdatedAt
+	data["warehouse_name"] = sale.WarehouseName
+	data["cashier_name"] = sale.CashierName
+	data["customer_name"] = sale.CustomerName
+	data["customer_loyalty_points"] = sale.CustomerLoyaltyPoints
+	data["items"] = items
+	data["payments"] = payments
+
+	return response.NewSuccessResponse(data, "")
+}

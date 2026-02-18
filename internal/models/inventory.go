@@ -63,6 +63,7 @@ type StockMovement struct {
 	ReferenceType string       `gorm:"type:varchar(50)" json:"reference_type,omitempty"`
 	ReferenceID   *uuid.UUID   `gorm:"type:uuid" json:"reference_id,omitempty"`
 	Notes         string       `gorm:"type:text" json:"notes,omitempty"`
+	CreatedBy     *uuid.UUID   `gorm:"column:created_by;type:uuid" json:"created_by,omitempty"`
 	CreatedAt     time.Time    `gorm:"autoCreateTime" json:"created_at"`
 
 	Product   *Product   `gorm:"foreignKey:ProductID" json:"product,omitempty"`

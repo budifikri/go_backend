@@ -10,12 +10,9 @@ type ApiResponse struct {
 
 // PaginatedResponse for list endpoints
 type PaginatedResponse struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data"`
-	Total   int64       `json:"total"`
-	Limit   int         `json:"limit"`
-	Offset  int         `json:"offset"`
-	HasMore bool        `json:"has_more"`
+	Success    bool        `json:"success"`
+	Data       interface{} `json:"data"`
+	Pagination Pagination  `json:"pagination"`
 }
 
 // Pagination metadata
@@ -65,9 +62,11 @@ func NewPaginatedResponse(data interface{}, total int64, limit, offset int) Pagi
 	return PaginatedResponse{
 		Success: true,
 		Data:    data,
-		Total:   total,
-		Limit:   limit,
-		Offset:  offset,
-		HasMore: hasMore,
+		Pagination: Pagination{
+			Total:   total,
+			Limit:   limit,
+			Offset:  offset,
+			HasMore: hasMore,
+		},
 	}
 }

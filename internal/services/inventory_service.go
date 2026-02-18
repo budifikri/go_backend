@@ -54,10 +54,12 @@ func (s *InventoryService) GetInventory(filters map[string]interface{}, limit, o
 		return response.PaginatedResponse{
 			Success: false,
 			Data:    []interface{}{},
-			Total:   0,
-			Limit:   limit,
-			Offset:  offset,
-			HasMore: false,
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
 		}
 	}
 
@@ -484,10 +486,12 @@ func (s *InventoryService) GetStockOpnames(filters map[string]interface{}, limit
 		return response.PaginatedResponse{
 			Success: false,
 			Data:    []interface{}{},
-			Total:   0,
-			Limit:   limit,
-			Offset:  offset,
-			HasMore: false,
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
 		}
 	}
 

@@ -106,10 +106,12 @@ func (s *ProductService) GetProducts(filters map[string]interface{}, limit, offs
 		return response.PaginatedResponse{
 			Success: false,
 			Data:    []interface{}{},
-			Total:   0,
-			Limit:   limit,
-			Offset:  offset,
-			HasMore: false,
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
 		}
 	}
 
