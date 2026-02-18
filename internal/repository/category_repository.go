@@ -14,12 +14,19 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-func (r *CategoryRepository) FindAll(companyID *uuid.UUID) ([]models.Category, error) {
+func (r *CategoryRepository) FindAll(companyID *uuid.UUID, limit, offset int) ([]models.Category, error) {
 	var categories []models.Category
 	query := r.db.Where("is_active = ?", true).Order("name ASC")
 
 	if companyID != nil {
-		query = query.Where("company_id = ? OR company_id IS NULL", companyID)
+		query = query.Where("company_id = ?", companyID)
+	}
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if offset >= 0 {
+		query = query.Offset(offset)
 	}
 
 	if err := query.Find(&categories).Error; err != nil {

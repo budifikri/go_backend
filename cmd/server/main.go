@@ -201,7 +201,13 @@ func main() {
 	products.Delete("/:id", productHandler.DeleteProduct)
 
 	// Category routes
-	protected.Get("/categories", productHandler.GetCategories)
+	categories := protected.Group("/categories")
+	categories.Get("/", productHandler.GetCategories)
+	categories.Get("/:id", productHandler.GetCategory)
+	categoriesAdmin := categories.Group("", middleware.RoleMiddleware("admin", "manager"))
+	categoriesAdmin.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateCategoryRequest{} }), productHandler.CreateCategory)
+	categoriesAdmin.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateCategoryRequest{} }), productHandler.UpdateCategory)
+	categoriesAdmin.Delete("/:id", productHandler.DeleteCategory)
 
 	// Unit routes
 	protected.Get("/units", productHandler.GetUnits)

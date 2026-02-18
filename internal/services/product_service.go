@@ -389,12 +389,190 @@ func (s *ProductService) GetCategories(companyID *string) response.ApiResponse {
 		}
 	}
 
-	categories, err := s.categoryRepo.FindAll(compID)
+	// TS parity default pagination for categories list
+	categories, err := s.categoryRepo.FindAll(compID, 50, 0)
 	if err != nil {
 		return response.NewErrorResponse("Failed to get categories")
 	}
 
-	return response.NewSuccessResponse(categories, "Categories retrieved successfully")
+	return response.NewSuccessResponse(categories, "")
+}
+
+func (s *ProductService) GetCategoriesPaged(companyID *string, limit, offset int) response.ApiResponse {
+	var compID *uuid.UUID
+	if companyID != nil && *companyID != "" {
+		id, err := uuid.Parse(*companyID)
+		if err == nil {
+			compID = &id
+		}
+	}
+
+	if limit <= 0 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	categories, err := s.categoryRepo.FindAll(compID, limit, offset)
+	if err != nil {
+		return response.NewErrorResponse("Failed to get categories")
+	}
+	return response.NewSuccessResponse(categories, "")
+}
+
+func (s *ProductService) GetCategoryByID(id string) response.ApiResponse {
+	catID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Category not found")
+	}
+
+	cat, err := s.categoryRepo.FindByID(catID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to get category")
+	}
+	if cat == nil {
+		return response.NewErrorResponse("Category not found")
+	}
+	return response.NewSuccessResponse(cat, "")
+}
+
+type CreateCategoryInput struct {
+	Code        string
+	Name        string
+	Description *string
+	ParentID    *string
+	CompanyID   *string
+}
+
+func (s *ProductService) CreateCategory(input CreateCategoryInput) response.ApiResponse {
+	existing, err := s.categoryRepo.FindByCode(input.Code)
+	if err != nil {
+		return response.NewErrorResponse("Failed to create category")
+	}
+	if existing != nil {
+		return response.NewErrorResponse("Category code already exists")
+	}
+
+	var parentUUID *uuid.UUID
+	if input.ParentID != nil {
+		pid := *input.ParentID
+		if pid != "" {
+			p, err := uuid.Parse(pid)
+			if err == nil {
+				parentUUID = &p
+			}
+		}
+	}
+
+	var companyUUID *uuid.UUID
+	if input.CompanyID != nil && *input.CompanyID != "" {
+		cid, err := uuid.Parse(*input.CompanyID)
+		if err == nil {
+			companyUUID = &cid
+		}
+	}
+
+	cat := models.Category{
+		ID:          uuid.New(),
+		Code:        input.Code,
+		Name:        input.Name,
+		Description: "",
+		ParentID:    parentUUID,
+		CompanyID:   companyUUID,
+		IsActive:    true,
+	}
+	if input.Description != nil {
+		cat.Description = *input.Description
+	}
+
+	if err := s.categoryRepo.Create(&cat); err != nil {
+		return response.NewErrorResponse("Failed to create category")
+	}
+	return response.NewSuccessResponse(cat, "")
+}
+
+type UpdateCategoryInput struct {
+	Code        *string
+	Name        *string
+	Description *string
+	ParentID    *string
+	IsActive    *bool
+}
+
+func (s *ProductService) UpdateCategory(id string, input UpdateCategoryInput) response.ApiResponse {
+	catID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Category not found")
+	}
+
+	cat, err := s.categoryRepo.FindByID(catID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to update category")
+	}
+	if cat == nil {
+		return response.NewErrorResponse("Category not found")
+	}
+
+	updated := false
+	if input.Code != nil {
+		cat.Code = *input.Code
+		updated = true
+	}
+	if input.Name != nil {
+		cat.Name = *input.Name
+		updated = true
+	}
+	if input.Description != nil {
+		cat.Description = *input.Description
+		updated = true
+	}
+	if input.ParentID != nil {
+		pid := *input.ParentID
+		if pid == "" {
+			cat.ParentID = nil
+		} else {
+			p, err := uuid.Parse(pid)
+			if err == nil {
+				cat.ParentID = &p
+			}
+		}
+		updated = true
+	}
+	if input.IsActive != nil {
+		cat.IsActive = *input.IsActive
+		updated = true
+	}
+
+	if !updated {
+		return response.NewErrorResponse("No fields to update")
+	}
+
+	if err := s.categoryRepo.Update(cat); err != nil {
+		return response.NewErrorResponse("Failed to update category")
+	}
+	return response.NewSuccessResponse(cat, "")
+}
+
+func (s *ProductService) DeleteCategory(id string) response.ApiResponse {
+	catID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Category not found")
+	}
+
+	cat, err := s.categoryRepo.FindByID(catID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to delete category")
+	}
+	if cat == nil {
+		return response.NewErrorResponse("Category not found")
+	}
+
+	cat.IsActive = false
+	if err := s.categoryRepo.Update(cat); err != nil {
+		return response.NewErrorResponse("Failed to delete category")
+	}
+	return response.NewSuccessResponse(nil, "Category deleted successfully")
 }
 
 func (s *ProductService) GetUnits() response.ApiResponse {

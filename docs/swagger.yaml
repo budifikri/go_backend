@@ -27,6 +27,20 @@ definitions:
     required:
     - closing_balance
     type: object
+  github_com_pos-retail_go_backend_internal_types_request.CreateCategoryRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      parent_id:
+        type: string
+    required:
+    - code
+    - name
+    type: object
   github_com_pos-retail_go_backend_internal_types_request.CreateCompanyRequest:
     properties:
       address:
@@ -537,6 +551,19 @@ definitions:
       notes:
         type: string
       to_warehouse_id:
+        type: string
+    type: object
+  github_com_pos-retail_go_backend_internal_types_request.UpdateCategoryRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      parent_id:
         type: string
     type: object
   github_com_pos-retail_go_backend_internal_types_request.UpdateCompanyRequest:
@@ -1172,6 +1199,16 @@ paths:
         name: Authorization
         required: true
         type: string
+      - default: 50
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
@@ -1186,6 +1223,170 @@ paths:
       security:
       - BearerAuth: []
       summary: List categories
+      tags:
+      - Categories
+    post:
+      consumes:
+      - application/json
+      description: Create a new category (admin/manager only)
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Create category
+      tags:
+      - Categories
+  /api/categories/{id}:
+    delete:
+      description: Soft delete category (set is_active to false) (admin/manager only)
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete category
+      tags:
+      - Categories
+    get:
+      description: Get category by ID
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get category details
+      tags:
+      - Categories
+    put:
+      consumes:
+      - application/json
+      description: Update category details (admin/manager only)
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update category
       tags:
       - Categories
   /api/companies:

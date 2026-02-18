@@ -194,6 +194,8 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 // @Tags Categories
 // @Produce json
 // @Param Authorization header string true "Bearer token"
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
@@ -205,7 +207,156 @@ func (h *ProductHandler) GetCategories(c *fiber.Ctx) error {
 		companyID = &user.CompanyID
 	}
 
-	result := h.productService.GetCategories(companyID)
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	result := h.productService.GetCategoriesPaged(companyID, limit, offset)
+	return c.JSON(result)
+}
+
+// GetCategory godoc
+// @Summary Get category details
+// @Description Get category by ID
+// @Tags Categories
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Category ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/categories/{id} [get]
+func (h *ProductHandler) GetCategory(c *fiber.Ctx) error {
+	result := h.productService.GetCategoryByID(c.Params("id"))
+	if !result.Success {
+		return c.Status(fiber.StatusNotFound).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// CreateCategory godoc
+// @Summary Create category
+// @Description Create a new category (admin/manager only)
+// @Tags Categories
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.CreateCategoryRequest true "Category payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 403 {object} response.ApiResponse
+// @Failure 409 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/categories [post]
+func (h *ProductHandler) CreateCategory(c *fiber.Ctx) error {
+	user := middleware.GetUserFromContext(c)
+	if user == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.NewErrorResponse("Unauthorized"))
+	}
+
+	var req request.CreateCategoryRequest
+	if v := c.Locals(middleware.ContextKeyValidatedBody); v != nil {
+		if parsed, ok := v.(*request.CreateCategoryRequest); ok {
+			req = *parsed
+		} else {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+		}
+	} else {
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+		}
+	}
+
+	// Handle empty string parent_id => null (TS parity)
+	var parentID *string
+	if req.ParentID != nil {
+		p := *req.ParentID
+		if p != "" {
+			parentID = &p
+		}
+	}
+
+	companyID := user.CompanyID
+	result := h.productService.CreateCategory(services.CreateCategoryInput{
+		Code:        req.Code,
+		Name:        req.Name,
+		Description: req.Description,
+		ParentID:    parentID,
+		CompanyID:   &companyID,
+	})
+	if !result.Success {
+		if result.Error == "Category code already exists" {
+			return c.Status(fiber.StatusConflict).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.Status(fiber.StatusCreated).JSON(result)
+}
+
+// UpdateCategory godoc
+// @Summary Update category
+// @Description Update category details (admin/manager only)
+// @Tags Categories
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Category ID"
+// @Param body body request.UpdateCategoryRequest true "Update payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 403 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/categories/{id} [put]
+func (h *ProductHandler) UpdateCategory(c *fiber.Ctx) error {
+	var req request.UpdateCategoryRequest
+	if v := c.Locals(middleware.ContextKeyValidatedBody); v != nil {
+		if parsed, ok := v.(*request.UpdateCategoryRequest); ok {
+			req = *parsed
+		} else {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+		}
+	} else {
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+		}
+	}
+
+	result := h.productService.UpdateCategory(c.Params("id"), services.UpdateCategoryInput{
+		Code:        req.Code,
+		Name:        req.Name,
+		Description: req.Description,
+		ParentID:    req.ParentID,
+		IsActive:    req.IsActive,
+	})
+	if !result.Success {
+		if result.Error == "Category not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// DeleteCategory godoc
+// @Summary Delete category
+// @Description Soft delete category (set is_active to false) (admin/manager only)
+// @Tags Categories
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Category ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 403 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/categories/{id} [delete]
+func (h *ProductHandler) DeleteCategory(c *fiber.Ctx) error {
+	result := h.productService.DeleteCategory(c.Params("id"))
+	if !result.Success {
+		return c.Status(fiber.StatusNotFound).JSON(result)
+	}
 	return c.JSON(result)
 }
 
