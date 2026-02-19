@@ -257,6 +257,18 @@ definitions:
       tax_id:
         type: string
     type: object
+  github_com_pos-retail_go_backend_internal_types_request.CreateUnitRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
   github_com_pos-retail_go_backend_internal_types_request.ExchangeReceivedItemRequest:
     properties:
       product_id:
@@ -720,6 +732,15 @@ definitions:
       status:
         type: string
       tax_id:
+        type: string
+    type: object
+  github_com_pos-retail_go_backend_internal_types_request.UpdateUnitRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      name:
         type: string
     type: object
   github_com_pos-retail_go_backend_internal_types_request.UploadCompanyLogoRequest:
@@ -4550,6 +4571,18 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
@@ -4564,6 +4597,158 @@ paths:
       security:
       - BearerAuth: []
       summary: List units
+      tags:
+      - Units
+    post:
+      consumes:
+      - application/json
+      description: Create a new unit of measure
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Unit payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Create unit
+      tags:
+      - Units
+  /api/units/{id}:
+    delete:
+      description: Delete unit of measure
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete unit
+      tags:
+      - Units
+    get:
+      description: Get unit of measure by ID
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get unit details
+      tags:
+      - Units
+    put:
+      consumes:
+      - application/json
+      description: Update unit of measure
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update unit
       tags:
       - Units
 securityDefinitions:

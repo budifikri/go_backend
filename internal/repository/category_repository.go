@@ -79,10 +79,42 @@ func NewUnitRepository(db *gorm.DB) *UnitRepository {
 
 func (r *UnitRepository) FindAll() ([]models.Unit, error) {
 	var units []models.Unit
-	if err := r.db.Where("is_active = ?", true).Order("name ASC").Find(&units).Error; err != nil {
+	if err := r.db.Order("code ASC").Find(&units).Error; err != nil {
 		return nil, err
 	}
 	return units, nil
+}
+
+func (r *UnitRepository) FindAllWithQuery(search *string, limit, offset *int) ([]models.Unit, error) {
+	var units []models.Unit
+	q := r.db.Model(&models.Unit{}).Order("code ASC")
+	if search != nil && *search != "" {
+		like := "%%" + *search + "%%"
+		q = q.Where("name ILIKE ? OR description ILIKE ?", like, like)
+	}
+	if limit != nil {
+		q = q.Limit(*limit)
+	}
+	if offset != nil {
+		q = q.Offset(*offset)
+	}
+	if err := q.Find(&units).Error; err != nil {
+		return nil, err
+	}
+	return units, nil
+}
+
+func (r *UnitRepository) Count(search *string) (int64, error) {
+	q := r.db.Model(&models.Unit{})
+	if search != nil && *search != "" {
+		like := "%%" + *search + "%%"
+		q = q.Where("name ILIKE ? OR description ILIKE ?", like, like)
+	}
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return 0, err
+	}
+	return total, nil
 }
 
 func (r *UnitRepository) FindByID(id uuid.UUID) (*models.Unit, error) {

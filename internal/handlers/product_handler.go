@@ -365,11 +365,152 @@ func (h *ProductHandler) DeleteCategory(c *fiber.Ctx) error {
 // @Tags Units
 // @Produce json
 // @Param Authorization header string true "Bearer token"
+// @Param search query string false "Search"
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
 // @Success 200 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
 // @Router /api/units [get]
 func (h *ProductHandler) GetUnits(c *fiber.Ctx) error {
-	result := h.productService.GetUnits()
+	var search *string
+	if q := c.Query("search"); q != "" {
+		search = &q
+	}
+	var limit *int
+	if q := c.Query("limit"); q != "" {
+		v := c.QueryInt("limit")
+		limit = &v
+	}
+	var offset *int
+	if q := c.Query("offset"); q != "" {
+		v := c.QueryInt("offset")
+		offset = &v
+	}
+
+	resp, pagination := h.productService.GetUnitsWithQuery(search, limit, offset)
+	if !resp.Success {
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+	if pagination != nil {
+		return c.JSON(fiber.Map{"success": true, "data": resp.Data, "pagination": pagination})
+	}
+	return c.JSON(resp)
+}
+
+// GetUnit godoc
+// @Summary Get unit details
+// @Description Get unit of measure by ID
+// @Tags Units
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Unit ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/units/{id} [get]
+func (h *ProductHandler) GetUnit(c *fiber.Ctx) error {
+	result := h.productService.GetUnitByID(c.Params("id"))
+	if !result.Success {
+		return c.Status(fiber.StatusNotFound).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// CreateUnit godoc
+// @Summary Create unit
+// @Description Create a new unit of measure
+// @Tags Units
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.CreateUnitRequest true "Unit payload"
+// @Success 201 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 409 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/units [post]
+func (h *ProductHandler) CreateUnit(c *fiber.Ctx) error {
+	var req request.CreateUnitRequest
+	if v := c.Locals(middleware.ContextKeyValidatedBody); v != nil {
+		if parsed, ok := v.(*request.CreateUnitRequest); ok {
+			req = *parsed
+		} else {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+		}
+	} else {
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+		}
+	}
+
+	result := h.productService.CreateUnit(services.CreateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description})
+	if !result.Success {
+		if result.Error == "Unit code already exists" {
+			return c.Status(fiber.StatusConflict).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.Status(fiber.StatusCreated).JSON(result)
+}
+
+// UpdateUnit godoc
+// @Summary Update unit
+// @Description Update unit of measure
+// @Tags Units
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Unit ID"
+// @Param body body request.UpdateUnitRequest true "Update payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/units/{id} [put]
+func (h *ProductHandler) UpdateUnit(c *fiber.Ctx) error {
+	var req request.UpdateUnitRequest
+	if v := c.Locals(middleware.ContextKeyValidatedBody); v != nil {
+		if parsed, ok := v.(*request.UpdateUnitRequest); ok {
+			req = *parsed
+		} else {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+		}
+	} else {
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+		}
+	}
+
+	result := h.productService.UpdateUnit(c.Params("id"), services.UpdateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description})
+	if !result.Success {
+		if result.Error == "Unit not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// DeleteUnit godoc
+// @Summary Delete unit
+// @Description Delete unit of measure
+// @Tags Units
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Unit ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/units/{id} [delete]
+func (h *ProductHandler) DeleteUnit(c *fiber.Ctx) error {
+	result := h.productService.DeleteUnit(c.Params("id"))
+	if !result.Success {
+		return c.Status(fiber.StatusNotFound).JSON(result)
+	}
 	return c.JSON(result)
 }

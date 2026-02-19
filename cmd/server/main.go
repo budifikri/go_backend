@@ -210,7 +210,12 @@ func main() {
 	categoriesAdmin.Delete("/:id", productHandler.DeleteCategory)
 
 	// Unit routes
-	protected.Get("/units", productHandler.GetUnits)
+	units := protected.Group("/units")
+	units.Get("/", productHandler.GetUnits)
+	units.Get("/:id", productHandler.GetUnit)
+	units.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateUnitRequest{} }), productHandler.CreateUnit)
+	units.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateUnitRequest{} }), productHandler.UpdateUnit)
+	units.Delete("/:id", productHandler.DeleteUnit)
 
 	// Inventory routes
 	inventory := protected.Group("/inventory")

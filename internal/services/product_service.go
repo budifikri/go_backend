@@ -578,8 +578,144 @@ func (s *ProductService) DeleteCategory(id string) response.ApiResponse {
 func (s *ProductService) GetUnits() response.ApiResponse {
 	units, err := s.unitRepo.FindAll()
 	if err != nil {
-		return response.NewErrorResponse("Failed to get units")
+		return response.NewErrorResponse("Failed to fetch units")
 	}
 
-	return response.NewSuccessResponse(units, "Units retrieved successfully")
+	return response.NewSuccessResponse(units, "")
+}
+
+func (s *ProductService) GetUnitsWithQuery(search *string, limit, offset *int) (response.ApiResponse, map[string]interface{}) {
+	units, err := s.unitRepo.FindAllWithQuery(search, limit, offset)
+	if err != nil {
+		return response.NewErrorResponse("Failed to fetch units"), nil
+	}
+
+	if limit != nil || offset != nil {
+		total, err := s.unitRepo.Count(search)
+		if err != nil {
+			return response.NewErrorResponse("Failed to fetch units"), nil
+		}
+		l := len(units)
+		lim := l
+		if limit != nil {
+			lim = *limit
+		}
+		off := 0
+		if offset != nil {
+			off = *offset
+		}
+		return response.NewSuccessResponse(units, ""), map[string]interface{}{
+			"limit":  lim,
+			"offset": off,
+			"total":  total,
+		}
+	}
+
+	return response.NewSuccessResponse(units, ""), nil
+}
+
+func (s *ProductService) GetUnitByID(id string) response.ApiResponse {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Unit not found")
+	}
+	unit, err := s.unitRepo.FindByID(uid)
+	if err != nil {
+		return response.NewErrorResponse("Failed to fetch unit")
+	}
+	if unit == nil {
+		return response.NewErrorResponse("Unit not found")
+	}
+	return response.NewSuccessResponse(unit, "")
+}
+
+type CreateUnitInput struct {
+	Code        string
+	Name        string
+	Description *string
+}
+
+func (s *ProductService) CreateUnit(input CreateUnitInput) response.ApiResponse {
+	existing, err := s.unitRepo.FindByCode(input.Code)
+	if err != nil {
+		return response.NewErrorResponse("Failed to create unit")
+	}
+	if existing != nil {
+		return response.NewErrorResponse("Unit code already exists")
+	}
+
+	unit := models.Unit{
+		ID:          uuid.New(),
+		Code:        input.Code,
+		Name:        input.Name,
+		Description: "",
+		IsActive:    true,
+	}
+	if input.Description != nil {
+		unit.Description = *input.Description
+	}
+	if err := s.unitRepo.Create(&unit); err != nil {
+		return response.NewErrorResponse("Failed to create unit")
+	}
+	return response.NewSuccessResponse(unit, "")
+}
+
+type UpdateUnitInput struct {
+	Code        *string
+	Name        *string
+	Description *string
+}
+
+func (s *ProductService) UpdateUnit(id string, input UpdateUnitInput) response.ApiResponse {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Unit not found")
+	}
+	unit, err := s.unitRepo.FindByID(uid)
+	if err != nil {
+		return response.NewErrorResponse("Failed to update unit")
+	}
+	if unit == nil {
+		return response.NewErrorResponse("Unit not found")
+	}
+
+	updated := false
+	if input.Code != nil {
+		unit.Code = *input.Code
+		updated = true
+	}
+	if input.Name != nil {
+		unit.Name = *input.Name
+		updated = true
+	}
+	if input.Description != nil {
+		unit.Description = *input.Description
+		updated = true
+	}
+	if !updated {
+		return response.NewErrorResponse("No fields to update")
+	}
+
+	if err := s.unitRepo.Update(unit); err != nil {
+		return response.NewErrorResponse("Failed to update unit")
+	}
+	return response.NewSuccessResponse(unit, "")
+}
+
+func (s *ProductService) DeleteUnit(id string) response.ApiResponse {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Unit not found")
+	}
+	unit, err := s.unitRepo.FindByID(uid)
+	if err != nil {
+		return response.NewErrorResponse("Failed to delete unit")
+	}
+	if unit == nil {
+		return response.NewErrorResponse("Unit not found")
+	}
+	if err := s.unitRepo.Delete(uid); err != nil {
+		return response.NewErrorResponse("Failed to delete unit")
+	}
+	return response.NewSuccessResponse(nil, "Unit deleted successfully")
 }
