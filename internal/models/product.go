@@ -76,8 +76,9 @@ const (
 type WarehouseStatus string
 
 const (
-	WarehouseStatusActive   WarehouseStatus = "active"
-	WarehouseStatusInactive WarehouseStatus = "inactive"
+	WarehouseStatusActive      WarehouseStatus = "active"
+	WarehouseStatusInactive    WarehouseStatus = "inactive"
+	WarehouseStatusMaintenance WarehouseStatus = "maintenance"
 )
 
 // Warehouse model

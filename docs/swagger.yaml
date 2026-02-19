@@ -269,6 +269,32 @@ definitions:
     - code
     - name
     type: object
+  github_com_pos-retail_go_backend_internal_types_request.CreateWarehouseRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      type:
+        enum:
+        - MAIN
+        - BRANCH
+        - STORAGE
+        - OUTLET
+        type: string
+    required:
+    - address
+    - city
+    - code
+    - name
+    - type
+    type: object
   github_com_pos-retail_go_backend_internal_types_request.ExchangeReceivedItemRequest:
     properties:
       product_id:
@@ -741,6 +767,32 @@ definitions:
       description:
         type: string
       name:
+        type: string
+    type: object
+  github_com_pos-retail_go_backend_internal_types_request.UpdateWarehouseRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - maintenance
+        type: string
+      type:
+        enum:
+        - MAIN
+        - BRANCH
+        - STORAGE
+        - OUTLET
         type: string
     type: object
   github_com_pos-retail_go_backend_internal_types_request.UploadCompanyLogoRequest:
@@ -4751,6 +4803,187 @@ paths:
       summary: Update unit
       tags:
       - Units
+  /api/warehouses:
+    get:
+      description: Get all active warehouses
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: List warehouses
+      tags:
+      - Warehouses
+    post:
+      consumes:
+      - application/json
+      description: Create a new warehouse
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Warehouse payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateWarehouseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Create warehouse
+      tags:
+      - Warehouses
+  /api/warehouses/{id}:
+    delete:
+      description: Soft delete warehouse (set status to inactive)
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete warehouse
+      tags:
+      - Warehouses
+    get:
+      description: Get warehouse by ID
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get warehouse details
+      tags:
+      - Warehouses
+    put:
+      consumes:
+      - application/json
+      description: Update warehouse details
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Warehouse ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateWarehouseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update warehouse
+      tags:
+      - Warehouses
 securityDefinitions:
   BearerAuth:
     in: header

@@ -114,6 +114,7 @@ func main() {
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
+	warehouseService := services.NewWarehouseService(warehouseRepo)
 	inventoryService := services.NewInventoryService(inventoryRepo, productRepo, warehouseRepo)
 	salesService := services.NewSalesService(db, salesRepo)
 	returnsService := services.NewReturnsService(db, returnsRepo)
@@ -131,6 +132,7 @@ func main() {
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	productHandler := handlers.NewProductHandler(productService)
+	warehouseHandler := handlers.NewWarehouseHandler(warehouseService)
 	inventoryHandler := handlers.NewInventoryHandler(inventoryService)
 	salesHandler := handlers.NewSalesHandler(salesService)
 	returnsHandler := handlers.NewReturnsHandler(returnsService)
@@ -216,6 +218,14 @@ func main() {
 	units.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateUnitRequest{} }), productHandler.CreateUnit)
 	units.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateUnitRequest{} }), productHandler.UpdateUnit)
 	units.Delete("/:id", productHandler.DeleteUnit)
+
+	// Warehouse routes
+	warehouses := protected.Group("/warehouses")
+	warehouses.Get("/", warehouseHandler.GetWarehouses)
+	warehouses.Get("/:id", warehouseHandler.GetWarehouse)
+	warehouses.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateWarehouseRequest{} }), warehouseHandler.CreateWarehouse)
+	warehouses.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateWarehouseRequest{} }), warehouseHandler.UpdateWarehouse)
+	warehouses.Delete("/:id", warehouseHandler.DeleteWarehouse)
 
 	// Inventory routes
 	inventory := protected.Group("/inventory")
