@@ -72,6 +72,32 @@ func (r *InventoryRepository) CreateStockMovement(movement *models.StockMovement
 	return r.db.Create(movement).Error
 }
 
+func (r *InventoryRepository) GetOpeningBalance(productID, warehouseID uuid.UUID, beforeDate time.Time) (int, error) {
+	var balance int
+
+	// Match TS behavior:
+	// - Sum IN movement types as +quantity
+	// - Sum OUT movement types as -quantity
+	// - OPNAME stores signed quantity (difference), so add it directly
+	// - Only movements strictly before from_date
+	err := r.db.Raw(`
+		SELECT COALESCE(SUM(
+			CASE
+				WHEN movement_type IN ('ADJUSTMENT_IN','PURCHASE','TRANSFER_IN','RETURN','EXCHANGE_IN') THEN quantity
+				WHEN movement_type IN ('SALE','ADJUSTMENT_OUT','TRANSFER_OUT','DAMAGE','EXCHANGE_OUT') THEN -quantity
+				WHEN movement_type IN ('OPNAME') THEN quantity
+				ELSE 0
+			END
+		), 0) AS balance
+		FROM stock_movements
+		WHERE product_id = ? AND warehouse_id = ? AND created_at < ?
+	`, productID, warehouseID, beforeDate).Scan(&balance).Error
+	if err != nil {
+		return 0, err
+	}
+	return balance, nil
+}
+
 func (r *InventoryRepository) GetStockCard(productID, warehouseID uuid.UUID, fromDate, toDate *time.Time) ([]models.StockMovement, error) {
 	var movements []models.StockMovement
 	query := r.db.Where("product_id = ? AND warehouse_id = ?", productID, warehouseID)
@@ -80,7 +106,8 @@ func (r *InventoryRepository) GetStockCard(productID, warehouseID uuid.UUID, fro
 		query = query.Where("created_at >= ?", fromDate)
 	}
 	if toDate != nil {
-		query = query.Where("created_at <= ?", toDate)
+		// Treat toDate as an exclusive upper bound (matches TS: created_at < to_date + 1 day)
+		query = query.Where("created_at < ?", toDate)
 	}
 
 	if err := query.Order("created_at ASC").Find(&movements).Error; err != nil {

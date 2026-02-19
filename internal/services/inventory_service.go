@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -209,37 +210,199 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 		return response.NewErrorResponse("Warehouse not found")
 	}
 
-	inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(pid, wid)
-	openingBalance := 0
-	if inventory != nil {
-		openingBalance = inventory.Quantity
-	}
-
-	var from, to *time.Time
+	// Parse dates (expected YYYY-MM-DD). Keep behavior safe if omitted.
+	var from, toExclusive *time.Time
 	if fromDate != "" {
-		t, _ := time.Parse("2006-01-02", fromDate)
+		t, err := time.Parse("2006-01-02", fromDate)
+		if err != nil {
+			return response.NewErrorResponse("Invalid from_date format. Expected YYYY-MM-DD")
+		}
 		from = &t
 	}
 	if toDate != "" {
-		t, _ := time.Parse("2006-01-02", toDate)
-		to = &t
+		t, err := time.Parse("2006-01-02", toDate)
+		if err != nil {
+			return response.NewErrorResponse("Invalid to_date format. Expected YYYY-MM-DD")
+		}
+		// Match TS: created_at < to_date + 1 day
+		t2 := t.AddDate(0, 0, 1)
+		toExclusive = &t2
 	}
 
-	movements, _ := s.inventoryRepo.GetStockCard(pid, wid, from, to)
+	openingBalance := 0
+	if from != nil {
+		bal, err := s.inventoryRepo.GetOpeningBalance(pid, wid, *from)
+		if err == nil {
+			openingBalance = bal
+		}
+	}
 
+	movements, _ := s.inventoryRepo.GetStockCard(pid, wid, from, toExclusive)
+
+	// Build transactions with running balance (match TS test expectations)
+	transactions := make([]map[string]interface{}, 0, len(movements))
 	totalIn := 0
 	totalOut := 0
-	balance := openingBalance
+	runningBalance := openingBalance
+
+	getTransactionName := func(mt models.MovementType, qty int) string {
+		names := map[models.MovementType]string{
+			models.MovementTypeSale:          "Penjualan",
+			models.MovementTypePurchase:      "Pembelian",
+			models.MovementTypeTransferOut:   "Transfer Keluar",
+			models.MovementTypeTransferIn:    "Transfer Masuk",
+			models.MovementTypeAdjustmentIn:  "Penyesuaian Stok",
+			models.MovementTypeAdjustmentOut: "Penyesuaian Stok",
+			models.MovementTypeReturn:        "Retur Penjualan",
+			models.MovementTypeDamage:        "Kerusakan",
+			models.MovementTypeExchangeIn:    "Pertukaran Masuk",
+			models.MovementTypeExchangeOut:   "Pertukaran Keluar",
+		}
+		if mt == models.MovementTypeOpname {
+			if qty > 0 {
+				return "Stock Opname Masuk"
+			}
+			if qty < 0 {
+				return "Stock Opname Keluar"
+			}
+			return "Stock Opname"
+		}
+		if v, ok := names[mt]; ok {
+			return v
+		}
+		return string(mt)
+	}
+
+	getDocumentNumber := func(id uuid.UUID, mt models.MovementType, qty int) string {
+		prefixMap := map[models.MovementType]string{
+			models.MovementTypeSale:          "SO",
+			models.MovementTypePurchase:      "PO",
+			models.MovementTypeTransferOut:   "TRF-OUT",
+			models.MovementTypeTransferIn:    "TRF-IN",
+			models.MovementTypeAdjustmentIn:  "ADJ",
+			models.MovementTypeAdjustmentOut: "ADJ",
+			models.MovementTypeReturn:        "RET",
+			models.MovementTypeDamage:        "DMG",
+			models.MovementTypeExchangeIn:    "EXC-IN",
+			models.MovementTypeExchangeOut:   "EXC-OUT",
+			models.MovementTypeOpname:        "OPN",
+		}
+		prefix := prefixMap[mt]
+		if prefix == "" {
+			prefix = "MOV"
+		}
+		if mt == models.MovementTypeOpname {
+			if qty > 0 {
+				prefix = "OPN-IN"
+			} else if qty < 0 {
+				prefix = "OPN-OUT"
+			}
+		}
+		s := strings.ToUpper(id.String())
+		short := "0000"
+		if len(s) >= 8 {
+			short = s[:8]
+		}
+		return prefix + "-" + short
+	}
+
+	isInType := func(mt models.MovementType) bool {
+		inTypes := map[models.MovementType]bool{
+			models.MovementTypeAdjustmentIn: true,
+			models.MovementTypePurchase:     true,
+			models.MovementTypeTransferIn:   true,
+			models.MovementTypeReturn:       true,
+			models.MovementTypeExchangeIn:   true,
+		}
+		return inTypes[mt]
+	}
+
+	for _, m := range movements {
+		qty := m.Quantity
+		mt := m.MovementType
+		transactionName := getTransactionName(mt, qty)
+
+		qtyIn := 0
+		qtyOut := 0
+		typeStr := "OUT"
+
+		if mt == models.MovementTypeOpname {
+			if qty >= 0 {
+				qtyIn = qty
+				qtyOut = 0
+				typeStr = "IN"
+			} else {
+				qtyIn = 0
+				qtyOut = -qty
+				typeStr = "OUT"
+			}
+			// runningBalance is updated by the signed qty
+			runningBalance += qty
+		} else if isInType(mt) {
+			qtyIn = qty
+			qtyOut = 0
+			typeStr = "IN"
+			runningBalance += qty
+		} else {
+			qtyIn = 0
+			qtyOut = qty
+			typeStr = "OUT"
+			runningBalance -= qty
+		}
+
+		totalIn += qtyIn
+		totalOut += qtyOut
+
+		desc := m.Notes
+		if desc == "" {
+			desc = transactionName
+		}
+
+		var ref interface{} = nil
+		if mt == models.MovementTypeOpname {
+			ref = "Stock Opname"
+		} else if m.ReferenceID != nil {
+			ref = m.ReferenceID.String()
+		}
+
+		transactions = append(transactions, map[string]interface{}{
+			"date":            m.CreatedAt.Format("2006-01-02"),
+			"documentNumber":  getDocumentNumber(m.ID, mt, qty),
+			"reference":       ref,
+			"type":            typeStr,
+			"transactionName": transactionName,
+			"description":     desc,
+			"qtyIn":           qtyIn,
+			"qtyOut":          qtyOut,
+			"balance":         runningBalance,
+		})
+	}
+
+	categoryName := "Uncategorized"
+	if product.Category != nil && product.Category.Name != "" {
+		categoryName = product.Category.Name
+	}
+	unitStr := "PCS"
+	if product.Unit != nil {
+		if product.Unit.Code != "" {
+			unitStr = product.Unit.Code
+		} else if product.Unit.Name != "" {
+			unitStr = product.Unit.Name
+		}
+	}
 
 	return response.NewSuccessResponse(map[string]interface{}{
-		"product": map[string]interface{}{
-			"id":   product.ID,
-			"code": product.SKU,
-			"name": product.Name,
+		"item": map[string]interface{}{
+			"id":       product.ID,
+			"code":     product.SKU,
+			"name":     product.Name,
+			"category": categoryName,
+			"unit":     unitStr,
 		},
 		"warehouse": map[string]interface{}{
 			"id":   warehouse.ID,
 			"name": warehouse.Name,
+			"rack": "-",
 		},
 		"period": map[string]string{
 			"from": fromDate,
@@ -249,9 +412,9 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 			"openingBalance": openingBalance,
 			"totalIn":        totalIn,
 			"totalOut":       totalOut,
-			"closingBalance": balance,
+			"closingBalance": runningBalance,
 		},
-		"movements": movements,
+		"transactions": transactions,
 	}, "Stock card retrieved successfully")
 }
 
