@@ -254,12 +254,13 @@ func (s *PurchaseService) UpdatePurchaseOrderStatus(id string, status string) re
 		return response.NewErrorResponse("Purchase order not found")
 	}
 
+	// Use raw UPDATE ... RETURNING to avoid reflection issues with chained Update().Scan().
 	var result map[string]interface{}
-	res := s.db.Table("purchase_orders").Clauses(clause.Returning{}).Where("id = ?", poID).Update("status", status).Scan(&result)
+	res := s.db.Raw("UPDATE purchase_orders SET status = ? WHERE id = ? RETURNING *", status, poID).Scan(&result)
 	if res.Error != nil {
 		return response.NewErrorResponse("Purchase order not found")
 	}
-	if res.RowsAffected == 0 {
+	if len(result) == 0 {
 		return response.NewErrorResponse("Purchase order not found")
 	}
 	return response.NewSuccessResponse(result, "")

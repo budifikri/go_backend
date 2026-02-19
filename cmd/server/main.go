@@ -363,7 +363,26 @@ func main() {
 
 	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "ok"})
+		dbStatus := "disconnected"
+		if sqlDB, err := db.DB(); err == nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			if err := sqlDB.PingContext(ctx); err == nil {
+				dbStatus = "connected"
+			}
+		}
+
+		return c.JSON(fiber.Map{
+			"message":       "POS Retail API is running",
+			"version":       "1.0.0",
+			"documentation": "/docs",
+			"database": fiber.Map{
+				"status":   dbStatus,
+				"host":     cfg.Database.Host,
+				"port":     cfg.Database.Port,
+				"database": cfg.Database.Name,
+			},
+		})
 	})
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
