@@ -94,6 +94,7 @@ func (h *SupplierHandler) CreateSupplier(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param is_active query bool false "Filter by active"
+// @Param include_inactive query bool false "Include inactive (ignore default active-only)"
 // @Param payment_terms query string false "Payment terms"
 // @Param search query string false "Search"
 // @Param min_credit_limit query int false "Min credit limit"
@@ -113,6 +114,7 @@ func (h *SupplierHandler) GetSuppliers(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 	filters := map[string]interface{}{}
+	includeInactive := c.QueryBool("include_inactive", false)
 	if v := c.Query("is_active"); v != "" {
 		if b, err := strconv.ParseBool(v); err == nil {
 			filters["is_active"] = b
@@ -124,7 +126,7 @@ func (h *SupplierHandler) GetSuppliers(c *fiber.Ctx) error {
 		} else if v == "inactive" {
 			filters["is_active"] = false
 		}
-	} else {
+	} else if !includeInactive {
 		filters["is_active"] = true
 	}
 	if v := c.Query("payment_terms"); v != "" {

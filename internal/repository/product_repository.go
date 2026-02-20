@@ -20,11 +20,9 @@ func (r *ProductRepository) FindAll(filters map[string]interface{}, limit, offse
 
 	query := r.db.Model(&models.Product{})
 
-	// Default to active products unless explicitly filtered.
+	// If is_active is not provided: include both active and inactive.
 	if v, ok := filters["is_active"].(bool); ok {
 		query = query.Where("is_active = ?", v)
-	} else {
-		query = query.Where("is_active = ?", true)
 	}
 	if categoryID, ok := filters["category_id"].(string); ok && categoryID != "" {
 		query = query.Where("category_id = ?", categoryID)

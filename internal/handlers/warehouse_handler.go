@@ -25,6 +25,7 @@ func NewWarehouseHandler(warehouseService *services.WarehouseService) *Warehouse
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param is_active query bool false "Filter by active"
+// @Param include_inactive query bool false "Include inactive (ignore default active-only)"
 // @Success 200 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
@@ -36,12 +37,13 @@ func (h *WarehouseHandler) GetWarehouses(c *fiber.Ctx) error {
 		companyID = &user.CompanyID
 	}
 
+	includeInactive := c.QueryBool("include_inactive", false)
 	var isActive *bool
 	if v := c.Query("is_active"); v != "" {
 		if b, err := strconv.ParseBool(v); err == nil {
 			isActive = &b
 		}
-	} else {
+	} else if !includeInactive {
 		b := true
 		isActive = &b
 	}

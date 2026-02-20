@@ -26,6 +26,7 @@ func NewProductHandler(productService *services.ProductService) *ProductHandler 
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param is_active query bool false "Filter by active"
+// @Param include_inactive query bool false "Include inactive (ignore default active-only)"
 // @Param category_id query string false "Filter by category"
 // @Param search query string false "Search term"
 // @Param limit query int false "Limit" default(50)
@@ -36,6 +37,7 @@ func NewProductHandler(productService *services.ProductService) *ProductHandler 
 // @Router /api/products [get]
 func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	filters := make(map[string]interface{})
+	includeInactive := c.QueryBool("include_inactive", false)
 
 	if v := c.Query("is_active"); v != "" {
 		if b, err := strconv.ParseBool(v); err == nil {
@@ -48,7 +50,7 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 		} else if status == "inactive" {
 			filters["is_active"] = false
 		}
-	} else {
+	} else if !includeInactive {
 		// Default active
 		filters["is_active"] = true
 	}
