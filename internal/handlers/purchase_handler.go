@@ -118,6 +118,66 @@ func (h *PurchaseHandler) CreatePurchaseOrder(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
+// UpdatePurchaseOrder godoc
+// @Summary Update purchase order
+// @Tags Purchases
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Param body body request.UpdatePurchaseOrderRequest true "Purchase order payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id} [put]
+func (h *PurchaseHandler) UpdatePurchaseOrder(c *fiber.Ctx) error {
+	var req request.UpdatePurchaseOrderRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+	}
+
+	if req.SupplierID == "" || req.WarehouseID == "" || req.ExpectedDate == "" || len(req.Items) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request data"))
+	}
+
+	expected, err := time.Parse(time.RFC3339, req.ExpectedDate)
+	if err != nil {
+		if t2, err2 := time.Parse("2006-01-02", req.ExpectedDate); err2 == nil {
+			expected = t2
+		} else {
+			expected = time.Now()
+		}
+	}
+
+	items := make([]services.CreatePurchaseOrderItemInput, 0, len(req.Items))
+	for _, it := range req.Items {
+		items = append(items, services.CreatePurchaseOrderItemInput{
+			ProductID: it.ProductID,
+			Quantity:  it.Quantity,
+			UnitPrice: it.UnitPrice,
+			Discount:  it.Discount,
+			TaxRate:   it.TaxRate,
+		})
+	}
+
+	result := h.purchaseService.UpdatePurchaseOrder(c.Params("id"), services.UpdatePurchaseOrderInput{
+		SupplierID:   req.SupplierID,
+		WarehouseID:  req.WarehouseID,
+		ExpectedDate: expected,
+		Items:        items,
+		Notes:        req.Notes,
+	})
+	if !result.Success {
+		if result.Error == "Purchase order not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
 // UpdatePurchaseOrderStatus godoc
 // @Summary Update purchase order status
 // @Tags Purchases

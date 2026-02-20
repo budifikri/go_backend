@@ -39,6 +39,14 @@ type CreatePurchaseOrderInput struct {
 	CompanyID    string
 }
 
+type UpdatePurchaseOrderInput struct {
+	SupplierID   string
+	WarehouseID  string
+	ExpectedDate time.Time
+	Items        []CreatePurchaseOrderItemInput
+	Notes        *string
+}
+
 func (s *PurchaseService) GetPurchaseOrders(filters map[string]string, limit, offset int) response.PaginatedResponse {
 	rows, total, err := s.purchaseRepo.FindPurchaseOrders(filters, limit, offset)
 	if err != nil {
@@ -246,6 +254,107 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 	}
 
 	return response.NewSuccessResponse(created, "")
+}
+
+func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrderInput) response.ApiResponse {
+	poID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	// Validate IDs early
+	supplierID, err := uuid.Parse(input.SupplierID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid request data")
+	}
+	warehouseID, err := uuid.Parse(input.WarehouseID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid request data")
+	}
+	if len(input.Items) == 0 {
+		return response.NewErrorResponse("Invalid request data")
+	}
+
+	po, err := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	if err != nil || po == nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+	if po.Status != "DRAFT" && po.Status != "PENDING" {
+		return response.NewErrorResponse("Purchase order cannot be updated")
+	}
+
+	itemsExisting, _ := s.purchaseRepo.GetPurchaseOrderItems(poID)
+	for _, it := range itemsExisting {
+		if it.ReceivedQuantity > 0 {
+			return response.NewErrorResponse("Purchase order cannot be updated")
+		}
+	}
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		updates := map[string]interface{}{
+			"supplier_id":       supplierID,
+			"warehouse_id":      warehouseID,
+			"expected_delivery": input.ExpectedDate,
+			"updated_at":        time.Now(),
+		}
+		if input.Notes != nil {
+			updates["notes"] = *input.Notes
+		} else {
+			updates["notes"] = nil
+		}
+
+		if err := tx.Table("purchase_orders").Where("id = ?", poID).Updates(updates).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Exec("DELETE FROM purchase_order_items WHERE po_id = ?", poID).Error; err != nil {
+			return err
+		}
+
+		subtotal := 0.0
+		taxAmount := 0.0
+		for _, item := range input.Items {
+			pid, err := uuid.Parse(item.ProductID)
+			if err != nil {
+				return err
+			}
+			lineSubtotal := float64(item.Quantity) * item.UnitPrice * (1 - item.Discount/100)
+			lineTax := lineSubtotal * (item.TaxRate / 100)
+			subtotal += lineSubtotal
+			taxAmount += lineTax
+
+			poi := map[string]interface{}{
+				"po_id":             poID,
+				"product_id":        pid,
+				"quantity":          item.Quantity,
+				"unit_price":        item.UnitPrice,
+				"discount_rate":     item.Discount,
+				"tax_rate":          item.TaxRate,
+				"received_quantity": 0,
+			}
+			if err := tx.Table("purchase_order_items").Create(poi).Error; err != nil {
+				return err
+			}
+		}
+
+		totalAmount := subtotal + taxAmount
+		if err := tx.Table("purchase_orders").Where("id = ?", poID).
+			Updates(map[string]interface{}{
+				"subtotal":     subtotal,
+				"tax_amount":   taxAmount,
+				"total_amount": totalAmount,
+				"updated_at":   time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return response.NewErrorResponse(err.Error())
+	}
+
+	return s.GetPurchaseOrderByID(id)
 }
 
 func (s *PurchaseService) UpdatePurchaseOrderStatus(id string, status string) response.ApiResponse {

@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.LoginRequest"
+                            "$ref": "#/definitions/request.LoginRequest"
                         }
                     }
                 ],
@@ -43,19 +43,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -89,13 +89,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -121,7 +121,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.RegisterRequest"
+                            "$ref": "#/definitions/request.RegisterRequest"
                         }
                     }
                 ],
@@ -129,13 +129,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -200,13 +200,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -245,19 +245,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -294,7 +294,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.OpenCashDrawerRequest"
+                            "$ref": "#/definitions/request.OpenCashDrawerRequest"
                         }
                     }
                 ],
@@ -302,19 +302,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -354,19 +354,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -410,7 +410,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CashInOutRequest"
+                            "$ref": "#/definitions/request.CashInOutRequest"
                         }
                     }
                 ],
@@ -418,19 +418,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -474,7 +474,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CashInOutRequest"
+                            "$ref": "#/definitions/request.CashInOutRequest"
                         }
                     }
                 ],
@@ -482,19 +482,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -538,7 +538,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CloseCashDrawerRequest"
+                            "$ref": "#/definitions/request.CloseCashDrawerRequest"
                         }
                     }
                 ],
@@ -546,19 +546,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -598,19 +598,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -670,13 +670,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -723,13 +723,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -765,7 +765,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateCategoryRequest"
+                            "$ref": "#/definitions/request.CreateCategoryRequest"
                         }
                     }
                 ],
@@ -773,31 +773,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -838,19 +838,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -893,7 +893,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateCategoryRequest"
+                            "$ref": "#/definitions/request.UpdateCategoryRequest"
                         }
                     }
                 ],
@@ -901,31 +901,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -964,25 +964,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1015,19 +1015,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1062,7 +1062,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateCompanyRequest"
+                            "$ref": "#/definitions/request.CreateCompanyRequest"
                         }
                     }
                 ],
@@ -1070,25 +1070,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1121,19 +1121,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1173,19 +1173,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1227,7 +1227,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateCompanyRequest"
+                            "$ref": "#/definitions/request.UpdateCompanyRequest"
                         }
                     }
                 ],
@@ -1235,31 +1235,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1297,31 +1297,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1365,7 +1365,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UploadCompanyLogoRequest"
+                            "$ref": "#/definitions/request.UploadCompanyLogoRequest"
                         }
                     }
                 ],
@@ -1373,31 +1373,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1474,13 +1474,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1515,7 +1515,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateCustomerRequest"
+                            "$ref": "#/definitions/request.CreateCustomerRequest"
                         }
                     }
                 ],
@@ -1523,19 +1523,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1589,13 +1589,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1649,13 +1649,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1709,13 +1709,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1755,19 +1755,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1809,7 +1809,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateCustomerRequest"
+                            "$ref": "#/definitions/request.UpdateCustomerRequest"
                         }
                     }
                 ],
@@ -1817,25 +1817,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1873,19 +1873,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1950,13 +1950,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -1991,7 +1991,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateExchangeRequest"
+                            "$ref": "#/definitions/request.CreateExchangeRequest"
                         }
                     }
                 ],
@@ -1999,19 +1999,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2051,19 +2051,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2140,13 +2140,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2181,7 +2181,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateGrnRequest"
+                            "$ref": "#/definitions/request.CreateGrnRequest"
                         }
                     }
                 ],
@@ -2189,19 +2189,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2241,19 +2241,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2295,7 +2295,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateGrnRequest"
+                            "$ref": "#/definitions/request.UpdateGrnRequest"
                         }
                     }
                 ],
@@ -2303,19 +2303,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2353,19 +2353,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2405,19 +2405,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2476,13 +2476,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2519,7 +2519,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.InventoryAdjustmentRequest"
+                            "$ref": "#/definitions/request.InventoryAdjustmentRequest"
                         }
                     }
                 ],
@@ -2527,19 +2527,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2598,19 +2598,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2687,13 +2687,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2728,7 +2728,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateIncomingInvoiceRequest"
+                            "$ref": "#/definitions/request.CreateIncomingInvoiceRequest"
                         }
                     }
                 ],
@@ -2736,19 +2736,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2788,19 +2788,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2842,7 +2842,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateIncomingInvoiceRequest"
+                            "$ref": "#/definitions/request.UpdateIncomingInvoiceRequest"
                         }
                     }
                 ],
@@ -2850,19 +2850,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2902,19 +2902,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -2958,7 +2958,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateInvoicePaymentRequest"
+                            "$ref": "#/definitions/request.CreateInvoicePaymentRequest"
                         }
                     }
                 ],
@@ -2966,19 +2966,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3018,19 +3018,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3107,13 +3107,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3148,7 +3148,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateOutgoingInvoiceRequest"
+                            "$ref": "#/definitions/request.CreateOutgoingInvoiceRequest"
                         }
                     }
                 ],
@@ -3156,19 +3156,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3208,19 +3208,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3262,7 +3262,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateOutgoingInvoiceRequest"
+                            "$ref": "#/definitions/request.UpdateOutgoingInvoiceRequest"
                         }
                     }
                 ],
@@ -3270,19 +3270,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3322,19 +3322,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3378,7 +3378,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateInvoicePaymentRequest"
+                            "$ref": "#/definitions/request.CreateInvoicePaymentRequest"
                         }
                     }
                 ],
@@ -3386,19 +3386,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3438,19 +3438,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3501,19 +3501,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3552,13 +3552,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3601,19 +3601,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3653,19 +3653,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3715,25 +3715,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3771,19 +3771,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3848,13 +3848,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3889,7 +3889,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.ProductCreateRequest"
+                            "$ref": "#/definitions/request.ProductCreateRequest"
                         }
                     }
                 ],
@@ -3897,19 +3897,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -3949,19 +3949,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4003,7 +4003,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.ProductUpdateRequest"
+                            "$ref": "#/definitions/request.ProductUpdateRequest"
                         }
                     }
                 ],
@@ -4011,19 +4011,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4061,19 +4061,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4138,13 +4138,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4187,19 +4187,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4239,19 +4239,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4301,25 +4301,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4357,19 +4357,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4434,13 +4434,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4475,7 +4475,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreatePurchaseOrderRequest"
+                            "$ref": "#/definitions/request.CreatePurchaseOrderRequest"
                         }
                     }
                 ],
@@ -4483,19 +4483,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4535,19 +4535,87 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Purchases"
+                ],
+                "summary": "Update purchase order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Purchase Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Purchase order payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdatePurchaseOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4585,19 +4653,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4641,7 +4709,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdatePurchaseOrderStatusRequest"
+                            "$ref": "#/definitions/request.UpdatePurchaseOrderStatusRequest"
                         }
                     }
                 ],
@@ -4649,25 +4717,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4732,13 +4800,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4773,7 +4841,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateReturnRequest"
+                            "$ref": "#/definitions/request.CreateReturnRequest"
                         }
                     }
                 ],
@@ -4781,19 +4849,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4833,19 +4901,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4934,13 +5002,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -4975,7 +5043,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateSaleRequest"
+                            "$ref": "#/definitions/request.CreateSaleRequest"
                         }
                     }
                 ],
@@ -4983,19 +5051,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5035,19 +5103,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5118,13 +5186,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5159,7 +5227,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockOpnameRequest"
+                            "$ref": "#/definitions/request.StockOpnameRequest"
                         }
                     }
                 ],
@@ -5167,19 +5235,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5219,19 +5287,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5275,7 +5343,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockOpnameStatusRequest"
+                            "$ref": "#/definitions/request.StockOpnameStatusRequest"
                         }
                     }
                 ],
@@ -5283,19 +5351,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5332,7 +5400,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockTransferRequest"
+                            "$ref": "#/definitions/request.StockTransferRequest"
                         }
                     }
                 ],
@@ -5340,19 +5408,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5396,7 +5464,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.ReceiveTransferRequest"
+                            "$ref": "#/definitions/request.ReceiveTransferRequest"
                         }
                     }
                 ],
@@ -5404,19 +5472,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5493,13 +5561,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5534,7 +5602,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateSupplierRequest"
+                            "$ref": "#/definitions/request.CreateSupplierRequest"
                         }
                     }
                 ],
@@ -5542,19 +5610,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5608,13 +5676,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5668,13 +5736,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5728,13 +5796,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse"
+                            "$ref": "#/definitions/response.PaginatedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5774,19 +5842,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5828,7 +5896,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateSupplierRequest"
+                            "$ref": "#/definitions/request.UpdateSupplierRequest"
                         }
                     }
                 ],
@@ -5836,19 +5904,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5886,19 +5954,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5949,13 +6017,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -5991,7 +6059,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateUnitRequest"
+                            "$ref": "#/definitions/request.CreateUnitRequest"
                         }
                     }
                 ],
@@ -5999,25 +6067,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6058,19 +6126,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6113,7 +6181,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateUnitRequest"
+                            "$ref": "#/definitions/request.UpdateUnitRequest"
                         }
                     }
                 ],
@@ -6121,25 +6189,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6178,19 +6246,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6224,13 +6292,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6266,7 +6334,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateWarehouseRequest"
+                            "$ref": "#/definitions/request.CreateWarehouseRequest"
                         }
                     }
                 ],
@@ -6274,25 +6342,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6333,19 +6401,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6388,7 +6456,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateWarehouseRequest"
+                            "$ref": "#/definitions/request.UpdateWarehouseRequest"
                         }
                     }
                 ],
@@ -6396,31 +6464,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6459,19 +6527,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse"
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     }
                 }
@@ -6479,7 +6547,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_pos-retail_go_backend_internal_types_request.CashInOutRequest": {
+        "request.CashInOutRequest": {
             "type": "object",
             "required": [
                 "amount",
@@ -6495,7 +6563,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CloseCashDrawerRequest": {
+        "request.CloseCashDrawerRequest": {
             "type": "object",
             "required": [
                 "closing_balance"
@@ -6518,7 +6586,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateCategoryRequest": {
+        "request.CreateCategoryRequest": {
             "type": "object",
             "required": [
                 "code",
@@ -6539,7 +6607,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateCompanyRequest": {
+        "request.CreateCompanyRequest": {
             "type": "object",
             "required": [
                 "code",
@@ -6581,7 +6649,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateCustomerRequest": {
+        "request.CreateCustomerRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -6619,7 +6687,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateExchangeRequest": {
+        "request.CreateExchangeRequest": {
             "type": "object",
             "properties": {
                 "reason": {
@@ -6628,13 +6696,13 @@ const docTemplate = `{
                 "received_items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.ExchangeReceivedItemRequest"
+                        "$ref": "#/definitions/request.ExchangeReceivedItemRequest"
                     }
                 },
                 "returned_items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.ExchangeReturnedItemRequest"
+                        "$ref": "#/definitions/request.ExchangeReturnedItemRequest"
                     }
                 },
                 "sale_id": {
@@ -6645,7 +6713,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateGrnRequest": {
+        "request.CreateGrnRequest": {
             "type": "object",
             "properties": {
                 "invoiceNumber": {
@@ -6662,7 +6730,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateIncomingInvoiceRequest": {
+        "request.CreateIncomingInvoiceRequest": {
             "type": "object",
             "required": [
                 "invoice_date",
@@ -6682,7 +6750,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest"
+                        "$ref": "#/definitions/request.FinanceInvoiceItemRequest"
                     }
                 },
                 "notes": {
@@ -6693,7 +6761,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateInvoicePaymentRequest": {
+        "request.CreateInvoicePaymentRequest": {
             "type": "object",
             "required": [
                 "amount",
@@ -6722,7 +6790,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateOutgoingInvoiceRequest": {
+        "request.CreateOutgoingInvoiceRequest": {
             "type": "object",
             "required": [
                 "invoice_date",
@@ -6744,7 +6812,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest"
+                        "$ref": "#/definitions/request.FinanceInvoiceItemRequest"
                     }
                 },
                 "notes": {
@@ -6752,7 +6820,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreatePurchaseOrderRequest": {
+        "request.CreatePurchaseOrderRequest": {
             "type": "object",
             "properties": {
                 "expected_date": {
@@ -6761,7 +6829,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.PurchaseOrderItemRequest"
+                        "$ref": "#/definitions/request.PurchaseOrderItemRequest"
                     }
                 },
                 "notes": {
@@ -6775,13 +6843,13 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateReturnRequest": {
+        "request.CreateReturnRequest": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.ReturnItemRequest"
+                        "$ref": "#/definitions/request.ReturnItemRequest"
                     }
                 },
                 "reason": {
@@ -6798,7 +6866,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateSaleRequest": {
+        "request.CreateSaleRequest": {
             "type": "object",
             "properties": {
                 "customer_id": {
@@ -6807,7 +6875,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.SaleItemRequest"
+                        "$ref": "#/definitions/request.SaleItemRequest"
                     }
                 },
                 "loyalty_points_redeem": {
@@ -6819,7 +6887,7 @@ const docTemplate = `{
                 "payments": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.SalePaymentRequest"
+                        "$ref": "#/definitions/request.SalePaymentRequest"
                     }
                 },
                 "warehouse_id": {
@@ -6827,7 +6895,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateSupplierRequest": {
+        "request.CreateSupplierRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -6862,7 +6930,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateUnitRequest": {
+        "request.CreateUnitRequest": {
             "type": "object",
             "required": [
                 "code",
@@ -6880,7 +6948,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.CreateWarehouseRequest": {
+        "request.CreateWarehouseRequest": {
             "type": "object",
             "required": [
                 "address",
@@ -6916,7 +6984,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.ExchangeReceivedItemRequest": {
+        "request.ExchangeReceivedItemRequest": {
             "type": "object",
             "properties": {
                 "product_id": {
@@ -6930,7 +6998,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.ExchangeReturnedItemRequest": {
+        "request.ExchangeReturnedItemRequest": {
             "type": "object",
             "properties": {
                 "condition": {
@@ -6947,7 +7015,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest": {
+        "request.FinanceInvoiceItemRequest": {
             "type": "object",
             "required": [
                 "description",
@@ -6979,7 +7047,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.InventoryAdjustmentRequest": {
+        "request.InventoryAdjustmentRequest": {
             "type": "object",
             "properties": {
                 "adjustment_type": {
@@ -7002,7 +7070,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.LoginRequest": {
+        "request.LoginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -7021,7 +7089,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.OpenCashDrawerRequest": {
+        "request.OpenCashDrawerRequest": {
             "type": "object",
             "required": [
                 "opening_balance",
@@ -7043,7 +7111,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.ProductCreateRequest": {
+        "request.ProductCreateRequest": {
             "type": "object",
             "required": [
                 "cost_price",
@@ -7094,7 +7162,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.ProductUpdateRequest": {
+        "request.ProductUpdateRequest": {
             "type": "object",
             "properties": {
                 "barcode": {
@@ -7135,7 +7203,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.PurchaseOrderItemRequest": {
+        "request.PurchaseOrderItemRequest": {
             "type": "object",
             "properties": {
                 "discount": {
@@ -7155,7 +7223,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.ReceiveTransferItemRequest": {
+        "request.ReceiveTransferItemRequest": {
             "type": "object",
             "properties": {
                 "notes": {
@@ -7169,18 +7237,18 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.ReceiveTransferRequest": {
+        "request.ReceiveTransferRequest": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.ReceiveTransferItemRequest"
+                        "$ref": "#/definitions/request.ReceiveTransferItemRequest"
                     }
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.RegisterRequest": {
+        "request.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -7219,7 +7287,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.ReturnItemRequest": {
+        "request.ReturnItemRequest": {
             "type": "object",
             "properties": {
                 "condition": {
@@ -7239,7 +7307,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.SaleItemRequest": {
+        "request.SaleItemRequest": {
             "type": "object",
             "properties": {
                 "product_id": {
@@ -7253,7 +7321,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.SalePaymentRequest": {
+        "request.SalePaymentRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -7270,7 +7338,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.StockOpnameItemRequest": {
+        "request.StockOpnameItemRequest": {
             "type": "object",
             "properties": {
                 "actual_quantity": {
@@ -7287,13 +7355,13 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.StockOpnameRequest": {
+        "request.StockOpnameRequest": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockOpnameItemRequest"
+                        "$ref": "#/definitions/request.StockOpnameItemRequest"
                     }
                 },
                 "notes": {
@@ -7307,7 +7375,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.StockOpnameStatusRequest": {
+        "request.StockOpnameStatusRequest": {
             "type": "object",
             "properties": {
                 "status": {
@@ -7315,7 +7383,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.StockTransferItemRequest": {
+        "request.StockTransferItemRequest": {
             "type": "object",
             "properties": {
                 "product_id": {
@@ -7326,7 +7394,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.StockTransferRequest": {
+        "request.StockTransferRequest": {
             "type": "object",
             "properties": {
                 "expected_arrival": {
@@ -7338,7 +7406,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockTransferItemRequest"
+                        "$ref": "#/definitions/request.StockTransferItemRequest"
                     }
                 },
                 "notes": {
@@ -7349,7 +7417,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateCategoryRequest": {
+        "request.UpdateCategoryRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -7369,7 +7437,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateCompanyRequest": {
+        "request.UpdateCompanyRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -7406,7 +7474,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateCustomerRequest": {
+        "request.UpdateCustomerRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -7447,7 +7515,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateGrnItemRequest": {
+        "request.UpdateGrnItemRequest": {
             "type": "object",
             "properties": {
                 "id": {
@@ -7476,7 +7544,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateGrnRequest": {
+        "request.UpdateGrnRequest": {
             "type": "object",
             "properties": {
                 "invoiceNumber": {
@@ -7485,7 +7553,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateGrnItemRequest"
+                        "$ref": "#/definitions/request.UpdateGrnItemRequest"
                     }
                 },
                 "notes": {
@@ -7493,7 +7561,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateIncomingInvoiceRequest": {
+        "request.UpdateIncomingInvoiceRequest": {
             "type": "object",
             "properties": {
                 "due_date": {
@@ -7505,7 +7573,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest"
+                        "$ref": "#/definitions/request.FinanceInvoiceItemRequest"
                     }
                 },
                 "notes": {
@@ -7524,7 +7592,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateOutgoingInvoiceRequest": {
+        "request.UpdateOutgoingInvoiceRequest": {
             "type": "object",
             "properties": {
                 "due_date": {
@@ -7536,7 +7604,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest"
+                        "$ref": "#/definitions/request.FinanceInvoiceItemRequest"
                     }
                 },
                 "notes": {
@@ -7555,7 +7623,30 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdatePurchaseOrderStatusRequest": {
+        "request.UpdatePurchaseOrderRequest": {
+            "type": "object",
+            "properties": {
+                "expected_date": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.PurchaseOrderItemRequest"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "supplier_id": {
+                    "type": "string"
+                },
+                "warehouse_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.UpdatePurchaseOrderStatusRequest": {
             "type": "object",
             "properties": {
                 "status": {
@@ -7563,7 +7654,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateSupplierRequest": {
+        "request.UpdateSupplierRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -7601,7 +7692,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateUnitRequest": {
+        "request.UpdateUnitRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -7615,7 +7706,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UpdateWarehouseRequest": {
+        "request.UpdateWarehouseRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -7652,7 +7743,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_request.UploadCompanyLogoRequest": {
+        "request.UploadCompanyLogoRequest": {
             "type": "object",
             "required": [
                 "logo"
@@ -7663,7 +7754,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_response.ApiResponse": {
+        "response.ApiResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -7678,19 +7769,19 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse": {
+        "response.PaginatedResponse": {
             "type": "object",
             "properties": {
                 "data": {},
                 "pagination": {
-                    "$ref": "#/definitions/github_com_pos-retail_go_backend_internal_types_response.Pagination"
+                    "$ref": "#/definitions/response.Pagination"
                 },
                 "success": {
                     "type": "boolean"
                 }
             }
         },
-        "github_com_pos-retail_go_backend_internal_types_response.Pagination": {
+        "response.Pagination": {
             "type": "object",
             "properties": {
                 "has_more": {

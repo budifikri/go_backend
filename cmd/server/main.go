@@ -290,6 +290,7 @@ func main() {
 	purchases.Get("/", purchaseHandler.GetPurchaseOrders)
 	purchases.Get("/:id", purchaseHandler.GetPurchaseOrder)
 	purchases.Post("/", purchaseHandler.CreatePurchaseOrder)
+	purchases.Put("/:id", purchaseHandler.UpdatePurchaseOrder)
 	purchases.Put("/:id/status", purchaseHandler.UpdatePurchaseOrderStatus)
 	purchases.Delete("/:id", purchaseHandler.CancelPurchaseOrder)
 
