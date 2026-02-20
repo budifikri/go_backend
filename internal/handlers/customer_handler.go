@@ -96,6 +96,7 @@ func (h *CustomerHandler) CreateCustomer(c *fiber.Ctx) error {
 // @Param Authorization header string true "Bearer token"
 // @Param tier query string false "Tier"
 // @Param is_active query bool false "Filter by active"
+// @Param include_inactive query bool false "Include inactive (ignore default active-only)"
 // @Param search query string false "Search"
 // @Param min_loyalty_points query int false "Min points"
 // @Param max_loyalty_points query int false "Max points"
@@ -114,6 +115,7 @@ func (h *CustomerHandler) GetCustomers(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 	filters := map[string]interface{}{}
+	includeInactive := c.QueryBool("include_inactive", false)
 	if v := c.Query("tier"); v != "" {
 		filters["tier"] = v
 	}
@@ -128,6 +130,8 @@ func (h *CustomerHandler) GetCustomers(c *fiber.Ctx) error {
 		} else if v == "inactive" {
 			filters["is_active"] = false
 		}
+	} else if !includeInactive {
+		filters["is_active"] = true
 	}
 	if v := c.Query("search"); v != "" {
 		filters["search"] = v

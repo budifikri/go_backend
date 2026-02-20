@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
@@ -18,10 +20,11 @@ func NewWarehouseHandler(warehouseService *services.WarehouseService) *Warehouse
 
 // GetWarehouses godoc
 // @Summary List warehouses
-// @Description Get all active warehouses
+// @Description List warehouses (default active only)
 // @Tags Warehouses
 // @Produce json
 // @Param Authorization header string true "Bearer token"
+// @Param is_active query bool false "Filter by active"
 // @Success 200 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
@@ -33,7 +36,16 @@ func (h *WarehouseHandler) GetWarehouses(c *fiber.Ctx) error {
 		companyID = &user.CompanyID
 	}
 
-	result := h.warehouseService.GetWarehouses(companyID)
+	var isActive *bool
+	if v := c.Query("is_active"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			isActive = &b
+		}
+	} else {
+		b := true
+		isActive = &b
+	}
+	result := h.warehouseService.GetWarehouses(companyID, isActive)
 	return c.JSON(result)
 }
 
@@ -162,7 +174,7 @@ func (h *WarehouseHandler) UpdateWarehouse(c *fiber.Ctx) error {
 
 // DeleteWarehouse godoc
 // @Summary Delete warehouse
-// @Description Soft delete warehouse (set is_active to false)
+// @Description Delete warehouse
 // @Tags Warehouses
 // @Produce json
 // @Param Authorization header string true "Bearer token"

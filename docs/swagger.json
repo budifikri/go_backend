@@ -6492,7 +6492,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Soft delete warehouse (set is_active to false)",
+                "description": "Delete warehouse",
                 "produces": [
                     "application/json"
                 ],

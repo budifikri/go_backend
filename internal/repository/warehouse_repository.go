@@ -18,11 +18,9 @@ func (r *WarehouseRepository) FindAll(filters map[string]interface{}) ([]models.
 	var warehouses []models.Warehouse
 	query := r.db.Model(&models.Warehouse{})
 
-	// Default to active warehouses only (matches previous behavior).
+	// If is_active is not provided: include both active and inactive.
 	if v, ok := filters["is_active"].(bool); ok {
 		query = query.Where("is_active = ?", v)
-	} else {
-		query = query.Where("is_active = ?", true)
 	}
 
 	if companyID, ok := filters["company_id"].(string); ok && companyID != "" {

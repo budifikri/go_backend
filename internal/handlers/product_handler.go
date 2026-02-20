@@ -48,6 +48,9 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 		} else if status == "inactive" {
 			filters["is_active"] = false
 		}
+	} else {
+		// Default active
+		filters["is_active"] = true
 	}
 	if categoryID := c.Query("category_id"); categoryID != "" {
 		filters["category_id"] = categoryID
@@ -221,7 +224,24 @@ func (h *ProductHandler) GetCategories(c *fiber.Ctx) error {
 
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
-	result := h.productService.GetCategoriesPaged(companyID, limit, offset)
+	includeInactive := c.QueryBool("include_inactive", false)
+	var isActive *bool
+	if !includeInactive {
+		if v := c.Query("is_active"); v != "" {
+			if b, err := strconv.ParseBool(v); err == nil {
+				isActive = &b
+			}
+		} else {
+			b := true
+			isActive = &b
+		}
+	} else if v := c.Query("is_active"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			isActive = &b
+		}
+	}
+
+	result := h.productService.GetCategoriesPaged(companyID, isActive, limit, offset)
 	return c.JSON(result)
 }
 
@@ -389,6 +409,22 @@ func (h *ProductHandler) GetUnits(c *fiber.Ctx) error {
 	if q := c.Query("search"); q != "" {
 		search = &q
 	}
+	includeInactive := c.QueryBool("include_inactive", false)
+	var isActive *bool
+	if !includeInactive {
+		if v := c.Query("is_active"); v != "" {
+			if b, err := strconv.ParseBool(v); err == nil {
+				isActive = &b
+			}
+		} else {
+			b := true
+			isActive = &b
+		}
+	} else if v := c.Query("is_active"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			isActive = &b
+		}
+	}
 	var limit *int
 	if q := c.Query("limit"); q != "" {
 		v := c.QueryInt("limit")
@@ -400,7 +436,7 @@ func (h *ProductHandler) GetUnits(c *fiber.Ctx) error {
 		offset = &v
 	}
 
-	resp, pagination := h.productService.GetUnitsWithQuery(search, limit, offset)
+	resp, pagination := h.productService.GetUnitsWithQuery(search, isActive, limit, offset)
 	if !resp.Success {
 		return c.Status(fiber.StatusBadRequest).JSON(resp)
 	}
@@ -497,7 +533,7 @@ func (h *ProductHandler) UpdateUnit(c *fiber.Ctx) error {
 		}
 	}
 
-	result := h.productService.UpdateUnit(c.Params("id"), services.UpdateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description})
+	result := h.productService.UpdateUnit(c.Params("id"), services.UpdateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description, IsActive: req.IsActive})
 	if !result.Success {
 		if result.Error == "Unit not found" {
 			return c.Status(fiber.StatusNotFound).JSON(result)

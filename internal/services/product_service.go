@@ -391,16 +391,14 @@ func (s *ProductService) DeleteProduct(id string) response.ApiResponse {
 		return response.NewErrorResponse(ErrProductNotFound.Error())
 	}
 
-	product.IsActive = false
-	product.Status = models.ProductStatusInactive
-	if err := s.productRepo.Update(product); err != nil {
+	if err := s.productRepo.Delete(product.ID); err != nil {
 		return response.NewErrorResponse("Failed to delete product")
 	}
 
 	return response.NewSuccessResponse(nil, "Product deleted successfully")
 }
 
-func (s *ProductService) GetCategories(companyID *string) response.ApiResponse {
+func (s *ProductService) GetCategories(companyID *string, isActive *bool) response.ApiResponse {
 	var compID *uuid.UUID
 	if companyID != nil && *companyID != "" {
 		id, err := uuid.Parse(*companyID)
@@ -408,9 +406,8 @@ func (s *ProductService) GetCategories(companyID *string) response.ApiResponse {
 			compID = &id
 		}
 	}
-
 	// TS parity default pagination for categories list
-	categories, err := s.categoryRepo.FindAll(compID, 50, 0)
+	categories, err := s.categoryRepo.FindAll(compID, isActive, 50, 0)
 	if err != nil {
 		return response.NewErrorResponse("Failed to get categories")
 	}
@@ -418,7 +415,7 @@ func (s *ProductService) GetCategories(companyID *string) response.ApiResponse {
 	return response.NewSuccessResponse(categories, "")
 }
 
-func (s *ProductService) GetCategoriesPaged(companyID *string, limit, offset int) response.ApiResponse {
+func (s *ProductService) GetCategoriesPaged(companyID *string, isActive *bool, limit, offset int) response.ApiResponse {
 	var compID *uuid.UUID
 	if companyID != nil && *companyID != "" {
 		id, err := uuid.Parse(*companyID)
@@ -434,7 +431,7 @@ func (s *ProductService) GetCategoriesPaged(companyID *string, limit, offset int
 		offset = 0
 	}
 
-	categories, err := s.categoryRepo.FindAll(compID, limit, offset)
+	categories, err := s.categoryRepo.FindAll(compID, isActive, limit, offset)
 	if err != nil {
 		return response.NewErrorResponse("Failed to get categories")
 	}
@@ -604,14 +601,14 @@ func (s *ProductService) GetUnits() response.ApiResponse {
 	return response.NewSuccessResponse(units, "")
 }
 
-func (s *ProductService) GetUnitsWithQuery(search *string, limit, offset *int) (response.ApiResponse, map[string]interface{}) {
-	units, err := s.unitRepo.FindAllWithQuery(search, limit, offset)
+func (s *ProductService) GetUnitsWithQuery(search *string, isActive *bool, limit, offset *int) (response.ApiResponse, map[string]interface{}) {
+	units, err := s.unitRepo.FindAllWithQuery(search, isActive, limit, offset)
 	if err != nil {
 		return response.NewErrorResponse("Failed to fetch units"), nil
 	}
 
 	if limit != nil || offset != nil {
-		total, err := s.unitRepo.Count(search)
+		total, err := s.unitRepo.Count(search, isActive)
 		if err != nil {
 			return response.NewErrorResponse("Failed to fetch units"), nil
 		}
@@ -684,6 +681,7 @@ type UpdateUnitInput struct {
 	Code        *string
 	Name        *string
 	Description *string
+	IsActive    *bool
 }
 
 func (s *ProductService) UpdateUnit(id string, input UpdateUnitInput) response.ApiResponse {
@@ -710,6 +708,10 @@ func (s *ProductService) UpdateUnit(id string, input UpdateUnitInput) response.A
 	}
 	if input.Description != nil {
 		unit.Description = *input.Description
+		updated = true
+	}
+	if input.IsActive != nil {
+		unit.IsActive = *input.IsActive
 		updated = true
 	}
 	if !updated {

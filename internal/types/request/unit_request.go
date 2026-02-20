@@ -10,4 +10,5 @@ type UpdateUnitRequest struct {
 	Code        *string `json:"code" validate:"omitempty"`
 	Name        *string `json:"name" validate:"omitempty"`
 	Description *string `json:"description" validate:"omitempty"`
+	IsActive    *bool   `json:"is_active" validate:"omitempty"`
 }

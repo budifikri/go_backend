@@ -15,10 +15,13 @@ func NewWarehouseService(warehouseRepo *repository.WarehouseRepository) *Warehou
 	return &WarehouseService{warehouseRepo: warehouseRepo}
 }
 
-func (s *WarehouseService) GetWarehouses(companyID *string) response.ApiResponse {
+func (s *WarehouseService) GetWarehouses(companyID *string, isActive *bool) response.ApiResponse {
 	filters := map[string]interface{}{}
 	if companyID != nil && *companyID != "" {
 		filters["company_id"] = *companyID
+	}
+	if isActive != nil {
+		filters["is_active"] = *isActive
 	}
 	warehouses, err := s.warehouseRepo.FindAll(filters)
 	if err != nil {
@@ -181,9 +184,7 @@ func (s *WarehouseService) DeleteWarehouse(id string) response.ApiResponse {
 		return response.NewErrorResponse("Warehouse not found")
 	}
 
-	wh.IsActive = false
-	wh.Status = models.WarehouseStatusInactive
-	if err := s.warehouseRepo.Update(wh); err != nil {
+	if err := s.warehouseRepo.Delete(wh.ID); err != nil {
 		return response.NewErrorResponse("Failed to delete warehouse")
 	}
 

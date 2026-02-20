@@ -14,9 +14,13 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-func (r *CategoryRepository) FindAll(companyID *uuid.UUID, limit, offset int) ([]models.Category, error) {
+func (r *CategoryRepository) FindAll(companyID *uuid.UUID, isActive *bool, limit, offset int) ([]models.Category, error) {
 	var categories []models.Category
-	query := r.db.Where("is_active = ?", true).Order("name ASC")
+	query := r.db.Model(&models.Category{}).Order("name ASC")
+	// If isActive is nil: include both active and inactive.
+	if isActive != nil {
+		query = query.Where("is_active = ?", *isActive)
+	}
 
 	if companyID != nil {
 		query = query.Where("company_id = ?", companyID)
@@ -79,15 +83,19 @@ func NewUnitRepository(db *gorm.DB) *UnitRepository {
 
 func (r *UnitRepository) FindAll() ([]models.Unit, error) {
 	var units []models.Unit
-	if err := r.db.Order("code ASC").Find(&units).Error; err != nil {
+	if err := r.db.Where("is_active = ?", true).Order("code ASC").Find(&units).Error; err != nil {
 		return nil, err
 	}
 	return units, nil
 }
 
-func (r *UnitRepository) FindAllWithQuery(search *string, limit, offset *int) ([]models.Unit, error) {
+func (r *UnitRepository) FindAllWithQuery(search *string, isActive *bool, limit, offset *int) ([]models.Unit, error) {
 	var units []models.Unit
 	q := r.db.Model(&models.Unit{}).Order("code ASC")
+	// If isActive is nil: include both active and inactive.
+	if isActive != nil {
+		q = q.Where("is_active = ?", *isActive)
+	}
 	if search != nil && *search != "" {
 		like := "%%" + *search + "%%"
 		q = q.Where("name ILIKE ? OR description ILIKE ?", like, like)
@@ -104,8 +112,11 @@ func (r *UnitRepository) FindAllWithQuery(search *string, limit, offset *int) ([
 	return units, nil
 }
 
-func (r *UnitRepository) Count(search *string) (int64, error) {
+func (r *UnitRepository) Count(search *string, isActive *bool) (int64, error) {
 	q := r.db.Model(&models.Unit{})
+	if isActive != nil {
+		q = q.Where("is_active = ?", *isActive)
+	}
 	if search != nil && *search != "" {
 		like := "%%" + *search + "%%"
 		q = q.Where("name ILIKE ? OR description ILIKE ?", like, like)

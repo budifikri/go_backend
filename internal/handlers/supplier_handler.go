@@ -124,6 +124,8 @@ func (h *SupplierHandler) GetSuppliers(c *fiber.Ctx) error {
 		} else if v == "inactive" {
 			filters["is_active"] = false
 		}
+	} else {
+		filters["is_active"] = true
 	}
 	if v := c.Query("payment_terms"); v != "" {
 		filters["payment_terms"] = v
