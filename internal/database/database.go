@@ -73,7 +73,35 @@ func ensureUUIDExtension(db *gorm.DB) error {
 }
 
 func AutoMigrate(models ...interface{}) error {
-	return DB.AutoMigrate(models...)
+	if err := DB.AutoMigrate(models...); err != nil {
+		return err
+	}
+	// Best-effort backfill for master is_active fields.
+	_ = BackfillMasterIsActive(DB)
+	return nil
+}
+
+// BackfillMasterIsActive sets is_active from legacy status columns.
+// Master tables only; transaction tables keep multi-status.
+func BackfillMasterIsActive(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+	stmts := []string{
+		`UPDATE users SET is_active = (LOWER(status) = 'active') WHERE status IS NOT NULL;`,
+		`UPDATE customers SET is_active = (LOWER(status) = 'active') WHERE status IS NOT NULL;`,
+		`UPDATE suppliers SET is_active = (LOWER(status) = 'active') WHERE status IS NOT NULL;`,
+		`UPDATE warehouses SET is_active = (LOWER(status) = 'active') WHERE status IS NOT NULL;`,
+		`UPDATE products SET is_active = (LOWER(status) = 'active') WHERE status IS NOT NULL;`,
+		`UPDATE companies SET is_active = (LOWER(status) = 'active') WHERE status IS NOT NULL;`,
+	}
+	for _, s := range stmts {
+		if err := db.Exec(s).Error; err != nil {
+			// Don't fail startup for backfill issues; migrations may run on partial schemas in tests.
+			continue
+		}
+	}
+	return nil
 }
 
 func GetDB() *gorm.DB {

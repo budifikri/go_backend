@@ -9,7 +9,7 @@ type CreateCompanyRequest struct {
 	Website         *string `json:"website" validate:"omitempty"`
 	TaxID           *string `json:"tax_id" validate:"omitempty"`
 	BusinessLicense *string `json:"business_license" validate:"omitempty"`
-	Status          *string `json:"status" validate:"omitempty,oneof=active inactive suspended"`
+	IsActive        *bool   `json:"is_active" validate:"omitempty"`
 }
 
 type UpdateCompanyRequest struct {
@@ -21,7 +21,7 @@ type UpdateCompanyRequest struct {
 	Website         *string `json:"website" validate:"omitempty"`
 	TaxID           *string `json:"tax_id" validate:"omitempty"`
 	BusinessLicense *string `json:"business_license" validate:"omitempty"`
-	Status          *string `json:"status" validate:"omitempty,oneof=active inactive suspended"`
+	IsActive        *bool   `json:"is_active" validate:"omitempty"`
 }
 
 type UploadCompanyLogoRequest struct {

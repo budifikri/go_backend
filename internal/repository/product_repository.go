@@ -20,8 +20,8 @@ func (r *ProductRepository) FindAll(filters map[string]interface{}, limit, offse
 
 	query := r.db.Model(&models.Product{})
 
-	if status, ok := filters["status"].(string); ok && status != "" {
-		query = query.Where("status = ?", status)
+	if v, ok := filters["is_active"].(bool); ok {
+		query = query.Where("is_active = ?", v)
 	}
 	if categoryID, ok := filters["category_id"].(string); ok && categoryID != "" {
 		query = query.Where("category_id = ?", categoryID)

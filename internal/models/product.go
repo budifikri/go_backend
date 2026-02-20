@@ -83,11 +83,13 @@ const (
 
 // Warehouse model
 type Warehouse struct {
-	ID        uuid.UUID       `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	Code      string          `gorm:"type:varchar(20);uniqueIndex;notNull" json:"code"`
-	Name      string          `gorm:"type:varchar(100);notNull" json:"name"`
-	Type      WarehouseType   `gorm:"type:varchar(20);notNull" json:"type"`
-	Status    WarehouseStatus `gorm:"type:varchar(20);notNull;default:'active'" json:"status"`
+	ID   uuid.UUID     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Code string        `gorm:"type:varchar(20);uniqueIndex;notNull" json:"code"`
+	Name string        `gorm:"type:varchar(100);notNull" json:"name"`
+	Type WarehouseType `gorm:"type:varchar(20);notNull" json:"type"`
+	// Legacy multi-status column kept for DB compatibility.
+	Status    WarehouseStatus `gorm:"column:status;type:varchar(20);notNull;default:'active'" json:"-"`
+	IsActive  bool            `gorm:"column:is_active;notNull;default:true" json:"is_active"`
 	Address   string          `gorm:"type:text" json:"address,omitempty"`
 	City      string          `gorm:"type:varchar(50)" json:"city,omitempty"`
 	Phone     string          `gorm:"type:varchar(20)" json:"phone,omitempty"`
@@ -110,16 +112,18 @@ func (Warehouse) TableName() string {
 
 // Product model
 type Product struct {
-	ID           uuid.UUID     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	SKU          string        `gorm:"type:varchar(50);uniqueIndex;notNull" json:"sku"`
-	Barcode      string        `gorm:"type:varchar(50);uniqueIndex" json:"barcode,omitempty"`
-	Name         string        `gorm:"type:varchar(200);notNull" json:"name"`
-	Description  string        `gorm:"type:text" json:"description,omitempty"`
-	CategoryID   *uuid.UUID    `gorm:"type:uuid" json:"category_id,omitempty"`
-	UnitID       uuid.UUID     `gorm:"type:uuid;notNull" json:"unit_id"`
-	CostPrice    float64       `gorm:"type:decimal(15,2);notNull" json:"cost_price"`
-	RetailPrice  float64       `gorm:"type:decimal(15,2);notNull" json:"retail_price"`
-	Status       ProductStatus `gorm:"type:varchar(20);notNull;default:'active'" json:"status"`
+	ID          uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	SKU         string     `gorm:"type:varchar(50);uniqueIndex;notNull" json:"sku"`
+	Barcode     string     `gorm:"type:varchar(50);uniqueIndex" json:"barcode,omitempty"`
+	Name        string     `gorm:"type:varchar(200);notNull" json:"name"`
+	Description string     `gorm:"type:text" json:"description,omitempty"`
+	CategoryID  *uuid.UUID `gorm:"type:uuid" json:"category_id,omitempty"`
+	UnitID      uuid.UUID  `gorm:"type:uuid;notNull" json:"unit_id"`
+	CostPrice   float64    `gorm:"type:decimal(15,2);notNull" json:"cost_price"`
+	RetailPrice float64    `gorm:"type:decimal(15,2);notNull" json:"retail_price"`
+	// Legacy multi-status column kept for DB compatibility.
+	Status       ProductStatus `gorm:"column:status;type:varchar(20);notNull;default:'active'" json:"-"`
+	IsActive     bool          `gorm:"column:is_active;notNull;default:true" json:"is_active"`
 	TaxRate      float64       `gorm:"type:decimal(5,2);default:0;notNull" json:"tax_rate"`
 	IsTrackable  bool          `gorm:"default:false;notNull" json:"is_trackable"`
 	ReorderPoint int           `gorm:"default:0;notNull" json:"reorder_point"`

@@ -18,7 +18,7 @@ type CustomerRow struct {
 	Address           *string    `json:"address" gorm:"column:address"`
 	City              *string    `json:"city" gorm:"column:city"`
 	Tier              string     `json:"tier" gorm:"column:tier"`
-	Status            string     `json:"status" gorm:"column:status"`
+	IsActive          bool       `json:"is_active" gorm:"column:is_active"`
 	LoyaltyPoints     int        `json:"loyalty_points" gorm:"column:loyalty_points"`
 	CreditLimit       string     `json:"credit_limit" gorm:"column:credit_limit"`
 	CreditBalance     string     `json:"credit_balance" gorm:"column:credit_balance"`
@@ -50,8 +50,8 @@ func (r *CustomerRepository) FindCustomers(filters map[string]interface{}, limit
 	if v, ok := filters["tier"].(string); ok && v != "" {
 		base = base.Where("c.tier = ?", v)
 	}
-	if v, ok := filters["status"].(string); ok && v != "" {
-		base = base.Where("c.status = ?", v)
+	if v, ok := filters["is_active"].(bool); ok {
+		base = base.Where("c.is_active = ?", v)
 	}
 	if v, ok := filters["search"].(string); ok && v != "" {
 		like := fmt.Sprintf("%%%s%%", v)
@@ -68,7 +68,7 @@ func (r *CustomerRepository) FindCustomers(filters map[string]interface{}, limit
 		return nil, 0, err
 	}
 
-	selectClause := "c.id, c.customer_code, c.name, c.email, c.phone, c.address, c.city, c.tier, c.status, c.loyalty_points, c.credit_limit, c.credit_balance, c.total_purchases, c.\"lastPurchaseDate\", c.bank_name, c.bank_account_number, c.bank_account_name, c.bank_branch, c.created_at, c.updated_at, c.company_id"
+	selectClause := "c.id, c.customer_code, c.name, c.email, c.phone, c.address, c.city, c.tier, c.is_active, c.loyalty_points, c.credit_limit, c.credit_balance, c.total_purchases, c.\"lastPurchaseDate\", c.bank_name, c.bank_account_number, c.bank_account_name, c.bank_branch, c.created_at, c.updated_at, c.company_id"
 	if err := base.Select(selectClause).Order("c.created_at DESC").Limit(limit).Offset(offset).Scan(&rows).Error; err != nil {
 		return nil, 0, err
 	}
@@ -79,7 +79,7 @@ func (r *CustomerRepository) FindCustomers(filters map[string]interface{}, limit
 func (r *CustomerRepository) GetCustomerByID(id uuid.UUID, companyID uuid.UUID) (*CustomerRow, error) {
 	var row CustomerRow
 
-	selectClause := "c.id, c.customer_code, c.name, c.email, c.phone, c.address, c.city, c.tier, c.status, c.loyalty_points, c.credit_limit, c.credit_balance, c.total_purchases, c.\"lastPurchaseDate\", c.bank_name, c.bank_account_number, c.bank_account_name, c.bank_branch, c.created_at, c.updated_at, c.company_id"
+	selectClause := "c.id, c.customer_code, c.name, c.email, c.phone, c.address, c.city, c.tier, c.is_active, c.loyalty_points, c.credit_limit, c.credit_balance, c.total_purchases, c.\"lastPurchaseDate\", c.bank_name, c.bank_account_number, c.bank_account_name, c.bank_branch, c.created_at, c.updated_at, c.company_id"
 	err := r.db.Table("customers c").
 		Select(selectClause).
 		Where("c.id = ? AND c.company_id = ?", id, companyID).
@@ -121,7 +121,7 @@ func (r *CustomerRepository) UpdateCustomer(id uuid.UUID, companyID uuid.UUID, u
 
 func (r *CustomerRepository) DeactivateCustomer(id uuid.UUID, companyID uuid.UUID) error {
 	return r.db.Table("customers").Where("id = ? AND company_id = ?", id, companyID).
-		Updates(map[string]interface{}{"status": "inactive", "updated_at": time.Now()}).Error
+		Updates(map[string]interface{}{"is_active": false, "status": "inactive", "updated_at": time.Now()}).Error
 }
 
 func (r *CustomerRepository) DeleteCustomer(id uuid.UUID, companyID uuid.UUID) (int64, error) {

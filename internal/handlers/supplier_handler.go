@@ -93,7 +93,7 @@ func (h *SupplierHandler) CreateSupplier(c *fiber.Ctx) error {
 // @Tags Suppliers
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param status query string false "Status"
+// @Param is_active query bool false "Filter by active"
 // @Param payment_terms query string false "Payment terms"
 // @Param search query string false "Search"
 // @Param min_credit_limit query int false "Min credit limit"
@@ -113,8 +113,17 @@ func (h *SupplierHandler) GetSuppliers(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 	filters := map[string]interface{}{}
-	if v := c.Query("status"); v != "" {
-		filters["status"] = v
+	if v := c.Query("is_active"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			filters["is_active"] = b
+		}
+	} else if v := c.Query("status"); v != "" {
+		// Backward compatibility: map status=active|inactive to is_active.
+		if v == "active" {
+			filters["is_active"] = true
+		} else if v == "inactive" {
+			filters["is_active"] = false
+		}
 	}
 	if v := c.Query("payment_terms"); v != "" {
 		filters["payment_terms"] = v
@@ -212,8 +221,13 @@ func (h *SupplierHandler) UpdateSupplier(c *fiber.Ctx) error {
 	if req.CreditLimit != nil {
 		updates["credit_limit"] = *req.CreditLimit
 	}
-	if req.Status != nil {
-		updates["status"] = *req.Status
+	if req.IsActive != nil {
+		updates["is_active"] = *req.IsActive
+		if *req.IsActive {
+			updates["status"] = "active"
+		} else {
+			updates["status"] = "inactive"
+		}
 	}
 	if req.Notes != nil {
 		updates["notes"] = *req.Notes
@@ -274,11 +288,11 @@ func (h *SupplierHandler) SearchSuppliers(c *fiber.Ctx) error {
 }
 
 // GetSuppliersByStatus godoc
-// @Summary List suppliers by status
+// @Summary List suppliers by active (deprecated)
 // @Tags Suppliers
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param status path string true "Status"
+// @Param status path string true "Status (active|inactive)"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -292,7 +306,13 @@ func (h *SupplierHandler) GetSuppliersByStatus(c *fiber.Ctx) error {
 	}
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	filters := map[string]interface{}{"status": c.Params("status")}
+	filters := map[string]interface{}{}
+	s := c.Params("status")
+	if s == "active" {
+		filters["is_active"] = true
+	} else if s == "inactive" {
+		filters["is_active"] = false
+	}
 	result := h.supplierService.GetSuppliers(filters, limit, offset, user.CompanyID)
 	return c.JSON(result)
 }

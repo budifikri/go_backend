@@ -29,22 +29,24 @@ const (
 
 // Supplier model
 type Supplier struct {
-	ID            uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	Code          string         `gorm:"type:varchar(20);uniqueIndex;notNull" json:"code"`
-	Name          string         `gorm:"type:varchar(100);notNull" json:"name"`
-	ContactPerson string         `gorm:"column:contact_person;type:varchar(100)" json:"contact_person,omitempty"`
-	Email         string         `gorm:"type:varchar(100)" json:"email,omitempty"`
-	Phone         string         `gorm:"type:varchar(20)" json:"phone,omitempty"`
-	Address       string         `gorm:"type:text" json:"address,omitempty"`
-	City          string         `gorm:"type:varchar(50)" json:"city,omitempty"`
-	TaxID         string         `gorm:"column:tax_id;type:varchar(50)" json:"tax_id,omitempty"`
-	PaymentTerms  PaymentTerms   `gorm:"column:payment_terms;type:varchar(20);notNull;default:'NET_30'" json:"payment_terms"`
-	CreditLimit   float64        `gorm:"column:credit_limit;type:decimal(15,2);notNull;default:0" json:"credit_limit"`
-	Status        SupplierStatus `gorm:"type:varchar(20);notNull;default:'active'" json:"status"`
-	CompanyID     uuid.UUID      `gorm:"column:company_id;type:uuid;notNull;index" json:"company_id"`
-	Notes         string         `gorm:"type:text" json:"notes,omitempty"`
-	CreatedAt     time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt     time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	ID            uuid.UUID    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Code          string       `gorm:"type:varchar(20);uniqueIndex;notNull" json:"code"`
+	Name          string       `gorm:"type:varchar(100);notNull" json:"name"`
+	ContactPerson string       `gorm:"column:contact_person;type:varchar(100)" json:"contact_person,omitempty"`
+	Email         string       `gorm:"type:varchar(100)" json:"email,omitempty"`
+	Phone         string       `gorm:"type:varchar(20)" json:"phone,omitempty"`
+	Address       string       `gorm:"type:text" json:"address,omitempty"`
+	City          string       `gorm:"type:varchar(50)" json:"city,omitempty"`
+	TaxID         string       `gorm:"column:tax_id;type:varchar(50)" json:"tax_id,omitempty"`
+	PaymentTerms  PaymentTerms `gorm:"column:payment_terms;type:varchar(20);notNull;default:'NET_30'" json:"payment_terms"`
+	CreditLimit   float64      `gorm:"column:credit_limit;type:decimal(15,2);notNull;default:0" json:"credit_limit"`
+	// Legacy multi-status column kept for DB compatibility.
+	Status    SupplierStatus `gorm:"column:status;type:varchar(20);notNull;default:'active'" json:"-"`
+	IsActive  bool           `gorm:"column:is_active;notNull;default:true" json:"is_active"`
+	CompanyID uuid.UUID      `gorm:"column:company_id;type:uuid;notNull;index" json:"company_id"`
+	Notes     string         `gorm:"type:text" json:"notes,omitempty"`
+	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 func (s *Supplier) BeforeCreate(tx *gorm.DB) error {

@@ -51,13 +51,9 @@ definitions:
         type: string
       email:
         type: string
+      is_active:
+        type: boolean
       nama:
-        type: string
-      status:
-        enum:
-        - active
-        - inactive
-        - suspended
         type: string
       tax_id:
         type: string
@@ -430,6 +426,8 @@ definitions:
         type: number
       description:
         type: string
+      is_active:
+        type: boolean
       name:
         maxLength: 200
         type: string
@@ -612,15 +610,11 @@ definitions:
         type: string
       email:
         type: string
+      is_active:
+        type: boolean
       logo:
         type: string
       nama:
-        type: string
-      status:
-        enum:
-        - active
-        - inactive
-        - suspended
         type: string
       tax_id:
         type: string
@@ -647,11 +641,11 @@ definitions:
         type: number
       email:
         type: string
+      is_active:
+        type: boolean
       name:
         type: string
       phone:
-        type: string
-      status:
         type: string
       tier:
         type: string
@@ -762,6 +756,8 @@ definitions:
         type: number
       email:
         type: string
+      is_active:
+        type: boolean
       name:
         type: string
       notes:
@@ -769,8 +765,6 @@ definitions:
       payment_terms:
         type: string
       phone:
-        type: string
-      status:
         type: string
       tax_id:
         type: string
@@ -792,15 +786,11 @@ definitions:
         type: string
       code:
         type: string
+      is_active:
+        type: boolean
       name:
         type: string
       phone:
-        type: string
-      status:
-        enum:
-        - active
-        - inactive
-        - maintenance
         type: string
       type:
         enum:
@@ -1754,10 +1744,10 @@ paths:
         in: query
         name: tier
         type: string
-      - description: Status
+      - description: Filter by active
         in: query
-        name: status
-        type: string
+        name: is_active
+        type: boolean
       - description: Search
         in: query
         name: search
@@ -1987,7 +1977,7 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: Status
+      - description: Status (active|inactive)
         in: path
         name: status
         required: true
@@ -2015,7 +2005,7 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
-      summary: List customers by status
+      summary: List customers by active (deprecated)
       tags:
       - Customers
   /api/customers/tier/{tier}:
@@ -3280,10 +3270,10 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: Filter by status
+      - description: Filter by active
         in: query
-        name: status
-        type: string
+        name: is_active
+        type: boolean
       - description: Filter by category
         in: query
         name: category_id
@@ -4371,10 +4361,10 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: Status
+      - description: Filter by active
         in: query
-        name: status
-        type: string
+        name: is_active
+        type: boolean
       - description: Payment terms
         in: query
         name: payment_terms
@@ -4482,7 +4472,7 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
-      summary: Delete supplier (deactivate)
+      summary: Delete supplier
       tags:
       - Suppliers
     get:
@@ -4643,7 +4633,7 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: Status
+      - description: Status (active|inactive)
         in: path
         name: status
         required: true
@@ -4671,7 +4661,7 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
-      summary: List suppliers by status
+      summary: List suppliers by active (deprecated)
       tags:
       - Suppliers
   /api/units:
@@ -4929,7 +4919,7 @@ paths:
       - Warehouses
   /api/warehouses/{id}:
     delete:
-      description: Soft delete warehouse (set status to inactive)
+      description: Soft delete warehouse (set is_active to false)
       parameters:
       - description: Bearer token
         in: header

@@ -46,7 +46,7 @@ type ProductListResponse struct {
 	UnitName     string     `json:"unit_name,omitempty"`
 	CostPrice    float64    `json:"cost_price"`
 	RetailPrice  float64    `json:"retail_price"`
-	Status       string     `json:"status"`
+	IsActive     bool       `json:"is_active"`
 	TaxRate      float64    `json:"tax_rate"`
 	ReorderPoint int        `json:"reorder_point"`
 	CompanyID    *uuid.UUID `json:"company_id,omitempty"`
@@ -66,7 +66,7 @@ type ProductDetailResponse struct {
 	UnitName     string              `json:"unit_name,omitempty"`
 	CostPrice    float64             `json:"cost_price"`
 	RetailPrice  float64             `json:"retail_price"`
-	Status       string              `json:"status"`
+	IsActive     bool                `json:"is_active"`
 	TaxRate      float64             `json:"tax_rate"`
 	ReorderPoint int                 `json:"reorder_point"`
 	CompanyID    *uuid.UUID          `json:"company_id,omitempty"`
@@ -98,6 +98,7 @@ type CreateProductRequest struct {
 	TaxRate      float64 `json:"tax_rate"`
 	ReorderPoint int     `json:"reorder_point"`
 	CompanyID    string  `json:"company_id"`
+	IsActive     *bool   `json:"is_active"`
 }
 
 func (s *ProductService) GetProducts(filters map[string]interface{}, limit, offset int) response.PaginatedResponse {
@@ -137,7 +138,7 @@ func (s *ProductService) GetProducts(filters map[string]interface{}, limit, offs
 			UnitName:     unitName,
 			CostPrice:    p.CostPrice,
 			RetailPrice:  p.RetailPrice,
-			Status:       string(p.Status),
+			IsActive:     p.IsActive,
 			TaxRate:      p.TaxRate,
 			ReorderPoint: p.ReorderPoint,
 			CompanyID:    p.CompanyID,
@@ -200,7 +201,7 @@ func (s *ProductService) GetProductByID(id string) response.ApiResponse {
 		UnitName:     unitName,
 		CostPrice:    product.CostPrice,
 		RetailPrice:  product.RetailPrice,
-		Status:       string(product.Status),
+		IsActive:     product.IsActive,
 		TaxRate:      product.TaxRate,
 		ReorderPoint: product.ReorderPoint,
 		CompanyID:    product.CompanyID,
@@ -249,6 +250,15 @@ func (s *ProductService) CreateProduct(req CreateProductRequest) response.ApiRes
 		}
 	}
 
+	isActive := true
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+	legacyStatus := models.ProductStatusActive
+	if !isActive {
+		legacyStatus = models.ProductStatusInactive
+	}
+
 	product := models.Product{
 		ID:           uuid.New(),
 		SKU:          req.SKU,
@@ -259,7 +269,8 @@ func (s *ProductService) CreateProduct(req CreateProductRequest) response.ApiRes
 		UnitID:       unitID,
 		CostPrice:    req.CostPrice,
 		RetailPrice:  req.RetailPrice,
-		Status:       models.ProductStatusActive,
+		Status:       legacyStatus,
+		IsActive:     isActive,
 		TaxRate:      req.TaxRate,
 		ReorderPoint: req.ReorderPoint,
 		CompanyID:    companyID,
@@ -277,7 +288,7 @@ func (s *ProductService) CreateProduct(req CreateProductRequest) response.ApiRes
 		UnitID:      product.UnitID,
 		CostPrice:   product.CostPrice,
 		RetailPrice: product.RetailPrice,
-		Status:      string(product.Status),
+		IsActive:    product.IsActive,
 		TaxRate:     product.TaxRate,
 		CreatedAt:   product.CreatedAt.Format("2006-01-02T15:04:05Z"),
 		UpdatedAt:   product.UpdatedAt.Format("2006-01-02T15:04:05Z"),
@@ -342,6 +353,14 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) resp
 			product.UnitID = unitID
 		}
 	}
+	if req.IsActive != nil {
+		product.IsActive = *req.IsActive
+		if *req.IsActive {
+			product.Status = models.ProductStatusActive
+		} else {
+			product.Status = models.ProductStatusInactive
+		}
+	}
 
 	if err := s.productRepo.Update(product); err != nil {
 		return response.NewErrorResponse("Failed to update product")
@@ -355,7 +374,7 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) resp
 		UnitID:      product.UnitID,
 		CostPrice:   product.CostPrice,
 		RetailPrice: product.RetailPrice,
-		Status:      string(product.Status),
+		IsActive:    product.IsActive,
 		TaxRate:     product.TaxRate,
 		UpdatedAt:   product.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 	}, "Product updated successfully")
@@ -372,7 +391,8 @@ func (s *ProductService) DeleteProduct(id string) response.ApiResponse {
 		return response.NewErrorResponse(ErrProductNotFound.Error())
 	}
 
-	product.Status = models.ProductStatusDiscontinued
+	product.IsActive = false
+	product.Status = models.ProductStatusInactive
 	if err := s.productRepo.Update(product); err != nil {
 		return response.NewErrorResponse("Failed to delete product")
 	}

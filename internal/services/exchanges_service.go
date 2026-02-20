@@ -115,7 +115,7 @@ func (s *ExchangesService) CreateExchange(input CreateExchangeInput, processedBy
 			var product struct {
 				ID uuid.UUID `gorm:"column:id"`
 			}
-			if err := tx.Table("products").Select("id").Where("id = ? AND status = 'active'", pid).Limit(1).Scan(&product).Error; err != nil {
+			if err := tx.Table("products").Select("id").Where("id = ? AND is_active = true", pid).Limit(1).Scan(&product).Error; err != nil {
 				return err
 			}
 			if product.ID == uuid.Nil {

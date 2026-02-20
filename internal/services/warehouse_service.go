@@ -80,6 +80,7 @@ func (s *WarehouseService) CreateWarehouse(input CreateWarehouseInput) response.
 		Name:      input.Name,
 		Type:      models.WarehouseType(input.Type),
 		Status:    models.WarehouseStatusActive,
+		IsActive:  true,
 		Address:   input.Address,
 		City:      input.City,
 		Phone:     phone,
@@ -93,13 +94,13 @@ func (s *WarehouseService) CreateWarehouse(input CreateWarehouseInput) response.
 }
 
 type UpdateWarehouseInput struct {
-	Code    *string
-	Name    *string
-	Type    *string
-	Address *string
-	City    *string
-	Phone   *string
-	Status  *string
+	Code     *string
+	Name     *string
+	Type     *string
+	Address  *string
+	City     *string
+	Phone    *string
+	IsActive *bool
 }
 
 func (s *WarehouseService) UpdateWarehouse(id string, input UpdateWarehouseInput) response.ApiResponse {
@@ -147,8 +148,13 @@ func (s *WarehouseService) UpdateWarehouse(id string, input UpdateWarehouseInput
 		wh.Phone = *input.Phone
 		updated = true
 	}
-	if input.Status != nil {
-		wh.Status = models.WarehouseStatus(*input.Status)
+	if input.IsActive != nil {
+		wh.IsActive = *input.IsActive
+		if *input.IsActive {
+			wh.Status = models.WarehouseStatusActive
+		} else {
+			wh.Status = models.WarehouseStatusInactive
+		}
 		updated = true
 	}
 
@@ -175,6 +181,7 @@ func (s *WarehouseService) DeleteWarehouse(id string) response.ApiResponse {
 		return response.NewErrorResponse("Warehouse not found")
 	}
 
+	wh.IsActive = false
 	wh.Status = models.WarehouseStatusInactive
 	if err := s.warehouseRepo.Update(wh); err != nil {
 		return response.NewErrorResponse("Failed to delete warehouse")

@@ -39,7 +39,7 @@ type LoginResponse struct {
 	Email     string    `json:"email"`
 	FullName  string    `json:"full_name"`
 	Role      string    `json:"role"`
-	Status    string    `json:"status"`
+	IsActive  bool      `json:"is_active"`
 	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"expires_at"`
 	LastLogin time.Time `json:"last_login"`
@@ -61,7 +61,7 @@ func (s *AuthService) Login(username, password string) response.ApiResponse {
 		return response.NewErrorResponse(ErrInvalidCredentials.Error())
 	}
 
-	if user.Status != models.StatusActive {
+	if !user.IsActive {
 		return response.NewErrorResponse(ErrUserInactive.Error())
 	}
 
@@ -99,7 +99,7 @@ func (s *AuthService) Login(username, password string) response.ApiResponse {
 		Email:     user.Email,
 		FullName:  user.FullName,
 		Role:      string(user.Role),
-		Status:    string(user.Status),
+		IsActive:  user.IsActive,
 		Token:     token,
 		ExpiresAt: expiresAt,
 		LastLogin: now,
@@ -138,6 +138,7 @@ func (s *AuthService) Register(req struct {
 		FullName:  req.FullName,
 		Role:      role,
 		Status:    models.StatusActive,
+		IsActive:  true,
 		CompanyID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 	}
 
@@ -168,7 +169,7 @@ func (s *AuthService) Register(req struct {
 		Email:     user.Email,
 		FullName:  user.FullName,
 		Role:      string(user.Role),
-		Status:    string(user.Status),
+		IsActive:  user.IsActive,
 		Token:     token,
 		ExpiresAt: expiresAt,
 		LastLogin: time.Now(),

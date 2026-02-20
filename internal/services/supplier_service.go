@@ -72,6 +72,7 @@ func (s *SupplierService) CreateSupplier(input map[string]interface{}, companyID
 	if _, ok := data["credit_limit"]; !ok {
 		data["credit_limit"] = "0"
 	}
+	data["is_active"] = true
 	data["status"] = "active"
 	data["created_at"] = time.Now()
 	data["updated_at"] = time.Now()

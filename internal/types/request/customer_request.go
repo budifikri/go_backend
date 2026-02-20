@@ -21,7 +21,7 @@ type UpdateCustomerRequest struct {
 	Address           *string  `json:"address"`
 	City              *string  `json:"city"`
 	Tier              *string  `json:"tier"`
-	Status            *string  `json:"status"`
+	IsActive          *bool    `json:"is_active"`
 	CreditLimit       *float64 `json:"credit_limit"`
 	BankName          *string  `json:"bank_name"`
 	BankAccountNumber *string  `json:"bank_account_number"`

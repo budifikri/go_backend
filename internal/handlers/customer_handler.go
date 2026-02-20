@@ -95,7 +95,7 @@ func (h *CustomerHandler) CreateCustomer(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param tier query string false "Tier"
-// @Param status query string false "Status"
+// @Param is_active query bool false "Filter by active"
 // @Param search query string false "Search"
 // @Param min_loyalty_points query int false "Min points"
 // @Param max_loyalty_points query int false "Max points"
@@ -117,8 +117,17 @@ func (h *CustomerHandler) GetCustomers(c *fiber.Ctx) error {
 	if v := c.Query("tier"); v != "" {
 		filters["tier"] = v
 	}
-	if v := c.Query("status"); v != "" {
-		filters["status"] = v
+	if v := c.Query("is_active"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			filters["is_active"] = b
+		}
+	} else if v := c.Query("status"); v != "" {
+		// Backward compatibility: map status=active|inactive to is_active.
+		if v == "active" {
+			filters["is_active"] = true
+		} else if v == "inactive" {
+			filters["is_active"] = false
+		}
 	}
 	if v := c.Query("search"); v != "" {
 		filters["search"] = v
@@ -204,8 +213,13 @@ func (h *CustomerHandler) UpdateCustomer(c *fiber.Ctx) error {
 	if req.Tier != nil {
 		updates["tier"] = *req.Tier
 	}
-	if req.Status != nil {
-		updates["status"] = *req.Status
+	if req.IsActive != nil {
+		updates["is_active"] = *req.IsActive
+		if *req.IsActive {
+			updates["status"] = "active"
+		} else {
+			updates["status"] = "inactive"
+		}
 	}
 	if req.CreditLimit != nil {
 		updates["credit_limit"] = *req.CreditLimit
@@ -302,11 +316,11 @@ func (h *CustomerHandler) GetCustomersByTier(c *fiber.Ctx) error {
 }
 
 // GetCustomersByStatus godoc
-// @Summary List customers by status
+// @Summary List customers by active (deprecated)
 // @Tags Customers
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param status path string true "Status"
+// @Param status path string true "Status (active|inactive)"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -320,7 +334,13 @@ func (h *CustomerHandler) GetCustomersByStatus(c *fiber.Ctx) error {
 	}
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	filters := map[string]interface{}{"status": c.Params("status")}
+	filters := map[string]interface{}{}
+	s := c.Params("status")
+	if s == "active" {
+		filters["is_active"] = true
+	} else if s == "inactive" {
+		filters["is_active"] = false
+	}
 	result := h.customerService.GetCustomers(filters, limit, offset, user.CompanyID)
 	return c.JSON(result)
 }

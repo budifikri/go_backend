@@ -25,10 +25,7 @@ type ProductUpdateRequest struct {
 	RetailPrice  float64 `json:"retail_price" validate:"omitempty,gt=0"`
 	TaxRate      float64 `json:"tax_rate" validate:"omitempty,min=0,max=100"`
 	ReorderPoint int     `json:"reorder_point" validate:"omitempty,min=0"`
-}
-
-type ProductStatusRequest struct {
-	Status string `json:"status" validate:"required,oneof=active inactive discontinued"`
+	IsActive     *bool   `json:"is_active" validate:"omitempty"`
 }
 
 type ProductPriceRequest struct {

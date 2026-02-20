@@ -108,7 +108,7 @@ func (h *CompanyHandler) CreateCompany(c *fiber.Ctx) error {
 		Website:         req.Website,
 		TaxID:           req.TaxID,
 		BusinessLicense: req.BusinessLicense,
-		Status:          req.Status,
+		IsActive:        req.IsActive,
 	})
 	if !result.Success {
 		return c.Status(fiber.StatusBadRequest).JSON(result)
@@ -155,7 +155,7 @@ func (h *CompanyHandler) UpdateCompany(c *fiber.Ctx) error {
 		Website:         req.Website,
 		TaxID:           req.TaxID,
 		BusinessLicense: req.BusinessLicense,
-		Status:          req.Status,
+		IsActive:        req.IsActive,
 	})
 	if !result.Success {
 		if result.Error == "Company not found" {

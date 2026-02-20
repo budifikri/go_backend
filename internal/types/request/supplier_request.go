@@ -23,6 +23,6 @@ type UpdateSupplierRequest struct {
 	TaxID         *string  `json:"tax_id"`
 	PaymentTerms  *string  `json:"payment_terms"`
 	CreditLimit   *float64 `json:"credit_limit"`
-	Status        *string  `json:"status"`
+	IsActive      *bool    `json:"is_active"`
 	Notes         *string  `json:"notes"`
 }

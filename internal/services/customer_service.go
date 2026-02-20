@@ -76,6 +76,7 @@ func (s *CustomerService) CreateCustomer(input map[string]interface{}, companyID
 	if _, ok := data["tier"]; !ok {
 		data["tier"] = "BRONZE"
 	}
+	data["is_active"] = true
 	data["status"] = "active"
 	data["loyalty_points"] = 0
 	if _, ok := data["credit_limit"]; !ok {

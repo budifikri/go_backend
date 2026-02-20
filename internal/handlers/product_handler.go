@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
@@ -23,7 +25,7 @@ func NewProductHandler(productService *services.ProductService) *ProductHandler 
 // @Tags Products
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param status query string false "Filter by status"
+// @Param is_active query bool false "Filter by active"
 // @Param category_id query string false "Filter by category"
 // @Param search query string false "Search term"
 // @Param limit query int false "Limit" default(50)
@@ -35,8 +37,17 @@ func NewProductHandler(productService *services.ProductService) *ProductHandler 
 func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	filters := make(map[string]interface{})
 
-	if status := c.Query("status"); status != "" {
-		filters["status"] = status
+	if v := c.Query("is_active"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			filters["is_active"] = b
+		}
+	} else if status := c.Query("status"); status != "" {
+		// Backward compatibility: map status=active|inactive to is_active.
+		if status == "active" {
+			filters["is_active"] = true
+		} else if status == "inactive" {
+			filters["is_active"] = false
+		}
 	}
 	if categoryID := c.Query("category_id"); categoryID != "" {
 		filters["category_id"] = categoryID
@@ -160,6 +171,7 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 		RetailPrice:  req.RetailPrice,
 		TaxRate:      req.TaxRate,
 		ReorderPoint: req.ReorderPoint,
+		IsActive:     req.IsActive,
 	})
 
 	if !result.Success {

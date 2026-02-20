@@ -28,15 +28,17 @@ const (
 
 // Customer model
 type Customer struct {
-	ID             uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	CustomerCode   string         `gorm:"column:customer_code;type:varchar(20);uniqueIndex;notNull" json:"customer_code"`
-	Name           string         `gorm:"type:varchar(100);notNull" json:"name"`
-	Email          string         `gorm:"type:varchar(100)" json:"email,omitempty"`
-	Phone          string         `gorm:"type:varchar(20)" json:"phone,omitempty"`
-	Address        string         `gorm:"type:text" json:"address,omitempty"`
-	City           string         `gorm:"type:varchar(50)" json:"city,omitempty"`
-	Tier           CustomerTier   `gorm:"type:varchar(20);default:'BRONZE'" json:"tier"`
-	Status         CustomerStatus `gorm:"type:varchar(20);notNull;default:'active'" json:"status"`
+	ID           uuid.UUID    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	CustomerCode string       `gorm:"column:customer_code;type:varchar(20);uniqueIndex;notNull" json:"customer_code"`
+	Name         string       `gorm:"type:varchar(100);notNull" json:"name"`
+	Email        string       `gorm:"type:varchar(100)" json:"email,omitempty"`
+	Phone        string       `gorm:"type:varchar(20)" json:"phone,omitempty"`
+	Address      string       `gorm:"type:text" json:"address,omitempty"`
+	City         string       `gorm:"type:varchar(50)" json:"city,omitempty"`
+	Tier         CustomerTier `gorm:"type:varchar(20);default:'BRONZE'" json:"tier"`
+	// Legacy multi-status column kept for DB compatibility.
+	Status         CustomerStatus `gorm:"column:status;type:varchar(20);notNull;default:'active'" json:"-"`
+	IsActive       bool           `gorm:"column:is_active;notNull;default:true" json:"is_active"`
 	LoyaltyPoints  int            `gorm:"column:loyalty_points;notNull;default:0" json:"loyalty_points"`
 	CreditLimit    float64        `gorm:"column:credit_limit;type:decimal(15,2);default:0" json:"credit_limit"`
 	CreditBalance  float64        `gorm:"column:credit_balance;type:decimal(15,2);notNull;default:0" json:"credit_balance"`

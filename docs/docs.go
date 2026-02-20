@@ -1432,9 +1432,9 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Status",
-                        "name": "status",
+                        "type": "boolean",
+                        "description": "Filter by active",
+                        "name": "is_active",
                         "in": "query"
                     },
                     {
@@ -1614,7 +1614,7 @@ const docTemplate = `{
                 "tags": [
                     "Customers"
                 ],
-                "summary": "List customers by status",
+                "summary": "List customers by active (deprecated)",
                 "parameters": [
                     {
                         "type": "string",
@@ -1625,7 +1625,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Status",
+                        "description": "Status (active|inactive)",
                         "name": "status",
                         "in": "path",
                         "required": true
@@ -3812,9 +3812,9 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Filter by status",
-                        "name": "status",
+                        "type": "boolean",
+                        "description": "Filter by active",
+                        "name": "is_active",
                         "in": "query"
                     },
                     {
@@ -5513,9 +5513,9 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Status",
-                        "name": "status",
+                        "type": "boolean",
+                        "description": "Filter by active",
+                        "name": "is_active",
                         "in": "query"
                     },
                     {
@@ -5761,7 +5761,7 @@ const docTemplate = `{
                 "tags": [
                     "Suppliers"
                 ],
-                "summary": "List suppliers by status",
+                "summary": "List suppliers by active (deprecated)",
                 "parameters": [
                     {
                         "type": "string",
@@ -5772,7 +5772,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Status",
+                        "description": "Status (active|inactive)",
                         "name": "status",
                         "in": "path",
                         "required": true
@@ -5933,7 +5933,7 @@ const docTemplate = `{
                 "tags": [
                     "Suppliers"
                 ],
-                "summary": "Delete supplier (deactivate)",
+                "summary": "Delete supplier",
                 "parameters": [
                     {
                         "type": "string",
@@ -6499,7 +6499,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Soft delete warehouse (set status to inactive)",
+                "description": "Soft delete warehouse (set is_active to false)",
                 "produces": [
                     "application/json"
                 ],
@@ -6627,16 +6627,11 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "nama": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "suspended"
-                    ]
                 },
                 "tax_id": {
                     "type": "string"
@@ -7178,6 +7173,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 200
@@ -7449,19 +7447,14 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "logo": {
                     "type": "string"
                 },
                 "nama": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "suspended"
-                    ]
                 },
                 "tax_id": {
                     "type": "string"
@@ -7501,13 +7494,13 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 },
                 "tier": {
@@ -7672,6 +7665,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -7682,9 +7678,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 },
                 "tax_id": {
@@ -7718,19 +7711,14 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "phone": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "maintenance"
-                    ]
                 },
                 "type": {
                     "type": "string",

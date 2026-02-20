@@ -140,13 +140,13 @@ func (h *WarehouseHandler) UpdateWarehouse(c *fiber.Ctx) error {
 	}
 
 	result := h.warehouseService.UpdateWarehouse(c.Params("id"), services.UpdateWarehouseInput{
-		Code:    req.Code,
-		Name:    req.Name,
-		Type:    req.Type,
-		Address: req.Address,
-		City:    req.City,
-		Phone:   req.Phone,
-		Status:  req.Status,
+		Code:     req.Code,
+		Name:     req.Name,
+		Type:     req.Type,
+		Address:  req.Address,
+		City:     req.City,
+		Phone:    req.Phone,
+		IsActive: req.IsActive,
 	})
 	if !result.Success {
 		if result.Error == "Warehouse not found" {
@@ -162,7 +162,7 @@ func (h *WarehouseHandler) UpdateWarehouse(c *fiber.Ctx) error {
 
 // DeleteWarehouse godoc
 // @Summary Delete warehouse
-// @Description Soft delete warehouse (set status to inactive)
+// @Description Soft delete warehouse (set is_active to false)
 // @Tags Warehouses
 // @Produce json
 // @Param Authorization header string true "Bearer token"

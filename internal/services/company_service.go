@@ -53,13 +53,17 @@ type CreateCompanyInput struct {
 	Website         *string
 	TaxID           *string
 	BusinessLicense *string
-	Status          *string
+	IsActive        *bool
 }
 
 func (s *CompanyService) CreateCompany(input CreateCompanyInput) response.ApiResponse {
+	isActive := true
+	if input.IsActive != nil {
+		isActive = *input.IsActive
+	}
 	status := models.CompanyStatusActive
-	if input.Status != nil && *input.Status != "" {
-		status = models.CompanyStatus(*input.Status)
+	if !isActive {
+		status = models.CompanyStatusInactive
 	}
 
 	company := models.Company{
@@ -73,6 +77,7 @@ func (s *CompanyService) CreateCompany(input CreateCompanyInput) response.ApiRes
 		TaxID:           input.TaxID,
 		BusinessLicense: input.BusinessLicense,
 		Status:          status,
+		IsActive:        isActive,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
@@ -96,7 +101,7 @@ type UpdateCompanyInput struct {
 	Website         *string
 	TaxID           *string
 	BusinessLicense *string
-	Status          *string
+	IsActive        *bool
 }
 
 func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) response.ApiResponse {
@@ -130,8 +135,13 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 	if input.BusinessLicense != nil {
 		updates["business_license"] = input.BusinessLicense
 	}
-	if input.Status != nil {
-		updates["status"] = *input.Status
+	if input.IsActive != nil {
+		updates["is_active"] = *input.IsActive
+		if *input.IsActive {
+			updates["status"] = "active"
+		} else {
+			updates["status"] = "inactive"
+		}
 	}
 
 	if len(updates) == 0 {

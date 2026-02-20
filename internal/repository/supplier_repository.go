@@ -22,7 +22,7 @@ type SupplierRow struct {
 	TaxID         *string   `json:"tax_id" gorm:"column:tax_id"`
 	PaymentTerms  string    `json:"payment_terms" gorm:"column:payment_terms"`
 	CreditLimit   string    `json:"credit_limit" gorm:"column:credit_limit"`
-	Status        string    `json:"status" gorm:"column:status"`
+	IsActive      bool      `json:"is_active" gorm:"column:is_active"`
 	Notes         *string   `json:"notes" gorm:"column:notes"`
 	CompanyID     uuid.UUID `json:"company_id" gorm:"column:company_id"`
 	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
@@ -43,8 +43,8 @@ func (r *SupplierRepository) FindSuppliers(filters map[string]interface{}, limit
 
 	base := r.db.Table("suppliers s")
 
-	if v, ok := filters["status"].(string); ok && v != "" {
-		base = base.Where("s.status = ?", v)
+	if v, ok := filters["is_active"].(bool); ok {
+		base = base.Where("s.is_active = ?", v)
 	}
 	if v, ok := filters["payment_terms"].(string); ok && v != "" {
 		base = base.Where("s.payment_terms = ?", v)
@@ -67,7 +67,7 @@ func (r *SupplierRepository) FindSuppliers(filters map[string]interface{}, limit
 		return nil, 0, err
 	}
 
-	selectClause := "s.id, s.code, s.name, s.contact_person, s.email, s.phone, s.address, s.city, s.tax_id, s.payment_terms, s.credit_limit, s.status, s.notes, s.company_id, s.created_at, s.updated_at"
+	selectClause := "s.id, s.code, s.name, s.contact_person, s.email, s.phone, s.address, s.city, s.tax_id, s.payment_terms, s.credit_limit, s.is_active, s.notes, s.company_id, s.created_at, s.updated_at"
 	if err := base.Select(selectClause).Order("s.created_at DESC").Limit(limit).Offset(offset).Scan(&rows).Error; err != nil {
 		return nil, 0, err
 	}
@@ -78,7 +78,7 @@ func (r *SupplierRepository) FindSuppliers(filters map[string]interface{}, limit
 func (r *SupplierRepository) GetSupplierByID(id uuid.UUID, companyID *uuid.UUID) (*SupplierRow, error) {
 	var row SupplierRow
 	query := r.db.Table("suppliers s").
-		Select("s.id, s.code, s.name, s.contact_person, s.email, s.phone, s.address, s.city, s.tax_id, s.payment_terms, s.credit_limit, s.status, s.notes, s.company_id, s.created_at, s.updated_at").
+		Select("s.id, s.code, s.name, s.contact_person, s.email, s.phone, s.address, s.city, s.tax_id, s.payment_terms, s.credit_limit, s.is_active, s.notes, s.company_id, s.created_at, s.updated_at").
 		Where("s.id = ?", id)
 	if companyID != nil {
 		query = query.Where("s.company_id = ?", *companyID)
@@ -120,7 +120,7 @@ func (r *SupplierRepository) UpdateSupplier(id uuid.UUID, companyID uuid.UUID, u
 func (r *SupplierRepository) DeactivateSupplier(id uuid.UUID, companyID uuid.UUID) error {
 	return r.db.Table("suppliers").
 		Where("id = ? AND company_id = ?", id, companyID).
-		Updates(map[string]interface{}{"status": "inactive", "updated_at": time.Now()}).Error
+		Updates(map[string]interface{}{"is_active": false, "status": "inactive", "updated_at": time.Now()}).Error
 }
 
 func (r *SupplierRepository) DeleteSupplier(id uuid.UUID, companyID uuid.UUID) (int64, error) {

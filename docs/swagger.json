@@ -1425,9 +1425,9 @@
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Status",
-                        "name": "status",
+                        "type": "boolean",
+                        "description": "Filter by active",
+                        "name": "is_active",
                         "in": "query"
                     },
                     {
@@ -1607,7 +1607,7 @@
                 "tags": [
                     "Customers"
                 ],
-                "summary": "List customers by status",
+                "summary": "List customers by active (deprecated)",
                 "parameters": [
                     {
                         "type": "string",
@@ -1618,7 +1618,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "Status",
+                        "description": "Status (active|inactive)",
                         "name": "status",
                         "in": "path",
                         "required": true
@@ -3805,9 +3805,9 @@
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Filter by status",
-                        "name": "status",
+                        "type": "boolean",
+                        "description": "Filter by active",
+                        "name": "is_active",
                         "in": "query"
                     },
                     {
@@ -5506,9 +5506,9 @@
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Status",
-                        "name": "status",
+                        "type": "boolean",
+                        "description": "Filter by active",
+                        "name": "is_active",
                         "in": "query"
                     },
                     {
@@ -5754,7 +5754,7 @@
                 "tags": [
                     "Suppliers"
                 ],
-                "summary": "List suppliers by status",
+                "summary": "List suppliers by active (deprecated)",
                 "parameters": [
                     {
                         "type": "string",
@@ -5765,7 +5765,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "Status",
+                        "description": "Status (active|inactive)",
                         "name": "status",
                         "in": "path",
                         "required": true
@@ -6492,7 +6492,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Soft delete warehouse (set status to inactive)",
+                "description": "Soft delete warehouse (set is_active to false)",
                 "produces": [
                     "application/json"
                 ],
@@ -6620,16 +6620,11 @@
                 "email": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "nama": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "suspended"
-                    ]
                 },
                 "tax_id": {
                     "type": "string"
@@ -7171,6 +7166,9 @@
                 "description": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 200
@@ -7442,19 +7440,14 @@
                 "email": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "logo": {
                     "type": "string"
                 },
                 "nama": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "suspended"
-                    ]
                 },
                 "tax_id": {
                     "type": "string"
@@ -7494,13 +7487,13 @@
                 "email": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 },
                 "tier": {
@@ -7665,6 +7658,9 @@
                 "email": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -7675,9 +7671,6 @@
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 },
                 "tax_id": {
@@ -7711,19 +7704,14 @@
                 "code": {
                     "type": "string"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "phone": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "maintenance"
-                    ]
                 },
                 "type": {
                     "type": "string",

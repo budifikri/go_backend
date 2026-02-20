@@ -16,7 +16,14 @@ func NewWarehouseRepository(db *gorm.DB) *WarehouseRepository {
 
 func (r *WarehouseRepository) FindAll(filters map[string]interface{}) ([]models.Warehouse, error) {
 	var warehouses []models.Warehouse
-	query := r.db.Where("status = ?", "active")
+	query := r.db.Model(&models.Warehouse{})
+
+	// Default to active warehouses only (matches previous behavior).
+	if v, ok := filters["is_active"].(bool); ok {
+		query = query.Where("is_active = ?", v)
+	} else {
+		query = query.Where("is_active = ?", true)
+	}
 
 	if companyID, ok := filters["company_id"].(string); ok && companyID != "" {
 		query = query.Where("company_id = ?", companyID)
