@@ -231,7 +231,7 @@ func (h *CustomerHandler) UpdateCustomer(c *fiber.Ctx) error {
 }
 
 // DeleteCustomer godoc
-// @Summary Delete customer (deactivate)
+// @Summary Delete customer
 // @Tags Customers
 // @Produce json
 // @Param Authorization header string true "Bearer token"
@@ -246,7 +246,7 @@ func (h *CustomerHandler) DeleteCustomer(c *fiber.Ctx) error {
 	if user == nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(response.NewErrorResponse("Unauthorized"))
 	}
-	result := h.customerService.DeactivateCustomer(c.Params("id"), user.CompanyID)
+	result := h.customerService.DeleteCustomer(c.Params("id"), user.CompanyID)
 	if !result.Success {
 		return c.Status(fiber.StatusNotFound).JSON(result)
 	}

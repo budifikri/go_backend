@@ -1852,7 +1852,7 @@ const docTemplate = `{
                 "tags": [
                     "Customers"
                 ],
-                "summary": "Delete customer (deactivate)",
+                "summary": "Delete customer",
                 "parameters": [
                     {
                         "type": "string",

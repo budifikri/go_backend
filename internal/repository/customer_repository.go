@@ -123,3 +123,8 @@ func (r *CustomerRepository) DeactivateCustomer(id uuid.UUID, companyID uuid.UUI
 	return r.db.Table("customers").Where("id = ? AND company_id = ?", id, companyID).
 		Updates(map[string]interface{}{"status": "inactive", "updated_at": time.Now()}).Error
 }
+
+func (r *CustomerRepository) DeleteCustomer(id uuid.UUID, companyID uuid.UUID) (int64, error) {
+	res := r.db.Exec("DELETE FROM customers WHERE id = ? AND company_id = ?", id, companyID)
+	return res.RowsAffected, res.Error
+}

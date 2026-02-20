@@ -1861,7 +1861,7 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
-      summary: Delete customer (deactivate)
+      summary: Delete customer
       tags:
       - Customers
     get:

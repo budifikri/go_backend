@@ -118,3 +118,23 @@ func (s *SupplierService) DeactivateSupplier(id string, companyID string) respon
 	}
 	return response.NewSuccessResponse(nil, "Supplier deactivated successfully")
 }
+
+func (s *SupplierService) DeleteSupplier(id string, companyID string) response.ApiResponse {
+	cid, err := uuid.Parse(companyID)
+	if err != nil {
+		return response.NewErrorResponse("Supplier not found")
+	}
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Supplier not found")
+	}
+
+	affected, err := s.supplierRepo.DeleteSupplier(uid, cid)
+	if err != nil {
+		return response.NewErrorResponse("Failed to delete supplier")
+	}
+	if affected == 0 {
+		return response.NewErrorResponse("Supplier not found")
+	}
+	return response.NewSuccessResponse(nil, "Supplier deleted successfully")
+}

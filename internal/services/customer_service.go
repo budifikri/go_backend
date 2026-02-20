@@ -113,7 +113,7 @@ func (s *CustomerService) UpdateCustomer(id string, companyID string, updates ma
 	return response.NewSuccessResponse(row, "Customer updated successfully")
 }
 
-func (s *CustomerService) DeactivateCustomer(id string, companyID string) response.ApiResponse {
+func (s *CustomerService) DeleteCustomer(id string, companyID string) response.ApiResponse {
 	cid, err := uuid.Parse(companyID)
 	if err != nil {
 		return response.NewErrorResponse("Customer not found")
@@ -123,8 +123,12 @@ func (s *CustomerService) DeactivateCustomer(id string, companyID string) respon
 		return response.NewErrorResponse("Customer not found")
 	}
 
-	if err := s.customerRepo.DeactivateCustomer(uid, cid); err != nil {
+	affected, err := s.customerRepo.DeleteCustomer(uid, cid)
+	if err != nil {
 		return response.NewErrorResponse(err.Error())
 	}
-	return response.NewSuccessResponse(nil, "Customer deactivated successfully")
+	if affected == 0 {
+		return response.NewErrorResponse("Customer not found")
+	}
+	return response.NewSuccessResponse(nil, "Customer deleted successfully")
 }

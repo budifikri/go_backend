@@ -227,7 +227,7 @@ func (h *SupplierHandler) UpdateSupplier(c *fiber.Ctx) error {
 }
 
 // DeleteSupplier godoc
-// @Summary Delete supplier (deactivate)
+// @Summary Delete supplier
 // @Tags Suppliers
 // @Produce json
 // @Param Authorization header string true "Bearer token"
@@ -242,7 +242,7 @@ func (h *SupplierHandler) DeleteSupplier(c *fiber.Ctx) error {
 	if user == nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(response.NewErrorResponse("Unauthorized"))
 	}
-	result := h.supplierService.DeactivateSupplier(c.Params("id"), user.CompanyID)
+	result := h.supplierService.DeleteSupplier(c.Params("id"), user.CompanyID)
 	if !result.Success {
 		return c.Status(fiber.StatusBadRequest).JSON(result)
 	}

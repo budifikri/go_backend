@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pos-retail/go_backend/internal/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -120,4 +121,9 @@ func (r *SupplierRepository) DeactivateSupplier(id uuid.UUID, companyID uuid.UUI
 	return r.db.Table("suppliers").
 		Where("id = ? AND company_id = ?", id, companyID).
 		Updates(map[string]interface{}{"status": "inactive", "updated_at": time.Now()}).Error
+}
+
+func (r *SupplierRepository) DeleteSupplier(id uuid.UUID, companyID uuid.UUID) (int64, error) {
+	tx := r.db.Where("id = ? AND company_id = ?", id, companyID).Delete(&models.Supplier{})
+	return tx.RowsAffected, tx.Error
 }
