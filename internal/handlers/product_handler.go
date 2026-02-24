@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -164,6 +165,8 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
 	}
+
+	log.Printf("[DEBUG] UpdateProduct request: id=%s, UnitID=%s, CategoryID=%s, Name=%s", id, req.UnitID, req.CategoryID, req.Name)
 
 	result := h.productService.UpdateProduct(id, services.CreateProductRequest{
 		SKU:          req.SKU,

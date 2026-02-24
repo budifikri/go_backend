@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log"
+
 	"github.com/google/uuid"
 	"github.com/pos-retail/go_backend/internal/models"
 	"gorm.io/gorm"
@@ -84,7 +86,12 @@ func (r *ProductRepository) Create(product *models.Product) error {
 }
 
 func (r *ProductRepository) Update(product *models.Product) error {
-	return r.db.Save(product).Error
+	log.Printf("[DEBUG] ProductRepo.Update: id=%s, UnitID=%s", product.ID, product.UnitID)
+	err := r.db.Model(product).Select("unit_id", "category_id", "name", "description", "cost_price", "retail_price", "tax_rate", "reorder_point", "is_active", "status", "updated_at").Updates(product).Error
+	if err != nil {
+		log.Printf("[DEBUG] ProductRepo.Update: error=%v", err)
+	}
+	return err
 }
 
 func (r *ProductRepository) Delete(id uuid.UUID) error {

@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/pos-retail/go_backend/internal/models"
@@ -306,6 +307,8 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) resp
 		return response.NewErrorResponse(ErrProductNotFound.Error())
 	}
 
+	log.Printf("[DEBUG] UpdateProduct: current UnitID=%s, requested UnitID=%s", product.UnitID, req.UnitID)
+
 	if req.SKU != "" && req.SKU != product.SKU {
 		existing, _ := s.productRepo.FindBySKU(req.SKU)
 		if existing != nil && existing.ID != productID {
@@ -351,6 +354,8 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) resp
 		unitID, err := uuid.Parse(req.UnitID)
 		if err == nil {
 			product.UnitID = unitID
+		} else {
+			log.Printf("[DEBUG] Failed to parse UnitID: %v, value: %s", err, req.UnitID)
 		}
 	}
 	if req.IsActive != nil {
@@ -361,10 +366,14 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) resp
 			product.Status = models.ProductStatusInactive
 		}
 	}
+	log.Printf("[DEBUG] UpdateProduct: after update UnitID=%s", product.UnitID)
 
 	if err := s.productRepo.Update(product); err != nil {
+		log.Printf("[DEBUG] UpdateProduct: DB update error: %v", err)
 		return response.NewErrorResponse("Failed to update product")
 	}
+
+	log.Printf("[DEBUG] UpdateProduct: success, UnitID=%s", product.UnitID)
 
 	return response.NewSuccessResponse(ProductDetailResponse{
 		ID:          product.ID,
