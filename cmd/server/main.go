@@ -292,7 +292,8 @@ func main() {
 	purchases.Post("/", purchaseHandler.CreatePurchaseOrder)
 	purchases.Put("/:id", purchaseHandler.UpdatePurchaseOrder)
 	purchases.Put("/:id/status", purchaseHandler.UpdatePurchaseOrderStatus)
-	purchases.Delete("/:id", purchaseHandler.CancelPurchaseOrder)
+	purchases.Post("/:id/cancel", purchaseHandler.CancelPurchaseOrder)
+	purchases.Delete("/:id", purchaseHandler.DeletePurchaseOrder)
 
 	// GRN routes
 	grn := protected.Group("/grn")

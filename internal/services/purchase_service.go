@@ -391,6 +391,18 @@ func (s *PurchaseService) CancelPurchaseOrder(id string) response.ApiResponse {
 	return response.NewSuccessResponse(nil, "Purchase order cancelled successfully")
 }
 
+func (s *PurchaseService) DeletePurchaseOrder(id string) response.ApiResponse {
+	poID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid purchase order ID")
+	}
+
+	if err := s.purchaseRepo.Delete(poID); err != nil {
+		return response.NewErrorResponse("Failed to delete purchase order: " + err.Error())
+	}
+	return response.NewSuccessResponse(nil, "Purchase order deleted successfully")
+}
+
 func toFloat(v string) float64 {
 	f, _ := strconv.ParseFloat(v, 64)
 	return f

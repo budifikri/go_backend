@@ -125,3 +125,15 @@ func (r *PurchaseRepository) GetPurchaseOrderItems(poID uuid.UUID) ([]PurchaseOr
 	}
 	return items, nil
 }
+
+func (r *PurchaseRepository) Delete(id uuid.UUID) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Table("purchase_order_items").Where("po_id = ?", id).Delete(nil).Error; err != nil {
+			return err
+		}
+		if err := tx.Table("purchase_orders").Where("id = ?", id).Delete(nil).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}

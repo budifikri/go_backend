@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -138,8 +139,12 @@ func (h *PurchaseHandler) UpdatePurchaseOrder(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
 	}
 
+	log.Printf("[DEBUG] UpdatePurchaseOrder payload: supplier_id=%s warehouse_id=%s expected_date=%s items=%d", req.SupplierID, req.WarehouseID, req.ExpectedDate, len(req.Items))
+
 	if req.SupplierID == "" || req.WarehouseID == "" || req.ExpectedDate == "" || len(req.Items) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request data"))
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse(
+			"Invalid request data: supplier_id, warehouse_id, expected_date, and items are required",
+		))
 	}
 
 	expected, err := time.Parse(time.RFC3339, req.ExpectedDate)
@@ -214,9 +219,28 @@ func (h *PurchaseHandler) UpdatePurchaseOrderStatus(c *fiber.Ctx) error {
 // @Failure 401 {object} response.ApiResponse
 // @Failure 404 {object} response.ApiResponse
 // @Security BearerAuth
-// @Router /api/purchases/{id} [delete]
+// @Router /api/purchases/{id}/cancel [post]
 func (h *PurchaseHandler) CancelPurchaseOrder(c *fiber.Ctx) error {
 	result := h.purchaseService.CancelPurchaseOrder(c.Params("id"))
+	if !result.Success {
+		return c.Status(fiber.StatusNotFound).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// DeletePurchaseOrder godoc
+// @Summary Delete purchase order permanently
+// @Tags Purchases
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id} [delete]
+func (h *PurchaseHandler) DeletePurchaseOrder(c *fiber.Ctx) error {
+	result := h.purchaseService.DeletePurchaseOrder(c.Params("id"))
 	if !result.Success {
 		return c.Status(fiber.StatusNotFound).JSON(result)
 	}
