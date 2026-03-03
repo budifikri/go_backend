@@ -71,20 +71,27 @@ func (h *GrnHandler) GetGrn(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param page query int false "Page" default(1)
-// @Param limit query int false "Limit" default(10)
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset (overrides page)" default(0)
 // @Param status query string false "Status"
 // @Param poId query string false "PO ID"
 // @Param warehouseId query string false "Warehouse ID"
 // @Param startDate query string false "Start date"
 // @Param endDate query string false "End date"
-// @Success 200 {object} response.ApiResponse
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
 // @Router /api/grn [get]
 func (h *GrnHandler) ListGrns(c *fiber.Ctx) error {
+	offset := -1
+	if v := c.Query("offset"); v != "" {
+		offset = c.QueryInt("offset", 0)
+	}
+
 	filter := services.GrnFilter{
 		Page:        c.QueryInt("page", 1),
-		Limit:       c.QueryInt("limit", 10),
+		Limit:       c.QueryInt("limit", 50),
+		Offset:      offset,
 		Status:      c.Query("status"),
 		PoID:        c.Query("poId"),
 		WarehouseID: c.Query("warehouseId"),

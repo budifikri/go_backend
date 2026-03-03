@@ -20,7 +20,9 @@ func NewPriceTierHandler(priceTierService *services.PriceTierService) *PriceTier
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param product_id query string false "Product ID"
-// @Success 200 {object} response.ApiResponse
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
 // @Router /api/price-tiers [get]
@@ -29,7 +31,10 @@ func (h *PriceTierHandler) GetPriceTiers(c *fiber.Ctx) error {
 	if v := c.Query("product_id"); v != "" {
 		pid = &v
 	}
-	result := h.priceTierService.GetPriceTiers(pid)
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+
+	result := h.priceTierService.GetPriceTiers(pid, limit, offset)
 	return c.JSON(result)
 }
 

@@ -403,9 +403,9 @@ func (h *ProductHandler) DeleteCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param search query string false "Search"
-// @Param limit query int false "Limit"
-// @Param offset query int false "Offset"
-// @Success 200 {object} response.ApiResponse
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
 // @Router /api/units [get]
@@ -430,25 +430,11 @@ func (h *ProductHandler) GetUnits(c *fiber.Ctx) error {
 			isActive = &b
 		}
 	}
-	var limit *int
-	if q := c.Query("limit"); q != "" {
-		v := c.QueryInt("limit")
-		limit = &v
-	}
-	var offset *int
-	if q := c.Query("offset"); q != "" {
-		v := c.QueryInt("offset")
-		offset = &v
-	}
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
 
-	resp, pagination := h.productService.GetUnitsWithQuery(search, isActive, limit, offset)
-	if !resp.Success {
-		return c.Status(fiber.StatusBadRequest).JSON(resp)
-	}
-	if pagination != nil {
-		return c.JSON(fiber.Map{"success": true, "data": resp.Data, "pagination": pagination})
-	}
-	return c.JSON(resp)
+	result := h.productService.GetUnitsWithQuery(search, isActive, limit, offset)
+	return c.JSON(result)
 }
 
 // GetUnit godoc

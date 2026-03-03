@@ -2190,10 +2190,15 @@ paths:
         in: query
         name: page
         type: integer
-      - default: 10
+      - default: 50
         description: Limit
         in: query
         name: limit
+        type: integer
+      - default: 0
+        description: Offset (overrides page)
+        in: query
+        name: offset
         type: integer
       - description: Status
         in: query
@@ -2221,7 +2226,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
@@ -3132,13 +3137,23 @@ paths:
         in: query
         name: product_id
         type: string
+      - default: 50
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
@@ -4747,11 +4762,13 @@ paths:
         in: query
         name: search
         type: string
-      - description: Limit
+      - default: 50
+        description: Limit
         in: query
         name: limit
         type: integer
-      - description: Offset
+      - default: 0
+        description: Offset
         in: query
         name: offset
         type: integer
@@ -4761,7 +4778,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:

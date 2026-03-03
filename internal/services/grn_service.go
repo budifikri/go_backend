@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"time"
 
@@ -23,6 +22,7 @@ func NewGrnService(db *gorm.DB) *GrnService {
 type GrnFilter struct {
 	Page        int
 	Limit       int
+	Offset      int
 	Status      string
 	PoID        string
 	WarehouseID string
@@ -100,16 +100,19 @@ type grnItemRow struct {
 	PoiDiscountRate    *string    `gorm:"column:poi_discount_rate"`
 }
 
-func (s *GrnService) GetGrns(filter GrnFilter) map[string]interface{} {
+func (s *GrnService) GetGrns(filter GrnFilter) response.PaginatedResponse {
 	page := filter.Page
 	limit := filter.Limit
 	if page <= 0 {
 		page = 1
 	}
 	if limit <= 0 {
-		limit = 10
+		limit = 50
 	}
-	offset := (page - 1) * limit
+	offset := filter.Offset
+	if offset < 0 {
+		offset = (page - 1) * limit
+	}
 
 	where := ""
 	args := make([]interface{}, 0)
@@ -141,7 +144,7 @@ func (s *GrnService) GetGrns(filter GrnFilter) map[string]interface{} {
 	var total int64
 	countSQL := fmt.Sprintf("SELECT COUNT(*) FROM goods_received_notes grn %s", where)
 	if err := s.db.Raw(countSQL, args...).Scan(&total).Error; err != nil {
-		return map[string]interface{}{"success": false, "error": "Failed to fetch GRNs", "message": "Failed to fetch GRNs"}
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
 
 	querySQL := fmt.Sprintf(`
@@ -165,7 +168,7 @@ func (s *GrnService) GetGrns(filter GrnFilter) map[string]interface{} {
 
 	var headers []grnHeaderRow
 	if err := s.db.Raw(querySQL, args...).Scan(&headers).Error; err != nil {
-		return map[string]interface{}{"success": false, "error": "Failed to fetch GRNs", "message": "Failed to fetch GRNs"}
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
 
 	data := make([]map[string]interface{}, 0, len(headers))
@@ -207,23 +210,7 @@ func (s *GrnService) GetGrns(filter GrnFilter) map[string]interface{} {
 		})
 	}
 
-	totalPages := int(math.Ceil(float64(total) / float64(limit)))
-	if totalPages < 1 {
-		totalPages = 1
-	}
-
-	return map[string]interface{}{
-		"success": true,
-		"data":    data,
-		"pagination": map[string]interface{}{
-			"currentPage":  page,
-			"totalPages":   totalPages,
-			"totalRecords": total,
-			"hasNextPage":  page < totalPages,
-			"hasPrevPage":  page > 1,
-		},
-		"message": "GRNs retrieved successfully",
-	}
+	return response.NewPaginatedResponse(data, total, limit, offset)
 }
 
 func (s *GrnService) GetGrnByID(id string) response.ApiResponse {

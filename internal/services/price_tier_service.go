@@ -17,7 +17,14 @@ func NewPriceTierService(db *gorm.DB) *PriceTierService {
 	return &PriceTierService{db: db}
 }
 
-func (s *PriceTierService) GetPriceTiers(productID *string) response.ApiResponse {
+func (s *PriceTierService) GetPriceTiers(productID *string, limit, offset int) response.PaginatedResponse {
+	if limit <= 0 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
 	var rows []map[string]interface{}
 	query := s.db.Table("price_tiers pt").
 		Select("pt.*, p.name AS product_name, p.sku, p.retail_price AS base_price").
@@ -26,10 +33,17 @@ func (s *PriceTierService) GetPriceTiers(productID *string) response.ApiResponse
 	if productID != nil && *productID != "" {
 		query = query.Where("pt.product_id = ?", *productID)
 	}
-	if err := query.Order("pt.min_quantity ASC").Find(&rows).Error; err != nil {
-		return response.NewErrorResponse("Failed to get price tiers")
+
+	var total int64
+	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
-	return response.NewSuccessResponse(rows, "")
+
+	if err := query.Order("pt.min_quantity ASC").Limit(limit).Offset(offset).Find(&rows).Error; err != nil {
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
+	}
+
+	return response.NewPaginatedResponse(rows, total, limit, offset)
 }
 
 func (s *PriceTierService) GetPriceTierByID(id string) response.ApiResponse {

@@ -610,34 +610,25 @@ func (s *ProductService) GetUnits() response.ApiResponse {
 	return response.NewSuccessResponse(units, "")
 }
 
-func (s *ProductService) GetUnitsWithQuery(search *string, isActive *bool, limit, offset *int) (response.ApiResponse, map[string]interface{}) {
-	units, err := s.unitRepo.FindAllWithQuery(search, isActive, limit, offset)
+func (s *ProductService) GetUnitsWithQuery(search *string, isActive *bool, limit, offset int) response.PaginatedResponse {
+	if limit <= 0 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	units, err := s.unitRepo.FindAllWithQuery(search, isActive, &limit, &offset)
 	if err != nil {
-		return response.NewErrorResponse("Failed to fetch units"), nil
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
 
-	if limit != nil || offset != nil {
-		total, err := s.unitRepo.Count(search, isActive)
-		if err != nil {
-			return response.NewErrorResponse("Failed to fetch units"), nil
-		}
-		l := len(units)
-		lim := l
-		if limit != nil {
-			lim = *limit
-		}
-		off := 0
-		if offset != nil {
-			off = *offset
-		}
-		return response.NewSuccessResponse(units, ""), map[string]interface{}{
-			"limit":  lim,
-			"offset": off,
-			"total":  total,
-		}
+	total, err := s.unitRepo.Count(search, isActive)
+	if err != nil {
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
 
-	return response.NewSuccessResponse(units, ""), nil
+	return response.NewPaginatedResponse(units, total, limit, offset)
 }
 
 func (s *ProductService) GetUnitByID(id string) response.ApiResponse {
