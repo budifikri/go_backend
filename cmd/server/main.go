@@ -146,6 +146,7 @@ func main() {
 	financeHandler := handlers.NewFinanceHandler(financeService)
 	cashDrawerHandler := handlers.NewCashDrawerHandler(cashDrawerService)
 	companyHandler := handlers.NewCompanyHandler(companyService)
+	healthHandler := handlers.NewHealthHandler(db, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -187,6 +188,7 @@ func main() {
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/logout", authHandler.Logout)
+	api.Get("/health", healthHandler.GetHealth)
 
 	// Protected routes
 	protected := api.Group("", authMiddleware.Handler())
@@ -364,28 +366,7 @@ func main() {
 	drawers.Get("/:id", cashDrawerHandler.GetCashDrawer)
 
 	// Health check
-	app.Get("/health", func(c *fiber.Ctx) error {
-		dbStatus := "disconnected"
-		if sqlDB, err := db.DB(); err == nil {
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-			if err := sqlDB.PingContext(ctx); err == nil {
-				dbStatus = "connected"
-			}
-		}
-
-		return c.JSON(fiber.Map{
-			"message":       "POS Retail API is running",
-			"version":       "1.0.0",
-			"documentation": "/docs",
-			"database": fiber.Map{
-				"status":   dbStatus,
-				"host":     cfg.Database.Host,
-				"port":     cfg.Database.Port,
-				"database": cfg.Database.Name,
-			},
-		})
-	})
+	app.Get("/health", healthHandler.GetHealth)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Server starting on %s", addr)

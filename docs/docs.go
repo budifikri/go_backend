@@ -1438,6 +1438,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "description": "Include inactive (ignore default active-only)",
+                        "name": "include_inactive",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Search",
                         "name": "search",
@@ -2418,6 +2424,27 @@ const docTemplate = `{
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/health": {
+            "get": {
+                "description": "Check API and database health status",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -3818,6 +3845,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "description": "Include inactive (ignore default active-only)",
+                        "name": "include_inactive",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Filter by category",
                         "name": "category_id",
@@ -4621,6 +4654,58 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Purchases"
+                ],
+                "summary": "Delete purchase order permanently",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Purchase Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/purchases/{id}/cancel": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -5519,6 +5604,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "description": "Include inactive (ignore default active-only)",
+                        "name": "include_inactive",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Payment terms",
                         "name": "payment_terms",
@@ -6271,7 +6362,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all active warehouses",
+                "description": "List warehouses (default active only)",
                 "produces": [
                     "application/json"
                 ],
@@ -6286,6 +6377,18 @@ const docTemplate = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by active",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include inactive (ignore default active-only)",
+                        "name": "include_inactive",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -6499,7 +6602,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Soft delete warehouse (set is_active to false)",
+                "description": "Delete warehouse",
                 "produces": [
                     "application/json"
                 ],
@@ -7693,6 +7796,9 @@ const docTemplate = `{
                 },
                 "description": {
                     "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"

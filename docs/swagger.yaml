@@ -775,6 +775,8 @@ definitions:
         type: string
       description:
         type: string
+      is_active:
+        type: boolean
       name:
         type: string
     type: object
@@ -1748,6 +1750,10 @@ paths:
         in: query
         name: is_active
         type: boolean
+      - description: Include inactive (ignore default active-only)
+        in: query
+        name: include_inactive
+        type: boolean
       - description: Search
         in: query
         name: search
@@ -2388,6 +2394,20 @@ paths:
       summary: Verify GRN
       tags:
       - GRN
+  /api/health:
+    get:
+      description: Check API and database health status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - Health
   /api/inventory:
     get:
       parameters:
@@ -3274,6 +3294,10 @@ paths:
         in: query
         name: is_active
         type: boolean
+      - description: Include inactive (ignore default active-only)
+        in: query
+        name: include_inactive
+        type: boolean
       - description: Filter by category
         in: query
         name: category_id
@@ -3749,7 +3773,7 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
-      summary: Cancel purchase order
+      summary: Delete purchase order permanently
       tags:
       - Purchases
     get:
@@ -3826,6 +3850,39 @@ paths:
       security:
       - BearerAuth: []
       summary: Update purchase order
+      tags:
+      - Purchases
+  /api/purchases/{id}/cancel:
+    post:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel purchase order
       tags:
       - Purchases
   /api/purchases/{id}/status:
@@ -4365,6 +4422,10 @@ paths:
         in: query
         name: is_active
         type: boolean
+      - description: Include inactive (ignore default active-only)
+        in: query
+        name: include_inactive
+        type: boolean
       - description: Payment terms
         in: query
         name: payment_terms
@@ -4854,13 +4915,21 @@ paths:
       - Units
   /api/warehouses:
     get:
-      description: Get all active warehouses
+      description: List warehouses (default active only)
       parameters:
       - description: Bearer token
         in: header
         name: Authorization
         required: true
         type: string
+      - description: Filter by active
+        in: query
+        name: is_active
+        type: boolean
+      - description: Include inactive (ignore default active-only)
+        in: query
+        name: include_inactive
+        type: boolean
       produces:
       - application/json
       responses:
@@ -4919,7 +4988,7 @@ paths:
       - Warehouses
   /api/warehouses/{id}:
     delete:
-      description: Soft delete warehouse (set is_active to false)
+      description: Delete warehouse
       parameters:
       - description: Bearer token
         in: header
