@@ -128,6 +128,7 @@ func main() {
 	financeService := services.NewFinanceService(db, financeRepo)
 	cashDrawerService := services.NewCashDrawerService(db, cashDrawerRepo, financeService)
 	companyService := services.NewCompanyService(db)
+	userService := services.NewUserService(db)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -146,6 +147,7 @@ func main() {
 	financeHandler := handlers.NewFinanceHandler(financeService)
 	cashDrawerHandler := handlers.NewCashDrawerHandler(cashDrawerService)
 	companyHandler := handlers.NewCompanyHandler(companyService)
+	userHandler := handlers.NewUserHandler(userService)
 	healthHandler := handlers.NewHealthHandler(db, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
 
 	// Initialize middleware
@@ -192,9 +194,15 @@ func main() {
 
 	// Protected routes
 	protected := api.Group("", authMiddleware.Handler())
-	protected.Get("/users", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"success": true, "message": "Users list"})
-	})
+
+	// User routes
+	users := protected.Group("/users", middleware.RoleMiddleware("admin", "manager"))
+	users.Get("/", userHandler.GetUsers)
+	users.Get("/:id", userHandler.GetUser)
+	users.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateUserRequest{} }), userHandler.CreateUser)
+	users.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateUserRequest{} }), userHandler.UpdateUser)
+	users.Patch("/:id/password", middleware.ValidateBody(func() interface{} { return &request.UpdateUserPasswordRequest{} }), userHandler.UpdateUserPassword)
+	users.Delete("/:id", userHandler.DeleteUser)
 
 	// Product routes
 	products := protected.Group("/products")
