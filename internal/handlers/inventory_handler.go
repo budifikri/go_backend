@@ -25,6 +25,7 @@ func NewInventoryHandler(inventoryService *services.InventoryService) *Inventory
 // @Param Authorization header string true "Bearer token"
 // @Param warehouse_id query string false "Warehouse ID"
 // @Param product_id query string false "Product ID"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -38,6 +39,9 @@ func (h *InventoryHandler) GetInventory(c *fiber.Ctx) error {
 	}
 	if productID := c.Query("product_id"); productID != "" {
 		filters["product_id"] = productID
+	}
+	if search := c.Query("search"); search != "" {
+		filters["search"] = search
 	}
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
@@ -276,6 +280,7 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 // @Param status query string false "Status"
 // @Param from_date query string false "From date"
 // @Param to_date query string false "To date"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -295,6 +300,9 @@ func (h *InventoryHandler) GetStockOpnames(c *fiber.Ctx) error {
 	}
 	if toDate := c.Query("to_date"); toDate != "" {
 		filters["to_date"] = toDate
+	}
+	if search := c.Query("search"); search != "" {
+		filters["search"] = search
 	}
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)

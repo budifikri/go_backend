@@ -105,6 +105,7 @@ func (h *SalesHandler) GetSale(c *fiber.Ctx) error {
 // @Param date_from query string false "From date (YYYY-MM-DD)"
 // @Param date_to query string false "To date (YYYY-MM-DD)"
 // @Param sale_number query string false "Sale number search"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -121,6 +122,7 @@ func (h *SalesHandler) GetSales(c *fiber.Ctx) error {
 	filters["date_from"] = c.Query("date_from")
 	filters["date_to"] = c.Query("date_to")
 	filters["sale_number"] = c.Query("sale_number")
+	filters["search"] = c.Query("search")
 
 	limit := c.QueryInt("limit", 50)
 	if limit <= 0 {

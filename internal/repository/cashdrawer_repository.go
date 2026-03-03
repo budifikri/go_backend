@@ -95,6 +95,10 @@ func (r *CashDrawerRepository) ListCashDrawers(filters map[string]string, limit,
 	if v := strings.TrimSpace(filters["status"]); v != "" {
 		q = q.Where("cd.status = ?", v)
 	}
+	if v := strings.TrimSpace(filters["search"]); v != "" {
+		like := "%" + v + "%"
+		q = q.Where("cd.drawer_number ILIKE ? OR w.name ILIKE ? OR u.full_name ILIKE ?", like, like, like)
+	}
 	if v := strings.TrimSpace(filters["from_date"]); v != "" {
 		if t, err := time.Parse("2006-01-02", v); err == nil {
 			q = q.Where("cd.opened_at >= ?", t)
@@ -133,7 +137,7 @@ func (r *CashDrawerRepository) GetCashDrawerByID(id uuid.UUID, companyID uuid.UU
 	return &row, nil
 }
 
-func (r *CashDrawerRepository) GetDrawerTransactions(drawerID uuid.UUID, txType *string, limit, offset int) ([]CashDrawerTransactionRow, int64, error) {
+func (r *CashDrawerRepository) GetDrawerTransactions(drawerID uuid.UUID, txType *string, search string, limit, offset int) ([]CashDrawerTransactionRow, int64, error) {
 	var rows []CashDrawerTransactionRow
 	var total int64
 
@@ -143,6 +147,10 @@ func (r *CashDrawerRepository) GetDrawerTransactions(drawerID uuid.UUID, txType 
 		Where("cdt.cash_drawer_id = ?", drawerID)
 	if txType != nil && strings.TrimSpace(*txType) != "" {
 		q = q.Where("cdt.type = ?", strings.TrimSpace(*txType))
+	}
+	if strings.TrimSpace(search) != "" {
+		like := "%" + strings.TrimSpace(search) + "%"
+		q = q.Where("cdt.reason ILIKE ? OR u.full_name ILIKE ?", like, like)
 	}
 
 	if err := q.Session(&gorm.Session{}).Count(&total).Error; err != nil {

@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,7 +20,7 @@ func NewCompanyService(db *gorm.DB) *CompanyService {
 	return &CompanyService{db: db}
 }
 
-func (s *CompanyService) GetCompanies(limit, offset int) response.PaginatedResponse {
+func (s *CompanyService) GetCompanies(search string, limit, offset int) response.PaginatedResponse {
 	var companies []models.Company
 	var total int64
 
@@ -31,6 +32,10 @@ func (s *CompanyService) GetCompanies(limit, offset int) response.PaginatedRespo
 	}
 
 	query := s.db.Model(&models.Company{})
+	if search != "" {
+		like := "%" + strings.ToLower(search) + "%"
+		query = query.Where("LOWER(code) LIKE ? OR LOWER(nama) LIKE ? OR LOWER(email) LIKE ?", like, like, like)
+	}
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}

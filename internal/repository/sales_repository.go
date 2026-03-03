@@ -54,6 +54,10 @@ func (r *SalesRepository) FindSales(filters map[string]string, limit, offset int
 	if v := filters["sale_number"]; v != "" {
 		query = query.Where("s.sale_number ILIKE ?", "%"+v+"%")
 	}
+	if v := filters["search"]; v != "" {
+		like := "%" + v + "%"
+		query = query.Where("s.sale_number ILIKE ? OR u.username ILIKE ? OR c.name ILIKE ?", like, like, like)
+	}
 	if v := filters["date_from"]; v != "" {
 		if t, err := time.Parse("2006-01-02", v); err == nil {
 			query = query.Where("s.sale_date >= ?", t)

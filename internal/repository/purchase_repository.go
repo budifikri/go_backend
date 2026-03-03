@@ -67,6 +67,10 @@ func (r *PurchaseRepository) FindPurchaseOrders(filters map[string]string, limit
 	if v := filters["warehouse_id"]; v != "" {
 		query = query.Where("po.warehouse_id = ?", v)
 	}
+	if v := filters["search"]; v != "" {
+		like := "%" + v + "%"
+		query = query.Where("po.po_number ILIKE ? OR s.name ILIKE ? OR w.name ILIKE ?", like, like, like)
+	}
 
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err

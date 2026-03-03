@@ -175,6 +175,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Limit",
@@ -645,6 +651,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Limit",
@@ -696,6 +708,12 @@
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1002,6 +1020,12 @@
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -1945,6 +1969,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Limit",
@@ -2123,6 +2153,12 @@
                         "default": 0,
                         "description": "Offset (overrides page)",
                         "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
                         "in": "query"
                     },
                     {
@@ -2496,6 +2532,12 @@
                         "type": "string",
                         "description": "Product ID",
                         "name": "product_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
                         "in": "query"
                     },
                     {
@@ -3589,6 +3631,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Limit",
@@ -4181,6 +4229,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Limit",
@@ -4474,6 +4528,12 @@
                         "type": "string",
                         "description": "Warehouse ID",
                         "name": "warehouse_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
                         "in": "query"
                     },
                     {
@@ -4895,6 +4955,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Limit",
@@ -5097,6 +5163,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Limit",
@@ -5278,6 +5350,12 @@
                         "type": "string",
                         "description": "To date",
                         "name": "to_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
                         "in": "query"
                     },
                     {
@@ -6809,6 +6887,12 @@
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
                     },
                     {
                         "type": "boolean",

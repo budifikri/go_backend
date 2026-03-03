@@ -27,6 +27,7 @@ func NewPurchaseHandler(purchaseService *services.PurchaseService) *PurchaseHand
 // @Param status query string false "PO status"
 // @Param supplier_id query string false "Supplier ID"
 // @Param warehouse_id query string false "Warehouse ID"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -38,6 +39,7 @@ func (h *PurchaseHandler) GetPurchaseOrders(c *fiber.Ctx) error {
 	filters["status"] = c.Query("status")
 	filters["supplier_id"] = c.Query("supplier_id")
 	filters["warehouse_id"] = c.Query("warehouse_id")
+	filters["search"] = c.Query("search")
 
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)

@@ -324,12 +324,12 @@ func (s *CashDrawerService) AddCashOut(drawerID string, input CashInOutInput, co
 	return response.NewSuccessResponse(created, "")
 }
 
-func (s *CashDrawerService) GetDrawerTransactions(drawerID string, txType *string, limit, offset int) response.PaginatedResponse {
+func (s *CashDrawerService) GetDrawerTransactions(drawerID string, txType *string, search string, limit, offset int) response.PaginatedResponse {
 	drawerUUID, err := uuid.Parse(drawerID)
 	if err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
-	rows, total, err := s.repo.GetDrawerTransactions(drawerUUID, txType, limit, offset)
+	rows, total, err := s.repo.GetDrawerTransactions(drawerUUID, txType, search, limit, offset)
 	if err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}

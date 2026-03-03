@@ -1013,6 +1013,10 @@ paths:
         in: query
         name: status
         type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
       - default: 50
         description: Limit
         in: query
@@ -1245,6 +1249,10 @@ paths:
         in: query
         name: type
         type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
       - default: 50
         description: Limit
         in: query
@@ -1346,6 +1354,10 @@ paths:
         in: header
         name: Authorization
         required: true
+        type: string
+      - description: Search
+        in: query
+        name: search
         type: string
       - default: 50
         description: Limit
@@ -1544,6 +1556,10 @@ paths:
         in: header
         name: Authorization
         required: true
+        type: string
+      - description: Search
+        in: query
+        name: search
         type: string
       - default: 50
         description: Limit
@@ -2151,6 +2167,10 @@ paths:
         in: query
         name: status
         type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
       - default: 50
         description: Limit
         in: query
@@ -2268,6 +2288,10 @@ paths:
         in: query
         name: offset
         type: integer
+      - description: Search
+        in: query
+        name: search
+        type: string
       - description: Status
         in: query
         name: status
@@ -2506,6 +2530,10 @@ paths:
       - description: Product ID
         in: query
         name: product_id
+        type: string
+      - description: Search
+        in: query
+        name: search
         type: string
       - default: 50
         description: Limit
@@ -3205,6 +3233,10 @@ paths:
         in: query
         name: product_id
         type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
       - default: 50
         description: Limit
         in: query
@@ -3585,6 +3617,10 @@ paths:
         in: query
         name: scope
         type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
       - default: 50
         description: Limit
         in: query
@@ -3774,6 +3810,10 @@ paths:
       - description: Warehouse ID
         in: query
         name: warehouse_id
+        type: string
+      - description: Search
+        in: query
+        name: search
         type: string
       - default: 50
         description: Limit
@@ -4043,6 +4083,10 @@ paths:
         in: query
         name: status
         type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
       - default: 50
         description: Limit
         in: query
@@ -4173,6 +4217,10 @@ paths:
         in: query
         name: sale_number
         type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
       - default: 50
         description: Limit
         in: query
@@ -4290,6 +4338,10 @@ paths:
       - description: To date
         in: query
         name: to_date
+        type: string
+      - description: Search
+        in: query
+        name: search
         type: string
       - default: 50
         description: Limit
@@ -5275,6 +5327,10 @@ paths:
         in: header
         name: Authorization
         required: true
+        type: string
+      - description: Search
+        in: query
+        name: search
         type: string
       - description: Filter by active
         in: query

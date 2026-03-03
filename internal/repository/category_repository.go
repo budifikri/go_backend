@@ -14,7 +14,7 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-func (r *CategoryRepository) FindAll(companyID *uuid.UUID, isActive *bool, limit, offset int) ([]models.Category, int64, error) {
+func (r *CategoryRepository) FindAll(companyID *uuid.UUID, isActive *bool, search string, limit, offset int) ([]models.Category, int64, error) {
 	var categories []models.Category
 	var total int64
 	query := r.db.Model(&models.Category{}).Order("name ASC")
@@ -25,6 +25,10 @@ func (r *CategoryRepository) FindAll(companyID *uuid.UUID, isActive *bool, limit
 
 	if companyID != nil {
 		query = query.Where("company_id = ?", companyID)
+	}
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ? OR code ILIKE ? OR description ILIKE ?", like, like, like)
 	}
 
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {

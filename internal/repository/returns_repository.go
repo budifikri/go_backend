@@ -43,6 +43,10 @@ func (r *ReturnsRepository) FindReturns(filters map[string]string, limit, offset
 	if v := filters["status"]; v != "" {
 		query = query.Where("sr.status = ?", v)
 	}
+	if v := filters["search"]; v != "" {
+		like := "%" + v + "%"
+		query = query.Where("sr.return_number ILIKE ? OR s.sale_number ILIKE ?", like, like)
+	}
 
 	countQuery := query.Session(&gorm.Session{})
 	if err := countQuery.Count(&total).Error; err != nil {

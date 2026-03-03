@@ -28,6 +28,11 @@ func (r *InventoryRepository) FindAll(filters map[string]interface{}, limit, off
 	if productID, ok := filters["product_id"].(string); ok && productID != "" {
 		query = query.Where("product_id = ?", productID)
 	}
+	if search, ok := filters["search"].(string); ok && search != "" {
+		like := "%" + search + "%"
+		query = query.Joins("LEFT JOIN products p ON p.id = inventories.product_id").
+			Where("p.name ILIKE ? OR p.sku ILIKE ? OR p.barcode ILIKE ?", like, like, like)
+	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -208,6 +213,10 @@ func (r *InventoryRepository) FindStockOpnames(filters map[string]interface{}, l
 	}
 	if toDate, ok := filters["to_date"].(string); ok && toDate != "" {
 		query = query.Where("opname_date <= ?", toDate)
+	}
+	if search, ok := filters["search"].(string); ok && search != "" {
+		like := "%" + search + "%"
+		query = query.Where("opname_number ILIKE ?", like)
 	}
 
 	if err := query.Count(&total).Error; err != nil {

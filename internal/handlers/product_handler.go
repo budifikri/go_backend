@@ -214,6 +214,7 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 // @Tags Categories
 // @Produce json
 // @Param Authorization header string true "Bearer token"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -246,7 +247,7 @@ func (h *ProductHandler) GetCategories(c *fiber.Ctx) error {
 		}
 	}
 
-	result := h.productService.GetCategoriesPaged(companyID, isActive, limit, offset)
+	result := h.productService.GetCategoriesPaged(companyID, isActive, c.Query("search"), limit, offset)
 	return c.JSON(result)
 }
 

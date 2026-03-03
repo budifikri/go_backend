@@ -27,6 +27,10 @@ func (r *WarehouseRepository) FindAll(filters map[string]interface{}, limit, off
 	if companyID, ok := filters["company_id"].(string); ok && companyID != "" {
 		query = query.Where("company_id = ?", companyID)
 	}
+	if search, ok := filters["search"].(string); ok && search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ? OR code ILIKE ? OR address ILIKE ? OR city ILIKE ?", like, like, like, like)
+	}
 
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err

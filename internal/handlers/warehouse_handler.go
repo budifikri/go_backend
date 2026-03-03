@@ -24,6 +24,7 @@ func NewWarehouseHandler(warehouseService *services.WarehouseService) *Warehouse
 // @Tags Warehouses
 // @Produce json
 // @Param Authorization header string true "Bearer token"
+// @Param search query string false "Search"
 // @Param is_active query bool false "Filter by active"
 // @Param include_inactive query bool false "Include inactive (ignore default active-only)"
 // @Param limit query int false "Limit" default(50)
@@ -52,7 +53,7 @@ func (h *WarehouseHandler) GetWarehouses(c *fiber.Ctx) error {
 		b := true
 		isActive = &b
 	}
-	result := h.warehouseService.GetWarehouses(companyID, isActive, limit, offset)
+	result := h.warehouseService.GetWarehouses(companyID, isActive, c.Query("search"), limit, offset)
 	return c.JSON(result)
 }
 

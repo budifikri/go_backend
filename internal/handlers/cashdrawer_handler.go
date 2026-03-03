@@ -188,6 +188,7 @@ func (h *CashDrawerHandler) CashOut(c *fiber.Ctx) error {
 // @Param Authorization header string true "Bearer token"
 // @Param id path string true "Drawer ID"
 // @Param type query string false "Transaction type"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -207,7 +208,7 @@ func (h *CashDrawerHandler) GetTransactions(c *fiber.Ctx) error {
 	if q := c.Query("type"); q != "" {
 		typ = &q
 	}
-	result := h.cashDrawerService.GetDrawerTransactions(c.Params("id"), typ, limit, offset)
+	result := h.cashDrawerService.GetDrawerTransactions(c.Params("id"), typ, c.Query("search"), limit, offset)
 	return c.JSON(result)
 }
 
@@ -294,6 +295,7 @@ func (h *CashDrawerHandler) GetSummary(c *fiber.Ctx) error {
 // @Param warehouse_id query string false "Warehouse ID"
 // @Param cashier_id query string false "Cashier ID"
 // @Param status query string false "Status"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -314,6 +316,9 @@ func (h *CashDrawerHandler) ListCashDrawers(c *fiber.Ctx) error {
 	}
 	if v := c.Query("status"); v != "" {
 		filters["status"] = v
+	}
+	if v := c.Query("search"); v != "" {
+		filters["search"] = v
 	}
 	limit := c.QueryInt("limit", 50)
 	if limit <= 0 {

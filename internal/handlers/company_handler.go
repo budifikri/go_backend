@@ -23,6 +23,7 @@ func NewCompanyHandler(companyService *services.CompanyService) *CompanyHandler 
 // @Tags Companies
 // @Produce json
 // @Param Authorization header string true "Bearer token"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -33,7 +34,7 @@ func NewCompanyHandler(companyService *services.CompanyService) *CompanyHandler 
 func (h *CompanyHandler) GetCompanies(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	result := h.companyService.GetCompanies(limit, offset)
+	result := h.companyService.GetCompanies(c.Query("search"), limit, offset)
 	return c.JSON(result)
 }
 

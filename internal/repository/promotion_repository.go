@@ -14,7 +14,7 @@ func NewPromotionRepository(db *gorm.DB) *PromotionRepository {
 	return &PromotionRepository{db: db}
 }
 
-func (r *PromotionRepository) FindPromotions(isActive *bool, promoType *string, scope *string, limit, offset int) ([]models.Promotion, int64, error) {
+func (r *PromotionRepository) FindPromotions(isActive *bool, promoType *string, scope *string, search string, limit, offset int) ([]models.Promotion, int64, error) {
 	query := r.db.Table("promotions")
 	if isActive != nil {
 		query = query.Where("is_active = ?", *isActive)
@@ -24,6 +24,10 @@ func (r *PromotionRepository) FindPromotions(isActive *bool, promoType *string, 
 	}
 	if scope != nil && *scope != "" {
 		query = query.Where("scope = ?", *scope)
+	}
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("code ILIKE ? OR name ILIKE ?", like, like)
 	}
 	var total int64
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {

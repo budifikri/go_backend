@@ -17,7 +17,7 @@ func NewPriceTierService(db *gorm.DB) *PriceTierService {
 	return &PriceTierService{db: db}
 }
 
-func (s *PriceTierService) GetPriceTiers(productID *string, limit, offset int) response.PaginatedResponse {
+func (s *PriceTierService) GetPriceTiers(productID *string, search string, limit, offset int) response.PaginatedResponse {
 	if limit <= 0 {
 		limit = 50
 	}
@@ -32,6 +32,10 @@ func (s *PriceTierService) GetPriceTiers(productID *string, limit, offset int) r
 		Where("pt.is_active = true")
 	if productID != nil && *productID != "" {
 		query = query.Where("pt.product_id = ?", *productID)
+	}
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("pt.tier_name ILIKE ? OR p.name ILIKE ? OR p.sku ILIKE ?", like, like, like)
 	}
 
 	var total int64

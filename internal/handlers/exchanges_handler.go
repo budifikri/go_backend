@@ -99,6 +99,7 @@ func (h *ExchangesHandler) GetExchange(c *fiber.Ctx) error {
 // @Param warehouse_id query string false "Warehouse ID"
 // @Param sale_id query string false "Sale ID"
 // @Param status query string false "Exchange status"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -110,6 +111,7 @@ func (h *ExchangesHandler) GetExchanges(c *fiber.Ctx) error {
 	filters["warehouse_id"] = c.Query("warehouse_id")
 	filters["sale_id"] = c.Query("sale_id")
 	filters["status"] = c.Query("status")
+	filters["search"] = c.Query("search")
 
 	limit := c.QueryInt("limit", 50)
 	if limit <= 0 {

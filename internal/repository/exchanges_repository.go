@@ -42,6 +42,10 @@ func (r *ExchangesRepository) FindExchanges(filters map[string]string, limit, of
 	if v := filters["status"]; v != "" {
 		query = query.Where("ie.status = ?", v)
 	}
+	if v := filters["search"]; v != "" {
+		like := "%" + v + "%"
+		query = query.Where("ie.exchange_number ILIKE ?", like)
+	}
 
 	countQuery := query.Session(&gorm.Session{})
 	if err := countQuery.Count(&total).Error; err != nil {

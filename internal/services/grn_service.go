@@ -23,6 +23,7 @@ type GrnFilter struct {
 	Page        int
 	Limit       int
 	Offset      int
+	Search      string
 	Status      string
 	PoID        string
 	WarehouseID string
@@ -139,6 +140,10 @@ func (s *GrnService) GetGrns(filter GrnFilter) response.PaginatedResponse {
 	}
 	if filter.EndDate != "" {
 		add("grn.received_date <= ?", filter.EndDate)
+	}
+	if filter.Search != "" {
+		add("(grn.grn_number ILIKE ? OR grn.invoice_number ILIKE ?)", "%"+filter.Search+"%")
+		args = append(args, "%"+filter.Search+"%")
 	}
 
 	var total int64

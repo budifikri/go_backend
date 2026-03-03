@@ -24,6 +24,7 @@ func NewPromotionHandler(promotionService *services.PromotionService) *Promotion
 // @Param is_active query bool false "Is active"
 // @Param type query string false "Promotion type"
 // @Param scope query string false "Scope"
+// @Param search query string false "Search"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -46,7 +47,7 @@ func (h *PromotionHandler) GetPromotions(c *fiber.Ctx) error {
 	}
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
-	result := h.promotionService.GetPromotions(isActive, promoType, scope, limit, offset)
+	result := h.promotionService.GetPromotions(isActive, promoType, scope, c.Query("search"), limit, offset)
 	return c.JSON(result)
 }
 

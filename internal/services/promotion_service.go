@@ -21,7 +21,7 @@ func NewPromotionService(db *gorm.DB, promoRepo *repository.PromotionRepository)
 	return &PromotionService{db: db, promoRepo: promoRepo}
 }
 
-func (s *PromotionService) GetPromotions(isActive *bool, promoType *string, scope *string, limit, offset int) response.PaginatedResponse {
+func (s *PromotionService) GetPromotions(isActive *bool, promoType *string, scope *string, search string, limit, offset int) response.PaginatedResponse {
 	if limit <= 0 {
 		limit = 50
 	}
@@ -29,7 +29,7 @@ func (s *PromotionService) GetPromotions(isActive *bool, promoType *string, scop
 		offset = 0
 	}
 
-	promos, total, err := s.promoRepo.FindPromotions(isActive, promoType, scope, limit, offset)
+	promos, total, err := s.promoRepo.FindPromotions(isActive, promoType, scope, search, limit, offset)
 	if err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}

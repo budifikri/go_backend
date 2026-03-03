@@ -407,7 +407,7 @@ func (s *ProductService) DeleteProduct(id string) response.ApiResponse {
 	return response.NewSuccessResponse(nil, "Product deleted successfully")
 }
 
-func (s *ProductService) GetCategories(companyID *string, isActive *bool) response.ApiResponse {
+func (s *ProductService) GetCategories(companyID *string, isActive *bool, search string) response.ApiResponse {
 	var compID *uuid.UUID
 	if companyID != nil && *companyID != "" {
 		id, err := uuid.Parse(*companyID)
@@ -416,7 +416,7 @@ func (s *ProductService) GetCategories(companyID *string, isActive *bool) respon
 		}
 	}
 	// TS parity default pagination for categories list
-	categories, _, err := s.categoryRepo.FindAll(compID, isActive, 50, 0)
+	categories, _, err := s.categoryRepo.FindAll(compID, isActive, search, 50, 0)
 	if err != nil {
 		return response.NewErrorResponse("Failed to get categories")
 	}
@@ -424,7 +424,7 @@ func (s *ProductService) GetCategories(companyID *string, isActive *bool) respon
 	return response.NewSuccessResponse(categories, "")
 }
 
-func (s *ProductService) GetCategoriesPaged(companyID *string, isActive *bool, limit, offset int) response.PaginatedResponse {
+func (s *ProductService) GetCategoriesPaged(companyID *string, isActive *bool, search string, limit, offset int) response.PaginatedResponse {
 	var compID *uuid.UUID
 	if companyID != nil && *companyID != "" {
 		id, err := uuid.Parse(*companyID)
@@ -440,7 +440,7 @@ func (s *ProductService) GetCategoriesPaged(companyID *string, isActive *bool, l
 		offset = 0
 	}
 
-	categories, total, err := s.categoryRepo.FindAll(compID, isActive, limit, offset)
+	categories, total, err := s.categoryRepo.FindAll(compID, isActive, search, limit, offset)
 	if err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}

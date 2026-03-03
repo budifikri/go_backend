@@ -15,13 +15,16 @@ func NewWarehouseService(warehouseRepo *repository.WarehouseRepository) *Warehou
 	return &WarehouseService{warehouseRepo: warehouseRepo}
 }
 
-func (s *WarehouseService) GetWarehouses(companyID *string, isActive *bool, limit, offset int) response.PaginatedResponse {
+func (s *WarehouseService) GetWarehouses(companyID *string, isActive *bool, search string, limit, offset int) response.PaginatedResponse {
 	filters := map[string]interface{}{}
 	if companyID != nil && *companyID != "" {
 		filters["company_id"] = *companyID
 	}
 	if isActive != nil {
 		filters["is_active"] = *isActive
+	}
+	if search != "" {
+		filters["search"] = search
 	}
 	warehouses, total, err := s.warehouseRepo.FindAll(filters, limit, offset)
 	if err != nil {

@@ -73,6 +73,7 @@ func (h *GrnHandler) GetGrn(c *fiber.Ctx) error {
 // @Param page query int false "Page" default(1)
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset (overrides page)" default(0)
+// @Param search query string false "Search"
 // @Param status query string false "Status"
 // @Param poId query string false "PO ID"
 // @Param warehouseId query string false "Warehouse ID"
@@ -92,6 +93,7 @@ func (h *GrnHandler) ListGrns(c *fiber.Ctx) error {
 		Page:        c.QueryInt("page", 1),
 		Limit:       c.QueryInt("limit", 50),
 		Offset:      offset,
+		Search:      c.Query("search"),
 		Status:      c.Query("status"),
 		PoID:        c.Query("poId"),
 		WarehouseID: c.Query("warehouseId"),
