@@ -15,7 +15,7 @@ func NewWarehouseService(warehouseRepo *repository.WarehouseRepository) *Warehou
 	return &WarehouseService{warehouseRepo: warehouseRepo}
 }
 
-func (s *WarehouseService) GetWarehouses(companyID *string, isActive *bool) response.ApiResponse {
+func (s *WarehouseService) GetWarehouses(companyID *string, isActive *bool, limit, offset int) response.PaginatedResponse {
 	filters := map[string]interface{}{}
 	if companyID != nil && *companyID != "" {
 		filters["company_id"] = *companyID
@@ -23,11 +23,11 @@ func (s *WarehouseService) GetWarehouses(companyID *string, isActive *bool) resp
 	if isActive != nil {
 		filters["is_active"] = *isActive
 	}
-	warehouses, err := s.warehouseRepo.FindAll(filters)
+	warehouses, total, err := s.warehouseRepo.FindAll(filters, limit, offset)
 	if err != nil {
-		return response.NewErrorResponse("Failed to get warehouses")
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
-	return response.NewSuccessResponse(warehouses, "")
+	return response.NewPaginatedResponse(warehouses, total, limit, offset)
 }
 
 func (s *WarehouseService) GetWarehouseByID(id string) response.ApiResponse {

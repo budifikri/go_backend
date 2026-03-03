@@ -14,8 +14,9 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-func (r *CategoryRepository) FindAll(companyID *uuid.UUID, isActive *bool, limit, offset int) ([]models.Category, error) {
+func (r *CategoryRepository) FindAll(companyID *uuid.UUID, isActive *bool, limit, offset int) ([]models.Category, int64, error) {
 	var categories []models.Category
+	var total int64
 	query := r.db.Model(&models.Category{}).Order("name ASC")
 	// If isActive is nil: include both active and inactive.
 	if isActive != nil {
@@ -26,6 +27,10 @@ func (r *CategoryRepository) FindAll(companyID *uuid.UUID, isActive *bool, limit
 		query = query.Where("company_id = ?", companyID)
 	}
 
+	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
 	if limit > 0 {
 		query = query.Limit(limit)
 	}
@@ -34,9 +39,9 @@ func (r *CategoryRepository) FindAll(companyID *uuid.UUID, isActive *bool, limit
 	}
 
 	if err := query.Find(&categories).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return categories, nil
+	return categories, total, nil
 }
 
 func (r *CategoryRepository) FindByID(id uuid.UUID) (*models.Category, error) {

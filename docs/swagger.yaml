@@ -1295,7 +1295,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1477,13 +1477,23 @@ paths:
         name: Authorization
         required: true
         type: string
+      - default: 50
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
@@ -3386,7 +3396,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
@@ -3418,7 +3428,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
@@ -3458,7 +3468,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
@@ -4930,13 +4940,23 @@ paths:
         in: query
         name: include_inactive
         type: boolean
+      - default: 50
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:

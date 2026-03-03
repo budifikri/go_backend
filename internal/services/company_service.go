@@ -19,12 +19,27 @@ func NewCompanyService(db *gorm.DB) *CompanyService {
 	return &CompanyService{db: db}
 }
 
-func (s *CompanyService) GetCompanies() response.ApiResponse {
+func (s *CompanyService) GetCompanies(limit, offset int) response.PaginatedResponse {
 	var companies []models.Company
-	if err := s.db.Order("nama").Find(&companies).Error; err != nil {
-		return response.NewErrorResponse("Failed to get companies")
+	var total int64
+
+	if limit <= 0 {
+		limit = 50
 	}
-	return response.NewSuccessResponse(companies, "")
+	if offset < 0 {
+		offset = 0
+	}
+
+	query := s.db.Model(&models.Company{})
+	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
+	}
+
+	if err := query.Order("nama").Limit(limit).Offset(offset).Find(&companies).Error; err != nil {
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
+	}
+
+	return response.NewPaginatedResponse(companies, total, limit, offset)
 }
 
 func (s *CompanyService) GetCompanyByID(id string) response.ApiResponse {

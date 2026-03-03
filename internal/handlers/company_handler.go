@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
@@ -21,13 +23,17 @@ func NewCompanyHandler(companyService *services.CompanyService) *CompanyHandler 
 // @Tags Companies
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Success 200 {object} response.ApiResponse
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 401 {object} response.ApiResponse
 // @Failure 403 {object} response.ApiResponse
 // @Security BearerAuth
 // @Router /api/companies [get]
 func (h *CompanyHandler) GetCompanies(c *fiber.Ctx) error {
-	result := h.companyService.GetCompanies()
+	limit, _ := strconv.Atoi(c.Query("limit", "50"))
+	offset, _ := strconv.Atoi(c.Query("offset", "0"))
+	result := h.companyService.GetCompanies(limit, offset)
 	return c.JSON(result)
 }
 

@@ -14,8 +14,9 @@ func NewWarehouseRepository(db *gorm.DB) *WarehouseRepository {
 	return &WarehouseRepository{db: db}
 }
 
-func (r *WarehouseRepository) FindAll(filters map[string]interface{}) ([]models.Warehouse, error) {
+func (r *WarehouseRepository) FindAll(filters map[string]interface{}, limit, offset int) ([]models.Warehouse, int64, error) {
 	var warehouses []models.Warehouse
+	var total int64
 	query := r.db.Model(&models.Warehouse{})
 
 	// If is_active is not provided: include both active and inactive.
@@ -27,10 +28,14 @@ func (r *WarehouseRepository) FindAll(filters map[string]interface{}) ([]models.
 		query = query.Where("company_id = ?", companyID)
 	}
 
-	if err := query.Order("name ASC").Find(&warehouses).Error; err != nil {
-		return nil, err
+	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return warehouses, nil
+
+	if err := query.Order("name ASC").Limit(limit).Offset(offset).Find(&warehouses).Error; err != nil {
+		return nil, 0, err
+	}
+	return warehouses, total, nil
 }
 
 func (r *WarehouseRepository) FindByID(id uuid.UUID) (*models.Warehouse, error) {

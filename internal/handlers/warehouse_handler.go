@@ -26,7 +26,9 @@ func NewWarehouseHandler(warehouseService *services.WarehouseService) *Warehouse
 // @Param Authorization header string true "Bearer token"
 // @Param is_active query bool false "Filter by active"
 // @Param include_inactive query bool false "Include inactive (ignore default active-only)"
-// @Success 200 {object} response.ApiResponse
+// @Param limit query int false "Limit" default(50)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
 // @Router /api/warehouses [get]
@@ -36,6 +38,9 @@ func (h *WarehouseHandler) GetWarehouses(c *fiber.Ctx) error {
 	if user != nil && user.CompanyID != "" {
 		companyID = &user.CompanyID
 	}
+
+	limit, _ := strconv.Atoi(c.Query("limit", "50"))
+	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 
 	includeInactive := c.QueryBool("include_inactive", false)
 	var isActive *bool
@@ -47,7 +52,7 @@ func (h *WarehouseHandler) GetWarehouses(c *fiber.Ctx) error {
 		b := true
 		isActive = &b
 	}
-	result := h.warehouseService.GetWarehouses(companyID, isActive)
+	result := h.warehouseService.GetWarehouses(companyID, isActive, limit, offset)
 	return c.JSON(result)
 }
 

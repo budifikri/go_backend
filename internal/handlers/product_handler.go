@@ -88,7 +88,7 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param id path string true "Product ID"
-// @Success 200 {object} response.ApiResponse
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 401 {object} response.ApiResponse
 // @Failure 404 {object} response.ApiResponse
 // @Security BearerAuth
@@ -154,7 +154,7 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 // @Param Authorization header string true "Bearer token"
 // @Param id path string true "Product ID"
 // @Param body body request.ProductUpdateRequest true "Product payload"
-// @Success 200 {object} response.ApiResponse
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 400 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
@@ -194,7 +194,7 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param id path string true "Product ID"
-// @Success 200 {object} response.ApiResponse
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 401 {object} response.ApiResponse
 // @Failure 404 {object} response.ApiResponse
 // @Security BearerAuth
@@ -216,7 +216,7 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 // @Param Authorization header string true "Bearer token"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.ApiResponse
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
 // @Router /api/categories [get]
