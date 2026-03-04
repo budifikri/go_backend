@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
 )
@@ -89,7 +90,13 @@ func (s *CustomerService) CreateCustomer(input map[string]interface{}, companyID
 
 	created, err := s.customerRepo.CreateCustomer(data)
 	if err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionCreate, "customers", "", companyID, "", err)
+		}
 		return response.NewErrorResponse(err.Error())
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionCreate, "customers", "", companyID, created.ID.String(), nil, created)
 	}
 	return response.NewSuccessResponse(created, "Customer created successfully")
 }
@@ -104,12 +111,20 @@ func (s *CustomerService) UpdateCustomer(id string, companyID string, updates ma
 		return response.NewErrorResponse("Customer not found")
 	}
 
+	oldRow, _ := s.customerRepo.GetCustomerByID(uid, cid)
+
 	row, err := s.customerRepo.UpdateCustomer(uid, cid, updates)
 	if err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionUpdate, "customers", "", companyID, uid.String(), err)
+		}
 		return response.NewErrorResponse(err.Error())
 	}
 	if row == nil {
 		return response.NewErrorResponse("Customer not found")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionUpdate, "customers", "", companyID, uid.String(), oldRow, row)
 	}
 	return response.NewSuccessResponse(row, "Customer updated successfully")
 }
@@ -124,12 +139,20 @@ func (s *CustomerService) DeleteCustomer(id string, companyID string) response.A
 		return response.NewErrorResponse("Customer not found")
 	}
 
+	oldRow, _ := s.customerRepo.GetCustomerByID(uid, cid)
+
 	affected, err := s.customerRepo.DeleteCustomer(uid, cid)
 	if err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionDelete, "customers", "", companyID, uid.String(), err)
+		}
 		return response.NewErrorResponse(err.Error())
 	}
 	if affected == 0 {
 		return response.NewErrorResponse("Customer not found")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionDelete, "customers", "", companyID, uid.String(), oldRow, nil)
 	}
 	return response.NewSuccessResponse(nil, "Customer deleted successfully")
 }

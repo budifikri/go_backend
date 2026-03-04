@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgconn"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/types/response"
 	"gorm.io/gorm"
@@ -102,7 +103,11 @@ func (s *CompanyService) CreateCompany(input CreateCompanyInput) response.ApiRes
 		UpdatedAt:       time.Now(),
 	}
 
-	if err := s.db.Create(&company).Error; err != nil {
+	logInstance := applogger.Default()
+	err := applogger.AuditCreate(s.db, logInstance, "companies", company.ID.String(), "", "", func() error {
+		return s.db.Create(&company).Error
+	})
+	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return response.NewErrorResponse("Company code or email already exists")
@@ -169,16 +174,23 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 	}
 	updates["updated_at"] = time.Now()
 
-	res := s.db.Model(&models.Company{}).Where("id = ?", companyID).Updates(updates)
-	if res.Error != nil {
+	logInstance := applogger.Default()
+	err = applogger.AuditUpdate(s.db, logInstance, "companies", companyID.String(), "", "", func() error {
+		res := s.db.Model(&models.Company{}).Where("id = ?", companyID).Updates(updates)
+		if res.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return res.Error
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.NewErrorResponse("Company not found")
+		}
 		var pgErr *pgconn.PgError
-		if errors.As(res.Error, &pgErr) && pgErr.Code == "23505" {
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return response.NewErrorResponse("Company email already exists")
 		}
 		return response.NewErrorResponse("Failed to update company")
-	}
-	if res.RowsAffected == 0 {
-		return response.NewErrorResponse("Company not found")
 	}
 
 	var company models.Company
@@ -225,7 +237,10 @@ func (s *CompanyService) DeleteCompany(id string) response.ApiResponse {
 	if err := s.db.First(&company, "id = ?", companyID).Error; err != nil {
 		return response.NewErrorResponse("Company not found")
 	}
-	if err := s.db.Delete(&models.Company{}, "id = ?", companyID).Error; err != nil {
+	logInstance := applogger.Default()
+	if err := applogger.AuditDelete(s.db, logInstance, "companies", companyID.String(), "", "", func() error {
+		return s.db.Delete(&models.Company{}, "id = ?", companyID).Error
+	}); err != nil {
 		return response.NewErrorResponse("Failed to delete company")
 	}
 	return response.NewSuccessResponse(nil, "Company deleted successfully")

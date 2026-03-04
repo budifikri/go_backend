@@ -18,18 +18,28 @@ Logging CRUD Plan
 - Tidak perlu membuat folder manual.
 
 4. Sumber Logging
-- Middleware mencatat request CRUD berdasarkan method:
-  - POST -> CREATE
-  - PUT/PATCH -> UPDATE
-  - DELETE -> DELETE
-- Middleware mengambil nama table dari path API setelah `/api/`.
-- Jika request gagal (status >= 400 atau error), catat ke `error.log` dan counter error.
+- Logging dilakukan di Service layer, bukan di middleware.
+- Workflow update/delete:
+  - Ambil old data dari database.
+  - Jalankan update/delete.
+  - Ambil new data (khusus update) dari database.
+  - Kirim old/new ke logger.
+- Helper wrapper tersedia di `internal/logger/audit.go`:
+  - `AuditCreate(...)`
+  - `AuditUpdate(...)`
+  - `AuditDelete(...)`
+- Jika proses gagal, error dicatat ke `error.log`.
 
 5. Format Log
 - Format plain text per baris.
-- Contoh:
-  - `[2026-03-04 10:30:00] [INFO] [CREATE] [users] user_id=... company_id=... record_id=...`
-  - `[2026-03-04 10:30:02] [ERROR] [DELETE] [users] user_id=... company_id=... record_id=... error=...`
+- CREATE:
+  - `[2026-03-04 10:30:00] [INFO] [CREATE] [units] user_id=abc company_id=xyz new={"name":"PCS","code":"PCS","is_active":true}`
+- UPDATE:
+  - `[2026-03-04 10:30:05] [INFO] [UPDATE] [units] user_id=abc company_id=xyz record_id=123 old={"name":"PCS","code":"PCS","is_active":true} new={"name":"PCS","code":"PCS","is_active":false}`
+- DELETE:
+  - `[2026-03-04 10:30:10] [INFO] [DELETE] [units] user_id=abc company_id=xyz record_id=123 old={"name":"PCS","code":"PCS","is_active":true}`
+- ERROR:
+  - `[2026-03-04 10:30:12] [ERROR] [UPDATE] [units] user_id=abc company_id=xyz record_id=123 error=...`
 
 6. Summary
 - `summary.txt` berisi total CREATE, UPDATE, DELETE, ERROR per table dan TOTAL keseluruhan.

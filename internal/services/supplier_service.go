@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
 )
@@ -79,7 +80,13 @@ func (s *SupplierService) CreateSupplier(input map[string]interface{}, companyID
 
 	created, err := s.supplierRepo.CreateSupplier(data)
 	if err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionCreate, "suppliers", "", companyID, "", err)
+		}
 		return response.NewErrorResponse(err.Error())
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionCreate, "suppliers", "", companyID, created.ID.String(), nil, created)
 	}
 	return response.NewSuccessResponse(created, "Supplier created successfully")
 }
@@ -94,12 +101,20 @@ func (s *SupplierService) UpdateSupplier(id string, companyID string, updates ma
 		return response.NewErrorResponse("Supplier not found")
 	}
 
+	oldRow, _ := s.supplierRepo.GetSupplierByID(uid, &cid)
+
 	row, err := s.supplierRepo.UpdateSupplier(uid, cid, updates)
 	if err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionUpdate, "suppliers", "", companyID, uid.String(), err)
+		}
 		return response.NewErrorResponse(err.Error())
 	}
 	if row == nil {
 		return response.NewErrorResponse("Supplier not found")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionUpdate, "suppliers", "", companyID, uid.String(), oldRow, row)
 	}
 	return response.NewSuccessResponse(row, "Supplier updated successfully")
 }
@@ -130,12 +145,20 @@ func (s *SupplierService) DeleteSupplier(id string, companyID string) response.A
 		return response.NewErrorResponse("Supplier not found")
 	}
 
+	oldRow, _ := s.supplierRepo.GetSupplierByID(uid, &cid)
+
 	affected, err := s.supplierRepo.DeleteSupplier(uid, cid)
 	if err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionDelete, "suppliers", "", companyID, uid.String(), err)
+		}
 		return response.NewErrorResponse("Failed to delete supplier")
 	}
 	if affected == 0 {
 		return response.NewErrorResponse("Supplier not found")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionDelete, "suppliers", "", companyID, uid.String(), oldRow, nil)
 	}
 	return response.NewSuccessResponse(nil, "Supplier deleted successfully")
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgconn"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/types/response"
 	"github.com/pos-retail/go_backend/internal/utils"
@@ -137,7 +138,11 @@ func (s *UserService) CreateUser(input CreateUserInput) response.ApiResponse {
 		UpdatedAt: time.Now(),
 	}
 
-	if err := s.db.Create(&user).Error; err != nil {
+	logInstance := applogger.Default()
+	err = applogger.AuditCreate(s.db, logInstance, "users", user.ID.String(), "", input.CompanyID, func() error {
+		return s.db.Create(&user).Error
+	})
+	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return response.NewErrorResponse("Username or email already exists")
@@ -192,16 +197,23 @@ func (s *UserService) UpdateUser(id, companyID string, input UpdateUserInput) re
 	}
 	updates["updated_at"] = time.Now()
 
-	res := s.db.Model(&models.User{}).Where("id = ? AND company_id = ?", userID, companyUUID).Updates(updates)
-	if res.Error != nil {
+	logInstance := applogger.Default()
+	err = applogger.AuditUpdate(s.db, logInstance, "users", userID.String(), "", companyID, func() error {
+		res := s.db.Model(&models.User{}).Where("id = ? AND company_id = ?", userID, companyUUID).Updates(updates)
+		if res.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return res.Error
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.NewErrorResponse("User not found")
+		}
 		var pgErr *pgconn.PgError
-		if errors.As(res.Error, &pgErr) && pgErr.Code == "23505" {
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return response.NewErrorResponse("Username or email already exists")
 		}
 		return response.NewErrorResponse("Failed to update user")
-	}
-	if res.RowsAffected == 0 {
-		return response.NewErrorResponse("User not found")
 	}
 
 	var user models.User
@@ -227,11 +239,14 @@ func (s *UserService) DeleteUser(id, companyID string) response.ApiResponse {
 		return response.NewErrorResponse("User not found")
 	}
 
-	if err := s.db.Where("user_id = ?", userID).Delete(&models.UserSession{}).Error; err != nil {
-		return response.NewErrorResponse("Failed to delete user")
-	}
-
-	if err := s.db.Delete(&models.User{}, "id = ? AND company_id = ?", userID, companyUUID).Error; err != nil {
+	logInstance := applogger.Default()
+	err = applogger.AuditDelete(s.db, logInstance, "users", userID.String(), "", companyID, func() error {
+		if err := s.db.Where("user_id = ?", userID).Delete(&models.UserSession{}).Error; err != nil {
+			return err
+		}
+		return s.db.Delete(&models.User{}, "id = ? AND company_id = ?", userID, companyUUID).Error
+	})
+	if err != nil {
 		return response.NewErrorResponse("Failed to delete user")
 	}
 

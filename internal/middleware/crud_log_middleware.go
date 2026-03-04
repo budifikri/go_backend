@@ -57,7 +57,11 @@ func (m *CRUDLogMiddleware) Handler() fiber.Handler {
 			return err
 		}
 
-		m.logger.Log(action, table, userID, companyID, recordID, payload)
+		if action == "CREATE" {
+			m.logger.Log(action, table, userID, companyID, recordID, nil, payload)
+		} else {
+			m.logger.Log(action, table, userID, companyID, recordID, nil, nil)
+		}
 		return nil
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/types/response"
 	"gorm.io/gorm"
@@ -94,7 +95,9 @@ func (s *PriceTierService) CreatePriceTier(input CreatePriceTierInput) response.
 		IsActive:    true,
 		CreatedAt:   time.Now(),
 	}
-	if err := s.db.Create(&pt).Error; err != nil {
+	if err := applogger.AuditCreate(s.db, applogger.Default(), "price_tiers", pt.ID.String(), "", "", func() error {
+		return s.db.Create(&pt).Error
+	}); err != nil {
 		return response.NewErrorResponse("Failed to create price tier")
 	}
 	return response.NewSuccessResponse(pt, "")
@@ -133,11 +136,17 @@ func (s *PriceTierService) UpdatePriceTier(id string, input UpdatePriceTierInput
 		return response.NewErrorResponse("No fields to update")
 	}
 
-	res := s.db.Table("price_tiers").Where("id = ?", tid).Updates(updates)
-	if res.Error != nil {
-		return response.NewErrorResponse("Price tier not found")
-	}
-	if res.RowsAffected == 0 {
+	err = applogger.AuditUpdate(s.db, applogger.Default(), "price_tiers", tid.String(), "", "", func() error {
+		res := s.db.Table("price_tiers").Where("id = ?", tid).Updates(updates)
+		if res.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return res.Error
+	})
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return response.NewErrorResponse("Price tier not found")
+		}
 		return response.NewErrorResponse("Price tier not found")
 	}
 	return s.GetPriceTierByID(id)
@@ -148,11 +157,14 @@ func (s *PriceTierService) DeletePriceTier(id string) response.ApiResponse {
 	if err != nil {
 		return response.NewErrorResponse("Price tier not found")
 	}
-	res := s.db.Exec("DELETE FROM price_tiers WHERE id = ?", tid)
-	if res.Error != nil {
-		return response.NewErrorResponse("Price tier not found")
-	}
-	if res.RowsAffected == 0 {
+	err = applogger.AuditDelete(s.db, applogger.Default(), "price_tiers", tid.String(), "", "", func() error {
+		res := s.db.Exec("DELETE FROM price_tiers WHERE id = ?", tid)
+		if res.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return res.Error
+	})
+	if err != nil {
 		return response.NewErrorResponse("Price tier not found")
 	}
 	return response.NewSuccessResponse(nil, "Price tier deleted successfully")

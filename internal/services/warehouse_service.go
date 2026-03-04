@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/google/uuid"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
@@ -94,7 +95,13 @@ func (s *WarehouseService) CreateWarehouse(input CreateWarehouseInput) response.
 	}
 
 	if err := s.warehouseRepo.Create(&wh); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionCreate, "warehouses", "", warehouseCompanyIDString(companyUUID), wh.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to create warehouse")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionCreate, "warehouses", "", warehouseCompanyIDString(companyUUID), wh.ID.String(), nil, wh)
 	}
 	return response.NewSuccessResponse(wh, "")
 }
@@ -122,6 +129,7 @@ func (s *WarehouseService) UpdateWarehouse(id string, input UpdateWarehouseInput
 	if wh == nil {
 		return response.NewErrorResponse("Warehouse not found")
 	}
+	oldWarehouse := *wh
 
 	updated := false
 	if input.Code != nil {
@@ -169,7 +177,13 @@ func (s *WarehouseService) UpdateWarehouse(id string, input UpdateWarehouseInput
 	}
 
 	if err := s.warehouseRepo.Update(wh); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionUpdate, "warehouses", "", warehouseCompanyIDString(wh.CompanyID), wh.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to update warehouse")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionUpdate, "warehouses", "", warehouseCompanyIDString(wh.CompanyID), wh.ID.String(), oldWarehouse, wh)
 	}
 	return response.NewSuccessResponse(wh, "")
 }
@@ -188,8 +202,21 @@ func (s *WarehouseService) DeleteWarehouse(id string) response.ApiResponse {
 	}
 
 	if err := s.warehouseRepo.Delete(wh.ID); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionDelete, "warehouses", "", warehouseCompanyIDString(wh.CompanyID), wh.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to delete warehouse")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionDelete, "warehouses", "", warehouseCompanyIDString(wh.CompanyID), wh.ID.String(), wh, nil)
 	}
 
 	return response.NewSuccessResponse(nil, "Warehouse deleted successfully")
+}
+
+func warehouseCompanyIDString(v *uuid.UUID) string {
+	if v == nil {
+		return ""
+	}
+	return v.String()
 }

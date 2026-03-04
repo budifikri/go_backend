@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/google/uuid"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
@@ -212,7 +213,7 @@ func (s *ProductService) GetProductByID(id string) response.ApiResponse {
 	}, "Product retrieved successfully")
 }
 
-func (s *ProductService) CreateProduct(req CreateProductRequest) response.ApiResponse {
+func (s *ProductService) CreateProduct(req CreateProductRequest, actorUserID, actorCompanyID string) response.ApiResponse {
 	unitID, err := uuid.Parse(req.UnitID)
 	if err != nil {
 		return response.NewErrorResponse("Invalid unit ID")
@@ -278,7 +279,13 @@ func (s *ProductService) CreateProduct(req CreateProductRequest) response.ApiRes
 	}
 
 	if err := s.productRepo.Create(&product); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionCreate, "products", actorUserID, actorCompanyID, product.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to create product")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionCreate, "products", actorUserID, actorCompanyID, product.ID.String(), nil, product)
 	}
 
 	return response.NewSuccessResponse(ProductDetailResponse{
@@ -296,7 +303,7 @@ func (s *ProductService) CreateProduct(req CreateProductRequest) response.ApiRes
 	}, "Product created successfully")
 }
 
-func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) response.ApiResponse {
+func (s *ProductService) UpdateProduct(id string, req CreateProductRequest, actorUserID, actorCompanyID string) response.ApiResponse {
 	productID, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Invalid product ID")
@@ -306,6 +313,7 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) resp
 	if err != nil || product == nil {
 		return response.NewErrorResponse(ErrProductNotFound.Error())
 	}
+	oldProduct := *product
 
 	log.Printf("[DEBUG] UpdateProduct: current UnitID=%s, requested UnitID=%s", product.UnitID, req.UnitID)
 
@@ -370,7 +378,13 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) resp
 
 	if err := s.productRepo.Update(product); err != nil {
 		log.Printf("[DEBUG] UpdateProduct: DB update error: %v", err)
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionUpdate, "products", actorUserID, actorCompanyID, product.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to update product")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionUpdate, "products", actorUserID, actorCompanyID, product.ID.String(), oldProduct, product)
 	}
 
 	log.Printf("[DEBUG] UpdateProduct: success, UnitID=%s", product.UnitID)
@@ -389,7 +403,7 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest) resp
 	}, "Product updated successfully")
 }
 
-func (s *ProductService) DeleteProduct(id string) response.ApiResponse {
+func (s *ProductService) DeleteProduct(id, actorUserID, actorCompanyID string) response.ApiResponse {
 	productID, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Invalid product ID")
@@ -401,7 +415,13 @@ func (s *ProductService) DeleteProduct(id string) response.ApiResponse {
 	}
 
 	if err := s.productRepo.Delete(product.ID); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionDelete, "products", actorUserID, actorCompanyID, product.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to delete product")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionDelete, "products", actorUserID, actorCompanyID, product.ID.String(), product, nil)
 	}
 
 	return response.NewSuccessResponse(nil, "Product deleted successfully")
@@ -471,7 +491,7 @@ type CreateCategoryInput struct {
 	CompanyID   *string
 }
 
-func (s *ProductService) CreateCategory(input CreateCategoryInput) response.ApiResponse {
+func (s *ProductService) CreateCategory(input CreateCategoryInput, actorUserID, actorCompanyID string) response.ApiResponse {
 	existing, err := s.categoryRepo.FindByCode(input.Code)
 	if err != nil {
 		return response.NewErrorResponse("Failed to create category")
@@ -513,7 +533,13 @@ func (s *ProductService) CreateCategory(input CreateCategoryInput) response.ApiR
 	}
 
 	if err := s.categoryRepo.Create(&cat); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionCreate, "categories", actorUserID, actorCompanyID, cat.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to create category")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionCreate, "categories", actorUserID, actorCompanyID, cat.ID.String(), nil, cat)
 	}
 	return response.NewSuccessResponse(cat, "")
 }
@@ -526,7 +552,7 @@ type UpdateCategoryInput struct {
 	IsActive    *bool
 }
 
-func (s *ProductService) UpdateCategory(id string, input UpdateCategoryInput) response.ApiResponse {
+func (s *ProductService) UpdateCategory(id string, input UpdateCategoryInput, actorUserID, actorCompanyID string) response.ApiResponse {
 	catID, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Category not found")
@@ -539,6 +565,7 @@ func (s *ProductService) UpdateCategory(id string, input UpdateCategoryInput) re
 	if cat == nil {
 		return response.NewErrorResponse("Category not found")
 	}
+	oldCategory := *cat
 
 	updated := false
 	if input.Code != nil {
@@ -575,12 +602,18 @@ func (s *ProductService) UpdateCategory(id string, input UpdateCategoryInput) re
 	}
 
 	if err := s.categoryRepo.Update(cat); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionUpdate, "categories", actorUserID, actorCompanyID, cat.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to update category")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionUpdate, "categories", actorUserID, actorCompanyID, cat.ID.String(), oldCategory, cat)
 	}
 	return response.NewSuccessResponse(cat, "")
 }
 
-func (s *ProductService) DeleteCategory(id string) response.ApiResponse {
+func (s *ProductService) DeleteCategory(id, actorUserID, actorCompanyID string) response.ApiResponse {
 	catID, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Category not found")
@@ -595,7 +628,13 @@ func (s *ProductService) DeleteCategory(id string) response.ApiResponse {
 	}
 
 	if err := s.categoryRepo.Delete(cat.ID); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionDelete, "categories", actorUserID, actorCompanyID, cat.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to delete category")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionDelete, "categories", actorUserID, actorCompanyID, cat.ID.String(), cat, nil)
 	}
 	return response.NewSuccessResponse(nil, "Category deleted successfully")
 }
@@ -651,7 +690,7 @@ type CreateUnitInput struct {
 	Description *string
 }
 
-func (s *ProductService) CreateUnit(input CreateUnitInput) response.ApiResponse {
+func (s *ProductService) CreateUnit(input CreateUnitInput, actorUserID, actorCompanyID string) response.ApiResponse {
 	existing, err := s.unitRepo.FindByCode(input.Code)
 	if err != nil {
 		return response.NewErrorResponse("Failed to create unit")
@@ -671,7 +710,13 @@ func (s *ProductService) CreateUnit(input CreateUnitInput) response.ApiResponse 
 		unit.Description = *input.Description
 	}
 	if err := s.unitRepo.Create(&unit); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionCreate, "units", actorUserID, actorCompanyID, unit.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to create unit")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionCreate, "units", actorUserID, actorCompanyID, unit.ID.String(), nil, unit)
 	}
 	return response.NewSuccessResponse(unit, "")
 }
@@ -683,7 +728,7 @@ type UpdateUnitInput struct {
 	IsActive    *bool
 }
 
-func (s *ProductService) UpdateUnit(id string, input UpdateUnitInput) response.ApiResponse {
+func (s *ProductService) UpdateUnit(id string, input UpdateUnitInput, actorUserID, actorCompanyID string) response.ApiResponse {
 	uid, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Unit not found")
@@ -695,6 +740,7 @@ func (s *ProductService) UpdateUnit(id string, input UpdateUnitInput) response.A
 	if unit == nil {
 		return response.NewErrorResponse("Unit not found")
 	}
+	oldUnit := *unit
 
 	updated := false
 	if input.Code != nil {
@@ -718,12 +764,18 @@ func (s *ProductService) UpdateUnit(id string, input UpdateUnitInput) response.A
 	}
 
 	if err := s.unitRepo.Update(unit); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionUpdate, "units", actorUserID, actorCompanyID, unit.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to update unit")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionUpdate, "units", actorUserID, actorCompanyID, unit.ID.String(), oldUnit, unit)
 	}
 	return response.NewSuccessResponse(unit, "")
 }
 
-func (s *ProductService) DeleteUnit(id string) response.ApiResponse {
+func (s *ProductService) DeleteUnit(id, actorUserID, actorCompanyID string) response.ApiResponse {
 	uid, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Unit not found")
@@ -736,7 +788,13 @@ func (s *ProductService) DeleteUnit(id string) response.ApiResponse {
 		return response.NewErrorResponse("Unit not found")
 	}
 	if err := s.unitRepo.Delete(uid); err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionDelete, "units", actorUserID, actorCompanyID, uid.String(), err)
+		}
 		return response.NewErrorResponse("Failed to delete unit")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionDelete, "units", actorUserID, actorCompanyID, uid.String(), unit, nil)
 	}
 	return response.NewSuccessResponse(nil, "Unit deleted successfully")
 }

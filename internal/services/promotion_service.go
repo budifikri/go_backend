@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
@@ -174,7 +175,13 @@ func (s *PromotionService) CreatePromotion(input CreatePromotionInput) response.
 		return nil
 	})
 	if err != nil {
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionCreate, "promotions", "", "", created.ID.String(), err)
+		}
 		return response.NewErrorResponse("Failed to create promotion")
+	}
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionCreate, "promotions", "", "", created.ID.String(), nil, created)
 	}
 
 	return response.NewSuccessResponse(map[string]interface{}{
@@ -216,6 +223,9 @@ func (s *PromotionService) UpdatePromotion(id string, input UpdatePromotionInput
 	if err != nil {
 		return response.NewErrorResponse("Promotion not found")
 	}
+
+	var oldPromo map[string]interface{}
+	_ = s.db.Table("promotions").Where("id = ?", pid).Take(&oldPromo).Error
 
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		updates := map[string]interface{}{}
@@ -299,7 +309,15 @@ func (s *PromotionService) UpdatePromotion(id string, input UpdatePromotionInput
 		if err == gorm.ErrRecordNotFound {
 			return response.NewErrorResponse("Promotion not found")
 		}
+		if l := applogger.Default(); l != nil {
+			l.LogError(applogger.ActionUpdate, "promotions", "", "", pid.String(), err)
+		}
 		return response.NewErrorResponse(err.Error())
+	}
+	var newPromo map[string]interface{}
+	_ = s.db.Table("promotions").Where("id = ?", pid).Take(&newPromo).Error
+	if l := applogger.Default(); l != nil {
+		l.Log(applogger.ActionUpdate, "promotions", "", "", pid.String(), oldPromo, newPromo)
 	}
 
 	return s.GetPromotionByID(id)
@@ -310,11 +328,14 @@ func (s *PromotionService) DeletePromotion(id string) response.ApiResponse {
 	if err != nil {
 		return response.NewErrorResponse("Promotion not found")
 	}
-	res := s.db.Exec("DELETE FROM promotions WHERE id = ?", pid)
-	if res.Error != nil {
-		return response.NewErrorResponse("Promotion not found")
-	}
-	if res.RowsAffected == 0 {
+	err = applogger.AuditDelete(s.db, applogger.Default(), "promotions", pid.String(), "", "", func() error {
+		res := s.db.Exec("DELETE FROM promotions WHERE id = ?", pid)
+		if res.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return res.Error
+	})
+	if err != nil {
 		return response.NewErrorResponse("Promotion not found")
 	}
 	return response.NewSuccessResponse(nil, "Promotion deleted successfully")

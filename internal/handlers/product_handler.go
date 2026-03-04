@@ -126,6 +126,13 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 		req.CompanyID = user.CompanyID
 	}
 
+	actorUserID := ""
+	actorCompanyID := ""
+	if user != nil {
+		actorUserID = user.UserID
+		actorCompanyID = user.CompanyID
+	}
+
 	result := h.productService.CreateProduct(services.CreateProductRequest{
 		SKU:          req.SKU,
 		Barcode:      req.Barcode,
@@ -138,7 +145,7 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 		TaxRate:      req.TaxRate,
 		ReorderPoint: req.ReorderPoint,
 		CompanyID:    req.CompanyID,
-	})
+	}, actorUserID, actorCompanyID)
 
 	if !result.Success {
 		return c.Status(fiber.StatusBadRequest).JSON(result)
@@ -168,6 +175,13 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 
 	log.Printf("[DEBUG] UpdateProduct request: id=%s, UnitID=%s, CategoryID=%s, Name=%s", id, req.UnitID, req.CategoryID, req.Name)
 
+	actorUserID := ""
+	actorCompanyID := ""
+	if user := middleware.GetUserFromContext(c); user != nil {
+		actorUserID = user.UserID
+		actorCompanyID = user.CompanyID
+	}
+
 	result := h.productService.UpdateProduct(id, services.CreateProductRequest{
 		SKU:          req.SKU,
 		Barcode:      req.Barcode,
@@ -180,7 +194,7 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 		TaxRate:      req.TaxRate,
 		ReorderPoint: req.ReorderPoint,
 		IsActive:     req.IsActive,
-	})
+	}, actorUserID, actorCompanyID)
 
 	if !result.Success {
 		return c.Status(fiber.StatusBadRequest).JSON(result)
@@ -201,7 +215,13 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 // @Router /api/products/{id} [delete]
 func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 	id := c.Params("id")
-	result := h.productService.DeleteProduct(id)
+	actorUserID := ""
+	actorCompanyID := ""
+	if user := middleware.GetUserFromContext(c); user != nil {
+		actorUserID = user.UserID
+		actorCompanyID = user.CompanyID
+	}
+	result := h.productService.DeleteProduct(id, actorUserID, actorCompanyID)
 
 	if !result.Success {
 		return c.Status(fiber.StatusNotFound).JSON(result)
@@ -321,7 +341,7 @@ func (h *ProductHandler) CreateCategory(c *fiber.Ctx) error {
 		Description: req.Description,
 		ParentID:    parentID,
 		CompanyID:   &companyID,
-	})
+	}, user.UserID, user.CompanyID)
 	if !result.Success {
 		if result.Error == "Category code already exists" {
 			return c.Status(fiber.StatusConflict).JSON(result)
@@ -361,13 +381,20 @@ func (h *ProductHandler) UpdateCategory(c *fiber.Ctx) error {
 		}
 	}
 
+	actorUserID := ""
+	actorCompanyID := ""
+	if user := middleware.GetUserFromContext(c); user != nil {
+		actorUserID = user.UserID
+		actorCompanyID = user.CompanyID
+	}
+
 	result := h.productService.UpdateCategory(c.Params("id"), services.UpdateCategoryInput{
 		Code:        req.Code,
 		Name:        req.Name,
 		Description: req.Description,
 		ParentID:    req.ParentID,
 		IsActive:    req.IsActive,
-	})
+	}, actorUserID, actorCompanyID)
 	if !result.Success {
 		if result.Error == "Category not found" {
 			return c.Status(fiber.StatusNotFound).JSON(result)
@@ -391,7 +418,13 @@ func (h *ProductHandler) UpdateCategory(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/categories/{id} [delete]
 func (h *ProductHandler) DeleteCategory(c *fiber.Ctx) error {
-	result := h.productService.DeleteCategory(c.Params("id"))
+	actorUserID := ""
+	actorCompanyID := ""
+	if user := middleware.GetUserFromContext(c); user != nil {
+		actorUserID = user.UserID
+		actorCompanyID = user.CompanyID
+	}
+	result := h.productService.DeleteCategory(c.Params("id"), actorUserID, actorCompanyID)
 	if !result.Success {
 		return c.Status(fiber.StatusNotFound).JSON(result)
 	}
@@ -486,7 +519,13 @@ func (h *ProductHandler) CreateUnit(c *fiber.Ctx) error {
 		}
 	}
 
-	result := h.productService.CreateUnit(services.CreateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description})
+	actorUserID := ""
+	actorCompanyID := ""
+	if user := middleware.GetUserFromContext(c); user != nil {
+		actorUserID = user.UserID
+		actorCompanyID = user.CompanyID
+	}
+	result := h.productService.CreateUnit(services.CreateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description}, actorUserID, actorCompanyID)
 	if !result.Success {
 		if result.Error == "Unit code already exists" {
 			return c.Status(fiber.StatusConflict).JSON(result)
@@ -525,7 +564,13 @@ func (h *ProductHandler) UpdateUnit(c *fiber.Ctx) error {
 		}
 	}
 
-	result := h.productService.UpdateUnit(c.Params("id"), services.UpdateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description, IsActive: req.IsActive})
+	actorUserID := ""
+	actorCompanyID := ""
+	if user := middleware.GetUserFromContext(c); user != nil {
+		actorUserID = user.UserID
+		actorCompanyID = user.CompanyID
+	}
+	result := h.productService.UpdateUnit(c.Params("id"), services.UpdateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description, IsActive: req.IsActive}, actorUserID, actorCompanyID)
 	if !result.Success {
 		if result.Error == "Unit not found" {
 			return c.Status(fiber.StatusNotFound).JSON(result)
@@ -548,7 +593,13 @@ func (h *ProductHandler) UpdateUnit(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/units/{id} [delete]
 func (h *ProductHandler) DeleteUnit(c *fiber.Ctx) error {
-	result := h.productService.DeleteUnit(c.Params("id"))
+	actorUserID := ""
+	actorCompanyID := ""
+	if user := middleware.GetUserFromContext(c); user != nil {
+		actorUserID = user.UserID
+		actorCompanyID = user.CompanyID
+	}
+	result := h.productService.DeleteUnit(c.Params("id"), actorUserID, actorCompanyID)
 	if !result.Success {
 		return c.Status(fiber.StatusNotFound).JSON(result)
 	}

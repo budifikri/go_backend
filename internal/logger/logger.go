@@ -26,6 +26,22 @@ type Logger struct {
 	counters   map[string]CRUDCount
 }
 
+const (
+	ActionCreate = "CREATE"
+	ActionUpdate = "UPDATE"
+	ActionDelete = "DELETE"
+)
+
+var defaultLogger *Logger
+
+func SetDefault(l *Logger) {
+	defaultLogger = l
+}
+
+func Default() *Logger {
+	return defaultLogger
+}
+
 func NewLogger(logDir string, enableCRUD bool) *Logger {
 	if logDir == "" {
 		logDir = "logs"
@@ -39,7 +55,7 @@ func NewLogger(logDir string, enableCRUD bool) *Logger {
 	return l
 }
 
-func (l *Logger) Log(action, table, userID, companyID, recordID string, payload interface{}) {
+func (l *Logger) Log(action, table, userID, companyID, recordID string, oldData, newData interface{}) {
 	if !l.enableCRUD {
 		return
 	}
@@ -47,9 +63,14 @@ func (l *Logger) Log(action, table, userID, companyID, recordID string, payload 
 	action = strings.ToUpper(action)
 
 	line := fmt.Sprintf("[%s] [INFO] [%s] [%s] user_id=%s company_id=%s", time.Now().Format("2006-01-02 15:04:05"), action, table, defaultValue(userID), defaultValue(companyID))
-	if action == "CREATE" {
-		line += " data=" + normalizePayload(payload)
-	} else {
+	switch action {
+	case ActionCreate:
+		line += " new=" + normalizePayload(newData)
+	case ActionUpdate:
+		line += " record_id=" + defaultValue(recordID) + " old=" + normalizePayload(oldData) + " new=" + normalizePayload(newData)
+	case ActionDelete:
+		line += " record_id=" + defaultValue(recordID) + " old=" + normalizePayload(oldData)
+	default:
 		line += " record_id=" + defaultValue(recordID)
 	}
 
@@ -60,12 +81,12 @@ func (l *Logger) Log(action, table, userID, companyID, recordID string, payload 
 	_ = appendLine(l.tableLogPath(table), line)
 
 	count := l.counters[table]
-	switch strings.ToUpper(action) {
-	case "CREATE":
+	switch action {
+	case ActionCreate:
 		count.Create++
-	case "UPDATE":
+	case ActionUpdate:
 		count.Update++
-	case "DELETE":
+	case ActionDelete:
 		count.Delete++
 	}
 	l.counters[table] = count

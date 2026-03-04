@@ -45,6 +45,7 @@ func main() {
 	}
 
 	crudLogger := applogger.NewLogger(cfg.Log.LogDir, cfg.Log.EnableCRUD)
+	applogger.SetDefault(crudLogger)
 
 	db, err := database.Connect(&cfg.Database)
 	if err != nil {
@@ -156,7 +157,6 @@ func main() {
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
-	crudLogMiddleware := middleware.NewCRUDLogMiddleware(crudLogger)
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
@@ -199,8 +199,6 @@ func main() {
 
 	// Protected routes
 	protected := api.Group("", authMiddleware.Handler())
-	protected.Use(crudLogMiddleware.Handler())
-
 	// Log routes
 	logs := protected.Group("/logs", middleware.RoleMiddleware("admin", "manager"))
 	logs.Get("/summary", logHandler.GetSummary)
