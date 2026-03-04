@@ -594,8 +594,7 @@ func (s *ProductService) DeleteCategory(id string) response.ApiResponse {
 		return response.NewErrorResponse("Category not found")
 	}
 
-	cat.IsActive = false
-	if err := s.categoryRepo.Update(cat); err != nil {
+	if err := s.categoryRepo.Delete(cat.ID); err != nil {
 		return response.NewErrorResponse("Failed to delete category")
 	}
 	return response.NewSuccessResponse(nil, "Category deleted successfully")

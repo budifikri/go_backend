@@ -71,8 +71,10 @@ type CORSConfig struct {
 }
 
 type LogConfig struct {
-	Level  string
-	Format string
+	Level      string
+	Format     string
+	EnableCRUD bool
+	LogDir     string
 }
 
 func Load() (*Config, error) {
@@ -116,8 +118,10 @@ func Load() (*Config, error) {
 			AllowedHeaders: getEnvAsSlice("CORS_ALLOWED_HEADERS", ","),
 		},
 		Log: LogConfig{
-			Level:  getEnv("LOG_LEVEL", "info"),
-			Format: getEnv("LOG_FORMAT", "json"),
+			Level:      getEnv("LOG_LEVEL", "info"),
+			Format:     getEnv("LOG_FORMAT", "text"),
+			EnableCRUD: getEnvAsBool("LOG_ENABLE_CRUD", true),
+			LogDir:     getEnv("LOG_DIR", "logs"),
 		},
 		Security: SecurityConfig{
 			SecureHeadersEnabled: getEnvAsBool("SECURE_HEADERS_ENABLED", true),

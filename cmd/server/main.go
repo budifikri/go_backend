@@ -29,6 +29,7 @@ import (
 	"github.com/pos-retail/go_backend/internal/database"
 	apidocs "github.com/pos-retail/go_backend/internal/docs"
 	"github.com/pos-retail/go_backend/internal/handlers"
+	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/repository"
@@ -42,6 +43,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+
+	crudLogger := applogger.NewLogger(cfg.Log.LogDir, cfg.Log.EnableCRUD)
 
 	db, err := database.Connect(&cfg.Database)
 	if err != nil {
@@ -149,9 +152,11 @@ func main() {
 	companyHandler := handlers.NewCompanyHandler(companyService)
 	userHandler := handlers.NewUserHandler(userService)
 	healthHandler := handlers.NewHealthHandler(db, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
+	logHandler := handlers.NewLogHandler(crudLogger)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
+	crudLogMiddleware := middleware.NewCRUDLogMiddleware(crudLogger)
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
@@ -194,6 +199,15 @@ func main() {
 
 	// Protected routes
 	protected := api.Group("", authMiddleware.Handler())
+	protected.Use(crudLogMiddleware.Handler())
+
+	// Log routes
+	logs := protected.Group("/logs", middleware.RoleMiddleware("admin", "manager"))
+	logs.Get("/summary", logHandler.GetSummary)
+	logs.Post("/save", logHandler.SaveSummary)
+	logs.Get("/files", logHandler.ListFiles)
+	logs.Get("/:tahun_bulan/error", logHandler.GetErrorLogs)
+	logs.Get("/:tahun_bulan/:table", logHandler.GetTableLogs)
 
 	// User routes
 	users := protected.Group("/users", middleware.RoleMiddleware("admin", "manager"))
@@ -400,6 +414,9 @@ func main() {
 
 	if err := app.ShutdownWithTimeout(10 * time.Second); err != nil {
 		log.Printf("Server shutdown error: %v", err)
+	}
+	if err := crudLogger.SaveSummary(); err != nil {
+		log.Printf("Failed to save log summary: %v", err)
 	}
 	if err := database.Close(); err != nil {
 		log.Printf("Database close error: %v", err)
