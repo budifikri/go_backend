@@ -954,7 +954,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Soft delete category (set is_active to false) (admin/manager only)",
+                "description": "Delete category (admin/manager only)",
                 "produces": [
                     "application/json"
                 ],

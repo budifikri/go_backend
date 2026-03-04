@@ -406,7 +406,7 @@ func (h *ProductHandler) UpdateCategory(c *fiber.Ctx) error {
 
 // DeleteCategory godoc
 // @Summary Delete category
-// @Description Soft delete category (set is_active to false) (admin/manager only)
+// @Description Delete category (admin/manager only)
 // @Tags Categories
 // @Produce json
 // @Param Authorization header string true "Bearer token"

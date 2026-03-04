@@ -1431,7 +1431,7 @@ paths:
       - Categories
   /api/categories/{id}:
     delete:
-      description: Soft delete category (set is_active to false) (admin/manager only)
+      description: Delete category (admin/manager only)
       parameters:
       - description: Bearer token
         in: header
