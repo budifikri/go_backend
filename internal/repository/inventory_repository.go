@@ -13,26 +13,73 @@ type InventoryRepository struct {
 	db *gorm.DB
 }
 
+type InventoryListRow struct {
+	InventoryID       *uuid.UUID `gorm:"column:inventory_id"`
+	ProductID         uuid.UUID  `gorm:"column:product_id"`
+	ProductName       string     `gorm:"column:product_name"`
+	WarehouseID       *uuid.UUID `gorm:"column:warehouse_id"`
+	WarehouseName     *string    `gorm:"column:warehouse_name"`
+	Quantity          int        `gorm:"column:quantity"`
+	ReservedQuantity  int        `gorm:"column:reserved_quantity"`
+	AvailableQuantity int        `gorm:"column:available_quantity"`
+	MinStockLevel     int        `gorm:"column:min_stock_level"`
+	MaxStockLevel     int        `gorm:"column:max_stock_level"`
+}
+
 func NewInventoryRepository(db *gorm.DB) *InventoryRepository {
 	return &InventoryRepository{db: db}
 }
 
-func (r *InventoryRepository) FindAll(filters map[string]interface{}, limit, offset int) ([]models.Inventory, int64, error) {
-	var inventories []models.Inventory
+func (r *InventoryRepository) FindAll(filters map[string]interface{}, limit, offset int) ([]InventoryListRow, int64, error) {
+	var rows []InventoryListRow
 	var total int64
 
-	query := r.db.Model(&models.Inventory{})
+	query := r.db.Table("products p")
 
-	if warehouseID, ok := filters["warehouse_id"].(string); ok && warehouseID != "" {
-		query = query.Where("warehouse_id = ?", warehouseID)
+	warehouseID, hasWarehouseFilter := filters["warehouse_id"].(string)
+	if hasWarehouseFilter && warehouseID != "" {
+		query = query.Select(`
+			i.id AS inventory_id,
+			p.id AS product_id,
+			p.name AS product_name,
+			w.id AS warehouse_id,
+			w.name AS warehouse_name,
+			COALESCE(i.quantity, 0) AS quantity,
+			COALESCE(i.reserved_quantity, 0) AS reserved_quantity,
+			COALESCE(i.available_quantity, 0) AS available_quantity,
+			COALESCE(i.min_stock_level, 0) AS min_stock_level,
+			COALESCE(i.max_stock_level, 0) AS max_stock_level
+		`).
+			Joins("LEFT JOIN inventory i ON i.product_id = p.id AND i.warehouse_id = ?", warehouseID).
+			Joins("LEFT JOIN warehouses w ON w.id = ?", warehouseID)
+	} else {
+		query = query.Select(`
+			i.id AS inventory_id,
+			p.id AS product_id,
+			p.name AS product_name,
+			w.id AS warehouse_id,
+			w.name AS warehouse_name,
+			COALESCE(i.quantity, 0) AS quantity,
+			COALESCE(i.reserved_quantity, 0) AS reserved_quantity,
+			COALESCE(i.available_quantity, 0) AS available_quantity,
+			COALESCE(i.min_stock_level, 0) AS min_stock_level,
+			COALESCE(i.max_stock_level, 0) AS max_stock_level
+		`).
+			Joins("LEFT JOIN inventory i ON i.product_id = p.id").
+			Joins("LEFT JOIN warehouses w ON w.id = i.warehouse_id")
+	}
+
+	query = query.Where("p.is_active = ?", true)
+
+	if companyID, ok := filters["company_id"].(string); ok && companyID != "" {
+		query = query.Where("p.company_id = ?", companyID)
 	}
 	if productID, ok := filters["product_id"].(string); ok && productID != "" {
-		query = query.Where("product_id = ?", productID)
+		query = query.Where("p.id = ?", productID)
 	}
 	if search, ok := filters["search"].(string); ok && search != "" {
 		like := "%" + search + "%"
-		query = query.Joins("LEFT JOIN products p ON p.id = inventories.product_id").
-			Where("p.name ILIKE ? OR p.sku ILIKE ? OR p.barcode ILIKE ?", like, like, like)
+		query = query.Where("p.name ILIKE ? OR p.sku ILIKE ? OR p.barcode ILIKE ?", like, like, like)
 	}
 
 	stockFilter := "available"
@@ -43,24 +90,24 @@ func (r *InventoryRepository) FindAll(filters map[string]interface{}, limit, off
 	case "all", "all_stock", "all stock":
 		// no filter
 	case "minus", "stock_minus", "stock minus":
-		query = query.Where("quantity < 0")
+		query = query.Where("COALESCE(i.quantity, 0) < 0")
 	case "empty", "stock_empty", "stock empty":
-		query = query.Where("quantity = 0")
+		query = query.Where("COALESCE(i.quantity, 0) = 0")
 	case "available", "stock_available", "stock available":
 		fallthrough
 	default:
-		query = query.Where("quantity > 0")
+		query = query.Where("COALESCE(i.quantity, 0) > 0")
 	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	if err := query.Preload("Product").Preload("Warehouse").Limit(limit).Offset(offset).Find(&inventories).Error; err != nil {
+	if err := query.Order("p.name ASC, w.name ASC").Limit(limit).Offset(offset).Find(&rows).Error; err != nil {
 		return nil, 0, err
 	}
 
-	return inventories, total, nil
+	return rows, total, nil
 }
 
 func (r *InventoryRepository) FindByProductAndWarehouse(productID, warehouseID uuid.UUID) (*models.Inventory, error) {

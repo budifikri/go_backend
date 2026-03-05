@@ -35,6 +35,10 @@ func NewInventoryHandler(inventoryService *services.InventoryService) *Inventory
 // @Router /api/inventory [get]
 func (h *InventoryHandler) GetInventory(c *fiber.Ctx) error {
 	filters := make(map[string]interface{})
+	user := middleware.GetUserFromContext(c)
+	if user != nil && user.CompanyID != "" {
+		filters["company_id"] = user.CompanyID
+	}
 	if warehouseID := c.Query("warehouse_id"); warehouseID != "" {
 		filters["warehouse_id"] = warehouseID
 	}

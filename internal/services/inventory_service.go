@@ -66,13 +66,17 @@ func (s *InventoryService) GetInventory(filters map[string]interface{}, limit, o
 
 	data := make([]InventoryResponse, len(inventories))
 	for i, inv := range inventories {
-		productName := ""
-		if inv.Product != nil {
-			productName = inv.Product.Name
+		warehouseID := uuid.Nil
+		if inv.WarehouseID != nil {
+			warehouseID = *inv.WarehouseID
 		}
 		warehouseName := ""
-		if inv.Warehouse != nil {
-			warehouseName = inv.Warehouse.Name
+		if inv.WarehouseName != nil {
+			warehouseName = *inv.WarehouseName
+		}
+		inventoryID := uuid.Nil
+		if inv.InventoryID != nil {
+			inventoryID = *inv.InventoryID
 		}
 
 		status := "normal"
@@ -84,10 +88,10 @@ func (s *InventoryService) GetInventory(filters map[string]interface{}, limit, o
 		}
 
 		data[i] = InventoryResponse{
-			ID:                inv.ID,
+			ID:                inventoryID,
 			ProductID:         inv.ProductID,
-			ProductName:       productName,
-			WarehouseID:       inv.WarehouseID,
+			ProductName:       inv.ProductName,
+			WarehouseID:       warehouseID,
 			WarehouseName:     warehouseName,
 			Quantity:          inv.Quantity,
 			ReservedQuantity:  inv.ReservedQuantity,
