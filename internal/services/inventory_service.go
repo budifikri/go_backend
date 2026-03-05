@@ -39,6 +39,9 @@ type InventoryResponse struct {
 	ID                uuid.UUID `json:"id"`
 	ProductID         uuid.UUID `json:"product_id"`
 	ProductName       string    `json:"product_name,omitempty"`
+	ProductCode       string    `json:"product_code,omitempty"`
+	CategoryName      string    `json:"category_name,omitempty"`
+	UnitName          string    `json:"unit_name,omitempty"`
 	WarehouseID       uuid.UUID `json:"warehouse_id"`
 	WarehouseName     string    `json:"warehouse_name,omitempty"`
 	Quantity          int       `json:"quantity"`
@@ -79,6 +82,26 @@ func (s *InventoryService) GetInventory(filters map[string]interface{}, limit, o
 			inventoryID = *inv.InventoryID
 		}
 
+		// Query product to get category and unit info
+		product, err := s.productRepo.FindByID(inv.ProductID)
+		productCode := ""
+		categoryName := ""
+		unitName := ""
+
+		if err == nil && product != nil {
+			productCode = product.SKU
+			if product.Category != nil && product.Category.Name != "" {
+				categoryName = product.Category.Name
+			}
+			if product.Unit != nil {
+				if product.Unit.Code != "" {
+					unitName = product.Unit.Code
+				} else if product.Unit.Name != "" {
+					unitName = product.Unit.Name
+				}
+			}
+		}
+
 		status := "normal"
 		if inv.AvailableQuantity <= inv.MinStockLevel {
 			status = "low_stock"
@@ -91,6 +114,9 @@ func (s *InventoryService) GetInventory(filters map[string]interface{}, limit, o
 			ID:                inventoryID,
 			ProductID:         inv.ProductID,
 			ProductName:       inv.ProductName,
+			ProductCode:       productCode,
+			CategoryName:      categoryName,
+			UnitName:          unitName,
 			WarehouseID:       warehouseID,
 			WarehouseName:     warehouseName,
 			Quantity:          inv.Quantity,
