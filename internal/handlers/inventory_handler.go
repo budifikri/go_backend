@@ -26,6 +26,7 @@ func NewInventoryHandler(inventoryService *services.InventoryService) *Inventory
 // @Param warehouse_id query string false "Warehouse ID"
 // @Param product_id query string false "Product ID"
 // @Param search query string false "Search"
+// @Param stock query string false "Stock filter: all|available|minus|empty" default(available)
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -43,6 +44,8 @@ func (h *InventoryHandler) GetInventory(c *fiber.Ctx) error {
 	if search := c.Query("search"); search != "" {
 		filters["search"] = search
 	}
+	stockFilter := c.Query("stock", "available")
+	filters["stock"] = stockFilter
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
 	result := h.inventoryService.GetInventory(filters, limit, offset)

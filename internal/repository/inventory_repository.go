@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,6 +33,23 @@ func (r *InventoryRepository) FindAll(filters map[string]interface{}, limit, off
 		like := "%" + search + "%"
 		query = query.Joins("LEFT JOIN products p ON p.id = inventories.product_id").
 			Where("p.name ILIKE ? OR p.sku ILIKE ? OR p.barcode ILIKE ?", like, like, like)
+	}
+
+	stockFilter := "available"
+	if stock, ok := filters["stock"].(string); ok && stock != "" {
+		stockFilter = strings.ToLower(strings.TrimSpace(stock))
+	}
+	switch stockFilter {
+	case "all", "all_stock", "all stock":
+		// no filter
+	case "minus", "stock_minus", "stock minus":
+		query = query.Where("quantity < 0")
+	case "empty", "stock_empty", "stock empty":
+		query = query.Where("quantity = 0")
+	case "available", "stock_available", "stock available":
+		fallthrough
+	default:
+		query = query.Where("quantity > 0")
 	}
 
 	if err := query.Count(&total).Error; err != nil {

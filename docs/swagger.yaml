@@ -2535,6 +2535,11 @@ paths:
         in: query
         name: search
         type: string
+      - default: available
+        description: 'Stock filter: all|available|minus|empty'
+        in: query
+        name: stock
+        type: string
       - default: 50
         description: Limit
         in: query

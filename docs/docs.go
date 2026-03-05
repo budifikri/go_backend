@@ -2548,6 +2548,13 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "default": "available",
+                        "description": "Stock filter: all|available|minus|empty",
+                        "name": "stock",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 50,
                         "description": "Limit",
