@@ -715,7 +715,44 @@ func (s *InventoryService) GetStockOpnameByID(id string) response.ApiResponse {
 		return response.NewErrorResponse("Stock opname not found")
 	}
 
-	return response.NewSuccessResponse(opname, "Stock opname retrieved successfully")
+	transformedItems := make([]map[string]interface{}, len(opname.Items))
+	for i, item := range opname.Items {
+		itemMap := map[string]interface{}{
+			"id":              item.ID,
+			"opname_id":       item.OpnameID,
+			"product_id":      item.ProductID,
+			"system_quantity": item.SystemQuantity,
+			"actual_quantity": item.ActualQuantity,
+			"difference":      item.Difference,
+			"status":          item.Status,
+			"notes":           item.Notes,
+		}
+		if item.Product != nil {
+			itemMap["product_name"] = item.Product.Name
+			itemMap["product_sku"] = item.Product.SKU
+			if item.Product.Unit != nil {
+				itemMap["product_unit_name"] = item.Product.Unit.Name
+			}
+		}
+		transformedItems[i] = itemMap
+	}
+
+	opnameMap := map[string]interface{}{
+		"id":            opname.ID,
+		"opname_number": opname.OpnameNumber,
+		"warehouse_id":  opname.WarehouseID,
+		"user_id":       opname.UserID,
+		"opname_date":   opname.OpnameDate,
+		"status":        opname.Status,
+		"notes":         opname.Notes,
+		"created_at":    opname.CreatedAt,
+		"updated_at":    opname.UpdatedAt,
+		"warehouse":     opname.Warehouse,
+		"user":          opname.User,
+		"items":         transformedItems,
+	}
+
+	return response.NewSuccessResponse(opnameMap, "Stock opname retrieved successfully")
 }
 
 func (s *InventoryService) UpdateStockOpnameStatus(id, status, userID string) response.ApiResponse {

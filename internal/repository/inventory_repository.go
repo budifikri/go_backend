@@ -248,7 +248,7 @@ func (r *InventoryRepository) CreateStockOpname(opname *models.StockOpname) erro
 
 func (r *InventoryRepository) GetStockOpnameByID(id uuid.UUID) (*models.StockOpname, error) {
 	var opname models.StockOpname
-	if err := r.db.Preload("Warehouse").Preload("User").Preload("Items").First(&opname, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("Warehouse").Preload("User").Preload("Items.Product").Preload("Items.Product.Unit").First(&opname, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
