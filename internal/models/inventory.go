@@ -190,6 +190,7 @@ type StockOpnameItem struct {
 	SystemQuantity int       `gorm:"notNull" json:"system_quantity"`
 	ActualQuantity int       `gorm:"notNull" json:"actual_quantity"`
 	Difference     int       `gorm:"notNull" json:"difference"`
+	Status         string    `gorm:"type:varchar(20);default:'pending'" json:"status"`
 	Notes          string    `gorm:"type:text" json:"notes,omitempty"`
 
 	Opname  *StockOpname `gorm:"foreignKey:OpnameID" json:"opname,omitempty"`

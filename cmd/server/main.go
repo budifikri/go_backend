@@ -265,6 +265,7 @@ func main() {
 	stockOpname.Post("/", inventoryHandler.CreateStockOpname)
 	stockOpname.Get("/", inventoryHandler.GetStockOpnames)
 	stockOpname.Get("/:id", inventoryHandler.GetStockOpname)
+	stockOpname.Put("/:id", inventoryHandler.UpdateStockOpname)
 	stockOpname.Put("/:id/status", inventoryHandler.UpdateStockOpnameStatus)
 	stockOpname.Delete("/:id", inventoryHandler.DeleteStockOpname)
 

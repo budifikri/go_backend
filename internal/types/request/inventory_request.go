@@ -49,3 +49,18 @@ type StockOpnameRequest struct {
 type StockOpnameStatusRequest struct {
 	Status string `json:"status"`
 }
+
+type StockOpnameUpdateItemRequest struct {
+	ProductID      string `json:"product_id"`
+	SystemQuantity int    `json:"system_quantity"`
+	ActualQuantity int    `json:"actual_quantity"`
+	Notes          string `json:"notes"`
+	Status         string `json:"status"`
+}
+
+type StockOpnameUpdateRequest struct {
+	WarehouseID string                         `json:"warehouse_id"`
+	OpnameDate  string                         `json:"opname_date"`
+	Notes       string                         `json:"notes"`
+	Items       []StockOpnameUpdateItemRequest `json:"items"`
+}

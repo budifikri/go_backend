@@ -17,6 +17,19 @@ var (
 	ErrProductNotInWarehouse = errors.New("product not available in warehouse")
 )
 
+type UpdateStockOpnameRequest struct {
+	WarehouseID string
+	OpnameDate  string
+	Notes       string
+	Items       []struct {
+		ProductID      string
+		SystemQuantity int
+		ActualQuantity int
+		Notes          string
+		Status         string
+	}
+}
+
 type InventoryService struct {
 	inventoryRepo *repository.InventoryRepository
 	productRepo   *repository.ProductRepository
@@ -771,17 +784,7 @@ func (s *InventoryService) DeleteStockOpname(id string) response.ApiResponse {
 	return response.NewSuccessResponse(nil, "Stock opname deleted successfully")
 }
 
-func (s *InventoryService) UpdateStockOpname(id string, req struct {
-	WarehouseID string `json:"warehouse_id"`
-	OpnameDate  string `json:"opname_date"`
-	Notes       string `json:"notes"`
-	Items       []struct {
-		ProductID      string `json:"product_id"`
-		SystemQuantity int    `json:"system_quantity"`
-		ActualQuantity int    `json:"actual_quantity"`
-		Notes          string `json:"notes"`
-	}
-}) response.ApiResponse {
+func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameRequest) response.ApiResponse {
 	opnameID, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Invalid stock opname ID")
@@ -823,12 +826,17 @@ func (s *InventoryService) UpdateStockOpname(id string, req struct {
 			continue
 		}
 		difference := item.ActualQuantity - item.SystemQuantity
+		status := item.Status
+		if status == "" {
+			status = "pending"
+		}
 		items = append(items, models.StockOpnameItem{
 			ID:             uuid.New(),
 			ProductID:      pid,
 			SystemQuantity: item.SystemQuantity,
 			ActualQuantity: item.ActualQuantity,
 			Difference:     difference,
+			Status:         status,
 			Notes:          item.Notes,
 		})
 	}

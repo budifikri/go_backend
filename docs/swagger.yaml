@@ -599,6 +599,32 @@ definitions:
       status:
         type: string
     type: object
+  request.StockOpnameUpdateItemRequest:
+    properties:
+      actual_quantity:
+        type: integer
+      notes:
+        type: string
+      product_id:
+        type: string
+      status:
+        type: string
+      system_quantity:
+        type: integer
+    type: object
+  request.StockOpnameUpdateRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/request.StockOpnameUpdateItemRequest'
+        type: array
+      notes:
+        type: string
+      opname_date:
+        type: string
+      warehouse_id:
+        type: string
+    type: object
   request.StockTransferItemRequest:
     properties:
       product_id:
@@ -4655,6 +4681,50 @@ paths:
       security:
       - BearerAuth: []
       summary: Get stock opname
+      tags:
+      - StockOpname
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Opname ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.StockOpnameUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update stock opname
       tags:
       - StockOpname
   /api/stock-opname/{id}/status:

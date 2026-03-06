@@ -391,3 +391,55 @@ func (h *InventoryHandler) DeleteStockOpname(c *fiber.Ctx) error {
 	}
 	return c.JSON(result)
 }
+
+// UpdateStockOpname godoc
+// @Summary Update stock opname
+// @Tags StockOpname
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Opname ID"
+// @Param body body request.StockOpnameUpdateRequest true "Update payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/stock-opname/{id} [put]
+func (h *InventoryHandler) UpdateStockOpname(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var req request.StockOpnameUpdateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+	}
+
+	reqService := services.UpdateStockOpnameRequest{
+		WarehouseID: req.WarehouseID,
+		OpnameDate:  req.OpnameDate,
+		Notes:       req.Notes,
+	}
+	for _, item := range req.Items {
+		reqService.Items = append(reqService.Items, struct {
+			ProductID      string
+			SystemQuantity int
+			ActualQuantity int
+			Notes          string
+			Status         string
+		}{
+			ProductID:      item.ProductID,
+			SystemQuantity: item.SystemQuantity,
+			ActualQuantity: item.ActualQuantity,
+			Notes:          item.Notes,
+			Status:         item.Status,
+		})
+	}
+
+	result := h.inventoryService.UpdateStockOpname(id, reqService)
+	if !result.Success {
+		if result.Error == "Stock opname not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
