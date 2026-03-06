@@ -51,6 +51,7 @@ type StockOpnameStatusRequest struct {
 }
 
 type StockOpnameUpdateItemRequest struct {
+	ID             string `json:"id"`
 	ProductID      string `json:"product_id"`
 	SystemQuantity int    `json:"system_quantity"`
 	ActualQuantity int    `json:"actual_quantity"`

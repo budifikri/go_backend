@@ -261,25 +261,68 @@ func (r *InventoryRepository) UpdateStockOpname(opname *models.StockOpname) erro
 	return r.db.Save(opname).Error
 }
 
-func (r *InventoryRepository) UpdateStockOpnameWithItems(opname *models.StockOpname, items []models.StockOpnameItem) error {
+func (r *InventoryRepository) UpdateStockOpnameWithItems(opname *models.StockOpname, items []struct {
+	ID             string
+	ProductID      uuid.UUID
+	SystemQuantity int
+	ActualQuantity int
+	Difference     int
+	Status         string
+	Notes          string
+}) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(opname).Error; err != nil {
 			return err
 		}
-		if err := tx.Where("opname_id = ?", opname.ID).Delete(&models.StockOpnameItem{}).Error; err != nil {
+
+		itemIDsToKeep := make([]string, 0, len(items))
+		for _, item := range items {
+			if item.ID != "" {
+				itemIDsToKeep = append(itemIDsToKeep, item.ID)
+			}
+		}
+
+		deleteQuery := tx.Where("opname_id = ?", opname.ID)
+		if len(itemIDsToKeep) > 0 {
+			deleteQuery = deleteQuery.Not("id", itemIDsToKeep)
+		}
+		if err := deleteQuery.Delete(&models.StockOpnameItem{}).Error; err != nil {
 			return err
 		}
-		for i := range items {
-			if items[i].ID == uuid.Nil {
-				items[i].ID = uuid.New()
+
+		for _, item := range items {
+			if item.ID != "" {
+				itemID, err := uuid.Parse(item.ID)
+				if err != nil {
+					continue
+				}
+				updateValues := map[string]interface{}{
+					"system_quantity": item.SystemQuantity,
+					"actual_quantity": item.ActualQuantity,
+					"difference":      item.Difference,
+					"status":          item.Status,
+					"notes":           item.Notes,
+				}
+				if err := tx.Model(&models.StockOpnameItem{}).Where("id = ?", itemID).Updates(updateValues).Error; err != nil {
+					return err
+				}
+			} else {
+				newItem := models.StockOpnameItem{
+					ID:             uuid.New(),
+					OpnameID:       opname.ID,
+					ProductID:      item.ProductID,
+					SystemQuantity: item.SystemQuantity,
+					ActualQuantity: item.ActualQuantity,
+					Difference:     item.Difference,
+					Status:         item.Status,
+					Notes:          item.Notes,
+				}
+				if err := tx.Create(&newItem).Error; err != nil {
+					return err
+				}
 			}
-			items[i].OpnameID = opname.ID
 		}
-		if len(items) > 0 {
-			if err := tx.Create(&items).Error; err != nil {
-				return err
-			}
-		}
+
 		return nil
 	})
 }

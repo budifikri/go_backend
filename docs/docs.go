@@ -8480,6 +8480,9 @@ const docTemplate = `{
                 "actual_quantity": {
                     "type": "integer"
                 },
+                "id": {
+                    "type": "string"
+                },
                 "notes": {
                     "type": "string"
                 },

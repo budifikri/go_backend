@@ -420,12 +420,14 @@ func (h *InventoryHandler) UpdateStockOpname(c *fiber.Ctx) error {
 	}
 	for _, item := range req.Items {
 		reqService.Items = append(reqService.Items, struct {
+			ID             string
 			ProductID      string
 			SystemQuantity int
 			ActualQuantity int
 			Notes          string
 			Status         string
 		}{
+			ID:             item.ID,
 			ProductID:      item.ProductID,
 			SystemQuantity: item.SystemQuantity,
 			ActualQuantity: item.ActualQuantity,

@@ -603,6 +603,8 @@ definitions:
     properties:
       actual_quantity:
         type: integer
+      id:
+        type: string
       notes:
         type: string
       product_id:

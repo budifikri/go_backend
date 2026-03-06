@@ -22,6 +22,7 @@ type UpdateStockOpnameRequest struct {
 	OpnameDate  string
 	Notes       string
 	Items       []struct {
+		ID             string
 		ProductID      string
 		SystemQuantity int
 		ActualQuantity int
@@ -856,7 +857,15 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 		opname.Notes = req.Notes
 	}
 
-	items := make([]models.StockOpnameItem, 0, len(req.Items))
+	items := make([]struct {
+		ID             string
+		ProductID      uuid.UUID
+		SystemQuantity int
+		ActualQuantity int
+		Difference     int
+		Status         string
+		Notes          string
+	}, 0, len(req.Items))
 	for _, item := range req.Items {
 		pid, err := uuid.Parse(item.ProductID)
 		if err != nil {
@@ -867,8 +876,16 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 		if status == "" {
 			status = "pending"
 		}
-		items = append(items, models.StockOpnameItem{
-			ID:             uuid.New(),
+		items = append(items, struct {
+			ID             string
+			ProductID      uuid.UUID
+			SystemQuantity int
+			ActualQuantity int
+			Difference     int
+			Status         string
+			Notes          string
+		}{
+			ID:             item.ID,
 			ProductID:      pid,
 			SystemQuantity: item.SystemQuantity,
 			ActualQuantity: item.ActualQuantity,
