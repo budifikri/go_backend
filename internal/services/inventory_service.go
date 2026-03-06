@@ -752,3 +752,91 @@ func (s *InventoryService) UpdateStockOpnameStatus(id, status, userID string) re
 		"status": opname.Status,
 	}, "Stock opname status updated successfully")
 }
+
+func (s *InventoryService) DeleteStockOpname(id string) response.ApiResponse {
+	opnameID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid stock opname ID")
+	}
+
+	opname, err := s.inventoryRepo.GetStockOpnameByID(opnameID)
+	if err != nil || opname == nil {
+		return response.NewErrorResponse("Stock opname not found")
+	}
+
+	if err := s.inventoryRepo.DeleteStockOpname(opnameID); err != nil {
+		return response.NewErrorResponse("Failed to delete stock opname")
+	}
+
+	return response.NewSuccessResponse(nil, "Stock opname deleted successfully")
+}
+
+func (s *InventoryService) UpdateStockOpname(id string, req struct {
+	WarehouseID string `json:"warehouse_id"`
+	OpnameDate  string `json:"opname_date"`
+	Notes       string `json:"notes"`
+	Items       []struct {
+		ProductID      string `json:"product_id"`
+		SystemQuantity int    `json:"system_quantity"`
+		ActualQuantity int    `json:"actual_quantity"`
+		Notes          string `json:"notes"`
+	}
+}) response.ApiResponse {
+	opnameID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid stock opname ID")
+	}
+
+	opname, err := s.inventoryRepo.GetStockOpnameByID(opnameID)
+	if err != nil || opname == nil {
+		return response.NewErrorResponse("Stock opname not found")
+	}
+
+	if opname.Status != models.StockOpnameStatusDraft && opname.Status != models.StockOpnameStatusInProgress {
+		return response.NewErrorResponse("Cannot update stock opname that is already completed or approved")
+	}
+
+	if req.WarehouseID != "" {
+		wid, err := uuid.Parse(req.WarehouseID)
+		if err != nil {
+			return response.NewErrorResponse("Invalid warehouse ID")
+		}
+		opname.WarehouseID = wid
+	}
+
+	if req.OpnameDate != "" {
+		t, err := time.Parse("2006-01-02", req.OpnameDate)
+		if err != nil {
+			return response.NewErrorResponse("Invalid opname_date format. Expected YYYY-MM-DD")
+		}
+		opname.OpnameDate = t
+	}
+
+	if req.Notes != "" {
+		opname.Notes = req.Notes
+	}
+
+	items := make([]models.StockOpnameItem, 0, len(req.Items))
+	for _, item := range req.Items {
+		pid, err := uuid.Parse(item.ProductID)
+		if err != nil {
+			continue
+		}
+		difference := item.ActualQuantity - item.SystemQuantity
+		items = append(items, models.StockOpnameItem{
+			ID:             uuid.New(),
+			ProductID:      pid,
+			SystemQuantity: item.SystemQuantity,
+			ActualQuantity: item.ActualQuantity,
+			Difference:     difference,
+			Notes:          item.Notes,
+		})
+	}
+
+	if err := s.inventoryRepo.UpdateStockOpnameWithItems(opname, items); err != nil {
+		return response.NewErrorResponse("Failed to update stock opname")
+	}
+
+	updated, _ := s.inventoryRepo.GetStockOpnameByID(opnameID)
+	return response.NewSuccessResponse(updated, "Stock opname updated successfully")
+}

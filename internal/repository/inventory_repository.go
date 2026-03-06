@@ -248,7 +248,7 @@ func (r *InventoryRepository) CreateStockOpname(opname *models.StockOpname) erro
 
 func (r *InventoryRepository) GetStockOpnameByID(id uuid.UUID) (*models.StockOpname, error) {
 	var opname models.StockOpname
-	if err := r.db.Preload("Warehouse").Preload("Items").First(&opname, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("Warehouse").Preload("User").Preload("Items").First(&opname, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
@@ -259,6 +259,29 @@ func (r *InventoryRepository) GetStockOpnameByID(id uuid.UUID) (*models.StockOpn
 
 func (r *InventoryRepository) UpdateStockOpname(opname *models.StockOpname) error {
 	return r.db.Save(opname).Error
+}
+
+func (r *InventoryRepository) UpdateStockOpnameWithItems(opname *models.StockOpname, items []models.StockOpnameItem) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(opname).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("opname_id = ?", opname.ID).Delete(&models.StockOpnameItem{}).Error; err != nil {
+			return err
+		}
+		for i := range items {
+			if items[i].ID == uuid.Nil {
+				items[i].ID = uuid.New()
+			}
+			items[i].OpnameID = opname.ID
+		}
+		if len(items) > 0 {
+			if err := tx.Create(&items).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (r *InventoryRepository) FindStockOpnames(filters map[string]interface{}, limit, offset int) ([]models.StockOpname, int64, error) {
@@ -288,7 +311,7 @@ func (r *InventoryRepository) FindStockOpnames(filters map[string]interface{}, l
 		return nil, 0, err
 	}
 
-	if err := query.Preload("Warehouse").Limit(limit).Offset(offset).Order("created_at DESC").Find(&opnames).Error; err != nil {
+	if err := query.Preload("Warehouse").Preload("User").Limit(limit).Offset(offset).Order("created_at DESC").Find(&opnames).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -313,6 +336,15 @@ func (r *InventoryRepository) CreateStockTransferItem(item *models.StockTransfer
 
 func (r *InventoryRepository) CreateStockOpnameItem(item *models.StockOpnameItem) error {
 	return r.db.Create(item).Error
+}
+
+func (r *InventoryRepository) DeleteStockOpname(id uuid.UUID) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("opname_id = ?", id).Delete(&models.StockOpnameItem{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&models.StockOpname{}, "id = ?", id).Error
+	})
 }
 
 func formatInt(n int64, width int) string {

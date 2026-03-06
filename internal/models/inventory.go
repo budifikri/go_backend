@@ -167,6 +167,7 @@ type StockOpname struct {
 	UpdatedAt    time.Time         `gorm:"autoUpdateTime" json:"updated_at"`
 
 	Warehouse *Warehouse        `gorm:"foreignKey:WarehouseID" json:"warehouse,omitempty"`
+	User      *User             `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Items     []StockOpnameItem `gorm:"foreignKey:OpnameID" json:"items,omitempty"`
 }
 

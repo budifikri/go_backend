@@ -266,6 +266,7 @@ func main() {
 	stockOpname.Get("/", inventoryHandler.GetStockOpnames)
 	stockOpname.Get("/:id", inventoryHandler.GetStockOpname)
 	stockOpname.Put("/:id/status", inventoryHandler.UpdateStockOpnameStatus)
+	stockOpname.Delete("/:id", inventoryHandler.DeleteStockOpname)
 
 	// Sales routes
 	sales := protected.Group("/sales")

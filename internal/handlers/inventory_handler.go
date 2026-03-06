@@ -367,3 +367,27 @@ func (h *InventoryHandler) UpdateStockOpnameStatus(c *fiber.Ctx) error {
 	}
 	return c.JSON(result)
 }
+
+// DeleteStockOpname godoc
+// @Summary Delete stock opname
+// @Tags StockOpname
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Opname ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/stock-opname/{id} [delete]
+func (h *InventoryHandler) DeleteStockOpname(c *fiber.Ctx) error {
+	id := c.Params("id")
+	result := h.inventoryService.DeleteStockOpname(id)
+	if !result.Success {
+		if result.Error == "Stock opname not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
