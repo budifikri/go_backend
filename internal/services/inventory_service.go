@@ -684,7 +684,7 @@ func (s *InventoryService) CreateStockOpname(req struct {
 		s.inventoryRepo.CreateStockOpnameItem(&opnameItem)
 	}
 
-	return response.NewSuccessResponse(opname, "Stock opname created successfully")
+	return s.GetStockOpnameByID(opname.ID.String())
 }
 
 func (s *InventoryService) GetStockOpnames(filters map[string]interface{}, limit, offset int) response.PaginatedResponse {

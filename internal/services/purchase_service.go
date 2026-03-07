@@ -162,7 +162,7 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 
 	poNumber := fmt.Sprintf("PO-%d", time.Now().UnixMilli())
 
-	var createdPO *repository.PurchaseOrderRow
+	var createdPOID uuid.UUID
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		po := map[string]interface{}{
 			"po_number":         poNumber,
@@ -187,26 +187,26 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 		if err := tx.Table("purchase_orders").Clauses(clause.Returning{}).Create(po).Scan(&poRow).Error; err != nil {
 			return err
 		}
-		poIDVal, ok := poRow["id"].(uuid.UUID)
+
+		var ok bool
+		createdPOID, ok = poRow["id"].(uuid.UUID)
 		if !ok {
-			// fallback fetch
 			var idStr string
 			if v, ok := poRow["id"].(string); ok {
 				idStr = v
 			}
 			if idStr != "" {
 				if p, err := uuid.Parse(idStr); err == nil {
-					poIDVal = p
+					createdPOID = p
 				}
 			}
 		}
-		if poIDVal == uuid.Nil {
-			// query by po_number
+		if createdPOID == uuid.Nil {
 			var tmp struct {
 				ID uuid.UUID `gorm:"column:id"`
 			}
 			_ = tx.Table("purchase_orders").Select("id").Where("po_number = ?", poNumber).Limit(1).Scan(&tmp).Error
-			poIDVal = tmp.ID
+			createdPOID = tmp.ID
 		}
 
 		subtotal := 0.0
@@ -222,7 +222,7 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 			taxAmount += lineTax
 
 			poi := map[string]interface{}{
-				"po_id":             poIDVal,
+				"po_id":             createdPOID,
 				"product_id":        pid,
 				"quantity":          item.Quantity,
 				"unit_price":        item.UnitPrice,
@@ -237,12 +237,11 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 
 		totalAmount := subtotal + taxAmount
 		if err := tx.Table("purchase_orders").
-			Where("id = ?", poIDVal).
+			Where("id = ?", createdPOID).
 			Updates(map[string]interface{}{"subtotal": subtotal, "tax_amount": taxAmount, "total_amount": totalAmount, "updated_at": time.Now()}).Error; err != nil {
 			return err
 		}
 
-		createdPO, _ = s.purchaseRepo.GetPurchaseOrderByID(poIDVal)
 		return nil
 	})
 
@@ -250,7 +249,12 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 		return response.NewErrorResponse(err.Error())
 	}
 
-	items, _ := s.purchaseRepo.GetPurchaseOrderItems(createdPO.ID)
+	po, err := s.purchaseRepo.GetPurchaseOrderByID(createdPOID)
+	if err != nil || po == nil {
+		return response.NewErrorResponse("Failed to fetch created purchase order")
+	}
+
+	items, _ := s.purchaseRepo.GetPurchaseOrderItems(createdPOID)
 	itemsOut := make([]map[string]interface{}, 0, len(items))
 	for _, it := range items {
 		itemsOut = append(itemsOut, map[string]interface{}{
@@ -269,25 +273,25 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 	}
 
 	data := map[string]interface{}{
-		"id":                createdPO.ID,
-		"po_number":         createdPO.PoNumber,
-		"supplier_id":       createdPO.SupplierID,
-		"warehouse_id":      createdPO.WarehouseID,
-		"order_date":        createdPO.OrderDate,
-		"expected_delivery": createdPO.ExpectedDelivery,
-		"payment_terms":     createdPO.PaymentTerms,
-		"status":            createdPO.Status,
-		"subtotal":          toFloat(createdPO.Subtotal),
-		"tax_amount":        toFloat(createdPO.TaxAmount),
-		"discount_amount":   toFloat(createdPO.DiscountAmount),
-		"total_amount":      toFloat(createdPO.TotalAmount),
-		"notes":             createdPO.Notes,
-		"created_by":        createdPO.CreatedBy,
-		"company_id":        createdPO.CompanyID,
-		"created_at":        createdPO.CreatedAt,
-		"updated_at":        createdPO.UpdatedAt,
-		"supplier_name":     createdPO.SupplierName,
-		"warehouse_name":    createdPO.WarehouseName,
+		"id":                po.ID,
+		"po_number":         po.PoNumber,
+		"supplier_id":       po.SupplierID,
+		"warehouse_id":      po.WarehouseID,
+		"order_date":        po.OrderDate,
+		"expected_delivery": po.ExpectedDelivery,
+		"payment_terms":     po.PaymentTerms,
+		"status":            po.Status,
+		"subtotal":          toFloat(po.Subtotal),
+		"tax_amount":        toFloat(po.TaxAmount),
+		"discount_amount":   toFloat(po.DiscountAmount),
+		"total_amount":      toFloat(po.TotalAmount),
+		"notes":             po.Notes,
+		"created_by":        po.CreatedBy,
+		"company_id":        po.CompanyID,
+		"created_at":        po.CreatedAt,
+		"updated_at":        po.UpdatedAt,
+		"supplier_name":     po.SupplierName,
+		"warehouse_name":    po.WarehouseName,
 		"items":             itemsOut,
 	}
 
