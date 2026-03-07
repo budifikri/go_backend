@@ -22,6 +22,7 @@ func NewPurchaseService(db *gorm.DB, purchaseRepo *repository.PurchaseRepository
 }
 
 type CreatePurchaseOrderItemInput struct {
+	ID        string
 	ProductID string
 	Quantity  int
 	UnitPrice float64
@@ -307,8 +308,26 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 			return err
 		}
 
-		if err := tx.Exec("DELETE FROM purchase_order_items WHERE po_id = ?", poID).Error; err != nil {
-			return err
+		itemIDsToKeep := make([]string, 0, len(input.Items))
+		for _, item := range input.Items {
+			if item.ID != "" {
+				itemIDsToKeep = append(itemIDsToKeep, item.ID)
+			}
+		}
+
+		deleteQuery := tx.Exec("DELETE FROM purchase_order_items WHERE po_id = ?", poID)
+		if deleteQuery.Error != nil {
+			return deleteQuery.Error
+		}
+		if len(itemIDsToKeep) > 0 {
+			notInClause := ""
+			for i, id := range itemIDsToKeep {
+				if i > 0 {
+					notInClause += ","
+				}
+				notInClause += "'" + id + "'"
+			}
+			tx.Exec("DELETE FROM purchase_order_items WHERE po_id = ? AND id NOT IN ("+notInClause+")", poID)
 		}
 
 		subtotal := 0.0
@@ -316,14 +335,29 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 		for _, item := range input.Items {
 			pid, err := uuid.Parse(item.ProductID)
 			if err != nil {
-				return err
+				continue
 			}
 			lineSubtotal := float64(item.Quantity) * item.UnitPrice * (1 - item.Discount/100)
 			lineTax := lineSubtotal * (item.TaxRate / 100)
 			subtotal += lineSubtotal
 			taxAmount += lineTax
 
+			if item.ID != "" {
+				itemID, err := uuid.Parse(item.ID)
+				if err == nil {
+					tx.Table("purchase_order_items").Where("id = ?", itemID).Updates(map[string]interface{}{
+						"product_id":    pid,
+						"quantity":      item.Quantity,
+						"unit_price":    item.UnitPrice,
+						"discount_rate": item.Discount,
+						"tax_rate":      item.TaxRate,
+					})
+					continue
+				}
+			}
+
 			poi := map[string]interface{}{
+				"id":                uuid.New(),
 				"po_id":             poID,
 				"product_id":        pid,
 				"quantity":          item.Quantity,

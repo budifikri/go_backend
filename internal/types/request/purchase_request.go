@@ -1,6 +1,7 @@
 package request
 
 type PurchaseOrderItemRequest struct {
+	ID        string  `json:"id"`
 	ProductID string  `json:"product_id"`
 	Quantity  int     `json:"quantity"`
 	UnitPrice float64 `json:"unit_price"`

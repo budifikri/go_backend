@@ -482,6 +482,8 @@ definitions:
     properties:
       discount:
         type: number
+      id:
+        type: string
       product_id:
         type: string
       quantity:

@@ -8300,6 +8300,9 @@ const docTemplate = `{
                 "discount": {
                     "type": "number"
                 },
+                "id": {
+                    "type": "string"
+                },
                 "product_id": {
                     "type": "string"
                 },
