@@ -162,7 +162,7 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 
 	poNumber := fmt.Sprintf("PO-%d", time.Now().UnixMilli())
 
-	var created map[string]interface{}
+	var createdPO *repository.PurchaseOrderRow
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		po := map[string]interface{}{
 			"po_number":         poNumber,
@@ -242,11 +242,7 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 			return err
 		}
 
-		var updated map[string]interface{}
-		if err := tx.Table("purchase_orders").Where("id = ?", poIDVal).Limit(1).Find(&updated).Error; err != nil {
-			// ignore
-		}
-		created = updated
+		createdPO, _ = s.purchaseRepo.GetPurchaseOrderByID(poIDVal)
 		return nil
 	})
 
@@ -254,7 +250,48 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 		return response.NewErrorResponse(err.Error())
 	}
 
-	return response.NewSuccessResponse(created, "")
+	items, _ := s.purchaseRepo.GetPurchaseOrderItems(createdPO.ID)
+	itemsOut := make([]map[string]interface{}, 0, len(items))
+	for _, it := range items {
+		itemsOut = append(itemsOut, map[string]interface{}{
+			"id":                it.ID,
+			"po_id":             it.PoID,
+			"product_id":        it.ProductID,
+			"quantity":          it.Quantity,
+			"received_quantity": it.ReceivedQuantity,
+			"unit_price":        toFloat(it.UnitPrice),
+			"discount":          toFloat(it.Discount),
+			"tax_rate":          toFloat(it.TaxRate),
+			"line_total":        toFloat(it.LineTotal),
+			"product_name":      it.ProductName,
+			"sku":               it.SKU,
+		})
+	}
+
+	data := map[string]interface{}{
+		"id":                createdPO.ID,
+		"po_number":         createdPO.PoNumber,
+		"supplier_id":       createdPO.SupplierID,
+		"warehouse_id":      createdPO.WarehouseID,
+		"order_date":        createdPO.OrderDate,
+		"expected_delivery": createdPO.ExpectedDelivery,
+		"payment_terms":     createdPO.PaymentTerms,
+		"status":            createdPO.Status,
+		"subtotal":          toFloat(createdPO.Subtotal),
+		"tax_amount":        toFloat(createdPO.TaxAmount),
+		"discount_amount":   toFloat(createdPO.DiscountAmount),
+		"total_amount":      toFloat(createdPO.TotalAmount),
+		"notes":             createdPO.Notes,
+		"created_by":        createdPO.CreatedBy,
+		"company_id":        createdPO.CompanyID,
+		"created_at":        createdPO.CreatedAt,
+		"updated_at":        createdPO.UpdatedAt,
+		"supplier_name":     createdPO.SupplierName,
+		"warehouse_name":    createdPO.WarehouseName,
+		"items":             itemsOut,
+	}
+
+	return response.NewSuccessResponse(data, "")
 }
 
 func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrderInput) response.ApiResponse {
