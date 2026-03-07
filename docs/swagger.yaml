@@ -108,17 +108,6 @@ definitions:
       warehouse_id:
         type: string
     type: object
-  request.CreateGrnRequest:
-    properties:
-      invoiceNumber:
-        type: string
-      notes:
-        type: string
-      poId:
-        type: string
-      warehouseId:
-        type: string
-    type: object
   request.CreateIncomingInvoiceRequest:
     properties:
       attachment_path:
@@ -493,6 +482,22 @@ definitions:
       unit_price:
         type: number
     type: object
+  request.ReceivePurchaseOrderItemRequest:
+    properties:
+      id:
+        type: string
+      qty_receive:
+        type: integer
+    type: object
+  request.ReceivePurchaseOrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/request.ReceivePurchaseOrderItemRequest'
+        type: array
+      status_receive:
+        type: string
+    type: object
   request.ReceiveTransferItemRequest:
     properties:
       notes:
@@ -710,36 +715,6 @@ definitions:
       phone:
         type: string
       tier:
-        type: string
-    type: object
-  request.UpdateGrnItemRequest:
-    properties:
-      id:
-        type: string
-      orderedQuantity:
-        type: integer
-      poItemId:
-        type: string
-      productId:
-        type: string
-      qualityNotes:
-        type: string
-      receivedQuantity:
-        type: integer
-      rejectedQuantity:
-        type: integer
-      unitPrice:
-        type: string
-    type: object
-  request.UpdateGrnRequest:
-    properties:
-      invoiceNumber:
-        type: string
-      items:
-        items:
-          $ref: '#/definitions/request.UpdateGrnItemRequest'
-        type: array
-      notes:
         type: string
     type: object
   request.UpdateIncomingInvoiceRequest:
@@ -2295,242 +2270,6 @@ paths:
       summary: Get exchange
       tags:
       - Exchanges
-  /api/grn:
-    get:
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - default: 1
-        description: Page
-        in: query
-        name: page
-        type: integer
-      - default: 50
-        description: Limit
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset (overrides page)
-        in: query
-        name: offset
-        type: integer
-      - description: Search
-        in: query
-        name: search
-        type: string
-      - description: Status
-        in: query
-        name: status
-        type: string
-      - description: PO ID
-        in: query
-        name: poId
-        type: string
-      - description: Warehouse ID
-        in: query
-        name: warehouseId
-        type: string
-      - description: Start date
-        in: query
-        name: startDate
-        type: string
-      - description: End date
-        in: query
-        name: endDate
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.PaginatedResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-      security:
-      - BearerAuth: []
-      summary: List GRNs
-      tags:
-      - GRN
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: GRN payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/request.CreateGrnRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-      security:
-      - BearerAuth: []
-      summary: Create GRN
-      tags:
-      - GRN
-  /api/grn/{id}:
-    delete:
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: GRN ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-      security:
-      - BearerAuth: []
-      summary: Cancel GRN
-      tags:
-      - GRN
-    get:
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: GRN ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-      security:
-      - BearerAuth: []
-      summary: Get GRN
-      tags:
-      - GRN
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: GRN ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Update payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/request.UpdateGrnRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-      security:
-      - BearerAuth: []
-      summary: Update GRN
-      tags:
-      - GRN
-  /api/grn/{id}/verify:
-    put:
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: GRN ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-      security:
-      - BearerAuth: []
-      summary: Verify GRN
-      tags:
-      - GRN
   /api/health:
     get:
       description: Check API and database health status
@@ -4199,6 +3938,43 @@ paths:
       summary: Update purchase order
       tags:
       - Purchases
+  /api/purchases/{id}/approve:
+    put:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Approve purchase order
+      tags:
+      - Purchases
   /api/purchases/{id}/cancel:
     post:
       parameters:
@@ -4230,6 +4006,51 @@ paths:
       security:
       - BearerAuth: []
       summary: Cancel purchase order
+      tags:
+      - Purchases
+  /api/purchases/{id}/receive:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Receive payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReceivePurchaseOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Receive purchase order items
       tags:
       - Purchases
   /api/purchases/{id}/status:

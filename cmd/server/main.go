@@ -25,9 +25,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
+	apidocs "github.com/pos-retail/go_backend/docs"
 	"github.com/pos-retail/go_backend/internal/config"
 	"github.com/pos-retail/go_backend/internal/database"
-	apidocs "github.com/pos-retail/go_backend/internal/docs"
 	"github.com/pos-retail/go_backend/internal/handlers"
 	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/middleware"
