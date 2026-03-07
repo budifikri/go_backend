@@ -248,3 +248,71 @@ func (h *PurchaseHandler) DeletePurchaseOrder(c *fiber.Ctx) error {
 	}
 	return c.JSON(result)
 }
+
+// ApprovePurchaseOrder godoc
+// @Summary Approve purchase order
+// @Tags Purchases
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id}/approve [put]
+func (h *PurchaseHandler) ApprovePurchaseOrder(c *fiber.Ctx) error {
+	result := h.purchaseService.ApprovePurchaseOrder(c.Params("id"))
+	if !result.Success {
+		if result.Error == "Purchase order not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// ReceivePurchaseOrder godoc
+// @Summary Receive purchase order items
+// @Tags Purchases
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Param body body request.ReceivePurchaseOrderRequest true "Receive payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id}/receive [put]
+func (h *PurchaseHandler) ReceivePurchaseOrder(c *fiber.Ctx) error {
+	var req request.ReceivePurchaseOrderRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+	}
+
+	if len(req.Items) == 0 || req.StatusReceive == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request data"))
+	}
+
+	items := make([]services.ReceivePurchaseOrderItemInput, 0, len(req.Items))
+	for _, it := range req.Items {
+		items = append(items, services.ReceivePurchaseOrderItemInput{
+			ID:         it.ID,
+			QtyReceive: it.QtyReceive,
+		})
+	}
+
+	result := h.purchaseService.ReceivePurchaseOrder(c.Params("id"), services.ReceivePurchaseOrderInput{
+		Items:         items,
+		StatusReceive: req.StatusReceive,
+	})
+	if !result.Success {
+		if result.Error == "Purchase order not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}

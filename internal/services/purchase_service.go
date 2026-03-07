@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
 	"gorm.io/gorm"
@@ -13,8 +14,9 @@ import (
 )
 
 type PurchaseService struct {
-	db           *gorm.DB
-	purchaseRepo *repository.PurchaseRepository
+	db            *gorm.DB
+	purchaseRepo  *repository.PurchaseRepository
+	inventoryRepo *repository.InventoryRepository
 }
 
 func NewPurchaseService(db *gorm.DB, purchaseRepo *repository.PurchaseRepository) *PurchaseService {
@@ -48,13 +50,22 @@ type UpdatePurchaseOrderInput struct {
 	Notes        *string
 }
 
+type ReceivePurchaseOrderItemInput struct {
+	ID         string
+	QtyReceive int
+}
+
+type ReceivePurchaseOrderInput struct {
+	Items         []ReceivePurchaseOrderItemInput
+	StatusReceive string
+}
+
 func (s *PurchaseService) GetPurchaseOrders(filters map[string]string, limit, offset int) response.PaginatedResponse {
 	rows, total, err := s.purchaseRepo.FindPurchaseOrders(filters, limit, offset)
 	if err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
 
-	// TS converts subtotal/tax_amount/total_amount to Number for list.
 	data := make([]map[string]interface{}, 0, len(rows))
 	for _, po := range rows {
 		m := map[string]interface{}{
@@ -65,7 +76,9 @@ func (s *PurchaseService) GetPurchaseOrders(filters map[string]string, limit, of
 			"order_date":        po.OrderDate,
 			"expected_delivery": po.ExpectedDelivery,
 			"payment_terms":     po.PaymentTerms,
-			"status":            po.Status,
+			"status_po":         po.StatusPo,
+			"status_receive":    po.StatusReceive,
+			"note_receive":      po.NoteReceive,
 			"subtotal":          toFloat(po.Subtotal),
 			"tax_amount":        toFloat(po.TaxAmount),
 			"discount_amount":   toFloat(po.DiscountAmount),
@@ -102,17 +115,17 @@ func (s *PurchaseService) GetPurchaseOrderByID(id string) response.ApiResponse {
 	itemsOut := make([]map[string]interface{}, 0, len(items))
 	for _, it := range items {
 		itemsOut = append(itemsOut, map[string]interface{}{
-			"id":                it.ID,
-			"po_id":             it.PoID,
-			"product_id":        it.ProductID,
-			"quantity":          it.Quantity,
-			"received_quantity": it.ReceivedQuantity,
-			"unit_price":        toFloat(it.UnitPrice),
-			"discount":          toFloat(it.Discount),
-			"tax_rate":          toFloat(it.TaxRate),
-			"line_total":        toFloat(it.LineTotal),
-			"product_name":      it.ProductName,
-			"sku":               it.SKU,
+			"id":           it.ID,
+			"po_id":        it.PoID,
+			"product_id":   it.ProductID,
+			"qty_po":       it.QtyPo,
+			"qty_receive":  it.QtyReceive,
+			"unit_price":   toFloat(it.UnitPrice),
+			"discount":     toFloat(it.Discount),
+			"tax_rate":     toFloat(it.TaxRate),
+			"line_total":   toFloat(it.LineTotal),
+			"product_name": it.ProductName,
+			"sku":          it.SKU,
 		})
 	}
 
@@ -124,7 +137,9 @@ func (s *PurchaseService) GetPurchaseOrderByID(id string) response.ApiResponse {
 		"order_date":        po.OrderDate,
 		"expected_delivery": po.ExpectedDelivery,
 		"payment_terms":     po.PaymentTerms,
-		"status":            po.Status,
+		"status_po":         po.StatusPo,
+		"status_receive":    po.StatusReceive,
+		"note_receive":      po.NoteReceive,
 		"subtotal":          toFloat(po.Subtotal),
 		"tax_amount":        toFloat(po.TaxAmount),
 		"discount_amount":   toFloat(po.DiscountAmount),
@@ -169,7 +184,8 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 			"supplier_id":       supplierID,
 			"warehouse_id":      warehouseID,
 			"expected_delivery": input.ExpectedDate,
-			"status":            "DRAFT",
+			"status_po":         "DRAFT",
+			"status_receive":    "DRAFT",
 			"subtotal":          0,
 			"tax_amount":        0,
 			"total_amount":      0,
@@ -222,13 +238,13 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 			taxAmount += lineTax
 
 			poi := map[string]interface{}{
-				"po_id":             createdPOID,
-				"product_id":        pid,
-				"quantity":          item.Quantity,
-				"unit_price":        item.UnitPrice,
-				"discount_rate":     item.Discount,
-				"tax_rate":          item.TaxRate,
-				"received_quantity": 0,
+				"po_id":         createdPOID,
+				"product_id":    pid,
+				"qty_po":        item.Quantity,
+				"unit_price":    item.UnitPrice,
+				"discount_rate": item.Discount,
+				"tax_rate":      item.TaxRate,
+				"qty_receive":   0,
 			}
 			if err := tx.Table("purchase_order_items").Create(poi).Error; err != nil {
 				return err
@@ -258,17 +274,17 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 	itemsOut := make([]map[string]interface{}, 0, len(items))
 	for _, it := range items {
 		itemsOut = append(itemsOut, map[string]interface{}{
-			"id":                it.ID,
-			"po_id":             it.PoID,
-			"product_id":        it.ProductID,
-			"quantity":          it.Quantity,
-			"received_quantity": it.ReceivedQuantity,
-			"unit_price":        toFloat(it.UnitPrice),
-			"discount":          toFloat(it.Discount),
-			"tax_rate":          toFloat(it.TaxRate),
-			"line_total":        toFloat(it.LineTotal),
-			"product_name":      it.ProductName,
-			"sku":               it.SKU,
+			"id":           it.ID,
+			"po_id":        it.PoID,
+			"product_id":   it.ProductID,
+			"qty_po":       it.QtyPo,
+			"qty_receive":  it.QtyReceive,
+			"unit_price":   toFloat(it.UnitPrice),
+			"discount":     toFloat(it.Discount),
+			"tax_rate":     toFloat(it.TaxRate),
+			"line_total":   toFloat(it.LineTotal),
+			"product_name": it.ProductName,
+			"sku":          it.SKU,
 		})
 	}
 
@@ -280,7 +296,9 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 		"order_date":        po.OrderDate,
 		"expected_delivery": po.ExpectedDelivery,
 		"payment_terms":     po.PaymentTerms,
-		"status":            po.Status,
+		"status_po":         po.StatusPo,
+		"status_receive":    po.StatusReceive,
+		"note_receive":      po.NoteReceive,
 		"subtotal":          toFloat(po.Subtotal),
 		"tax_amount":        toFloat(po.TaxAmount),
 		"discount_amount":   toFloat(po.DiscountAmount),
@@ -298,13 +316,145 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 	return response.NewSuccessResponse(data, "")
 }
 
+func (s *PurchaseService) ApprovePurchaseOrder(id string) response.ApiResponse {
+	poID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	po, err := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	if err != nil || po == nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	if po.StatusPo != "DRAFT" {
+		return response.NewErrorResponse("Only DRAFT purchase orders can be approved")
+	}
+
+	err = s.purchaseRepo.UpdatePurchaseOrder(poID, map[string]interface{}{
+		"status_po":  "APPROVE",
+		"updated_at": time.Now(),
+	})
+	if err != nil {
+		return response.NewErrorResponse("Failed to approve purchase order")
+	}
+
+	return s.GetPurchaseOrderByID(id)
+}
+
+func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseOrderInput) response.ApiResponse {
+	poID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	po, err := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	if err != nil || po == nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	if po.StatusPo != "APPROVE" {
+		return response.NewErrorResponse("Only APPROVED purchase orders can receive items")
+	}
+
+	if po.StatusReceive == "RECEIVE" {
+		return response.NewErrorResponse("Purchase order already fully received")
+	}
+
+	items, err := s.purchaseRepo.GetPurchaseOrderItems(poID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to get purchase order items")
+	}
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		hasPartial := false
+
+		for _, reqItem := range input.Items {
+			itemID, err := uuid.Parse(reqItem.ID)
+			if err != nil {
+				continue
+			}
+
+			for i := range items {
+				if items[i].ID == itemID {
+					oldReceive := items[i].QtyReceive
+					items[i].QtyReceive = reqItem.QtyReceive
+
+					err := tx.Table("purchase_order_items").
+						Where("id = ?", itemID).
+						Updates(map[string]interface{}{
+							"qty_receive": reqItem.QtyReceive,
+						}).Error
+					if err != nil {
+						return err
+					}
+
+					if reqItem.QtyReceive > oldReceive && input.StatusReceive == "RECEIVE" {
+						qtyToAdd := reqItem.QtyReceive - oldReceive
+						if qtyToAdd > 0 {
+							err := tx.Model(&models.Inventory{}).
+								Where("product_id = ? AND warehouse_id = ?", items[i].ProductID, po.WarehouseID).
+								UpdateColumn("quantity", gorm.Expr("quantity + ?", qtyToAdd)).Error
+							if err != nil {
+								return err
+							}
+
+							movement := models.StockMovement{
+								ID:            uuid.New(),
+								ProductID:     items[i].ProductID,
+								WarehouseID:   po.WarehouseID,
+								MovementType:  "IN",
+								Quantity:      qtyToAdd,
+								ReferenceType: "PO",
+								ReferenceID:   &poID,
+								Notes:         "Receive from PO",
+								CreatedBy:     &po.CreatedBy,
+							}
+							if err := tx.Create(&movement).Error; err != nil {
+								return err
+							}
+						}
+					}
+
+					if items[i].QtyPo > reqItem.QtyReceive {
+						hasPartial = true
+					}
+					break
+				}
+			}
+		}
+
+		noteReceive := "COMPLETE"
+		if hasPartial {
+			noteReceive = "PARTIAL"
+		}
+
+		updates := map[string]interface{}{
+			"status_receive": input.StatusReceive,
+			"note_receive":   noteReceive,
+			"updated_at":     time.Now(),
+		}
+
+		if err := tx.Table("purchase_orders").Where("id = ?", poID).Updates(updates).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return response.NewErrorResponse("Failed to receive purchase order: " + err.Error())
+	}
+
+	return s.GetPurchaseOrderByID(id)
+}
+
 func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrderInput) response.ApiResponse {
 	poID, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Purchase order not found")
 	}
 
-	// Validate IDs early
 	supplierID, err := uuid.Parse(input.SupplierID)
 	if err != nil {
 		return response.NewErrorResponse("Invalid request data")
@@ -321,13 +471,13 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 	if err != nil || po == nil {
 		return response.NewErrorResponse("Purchase order not found")
 	}
-	if po.Status != "DRAFT" && po.Status != "PENDING" {
+	if po.StatusPo != "DRAFT" && po.StatusPo != "PENDING" {
 		return response.NewErrorResponse("Purchase order cannot be updated")
 	}
 
 	itemsExisting, _ := s.purchaseRepo.GetPurchaseOrderItems(poID)
 	for _, it := range itemsExisting {
-		if it.ReceivedQuantity > 0 {
+		if it.QtyReceive > 0 {
 			return response.NewErrorResponse("Purchase order cannot be updated")
 		}
 	}
@@ -362,11 +512,11 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 		}
 		if len(itemIDsToKeep) > 0 {
 			notInClause := ""
-			for i, id := range itemIDsToKeep {
+			for i, itemID := range itemIDsToKeep {
 				if i > 0 {
 					notInClause += ","
 				}
-				notInClause += "'" + id + "'"
+				notInClause += "'" + itemID + "'"
 			}
 			tx.Exec("DELETE FROM purchase_order_items WHERE po_id = ? AND id NOT IN ("+notInClause+")", poID)
 		}
@@ -388,7 +538,7 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 				if err == nil {
 					tx.Table("purchase_order_items").Where("id = ?", itemID).Updates(map[string]interface{}{
 						"product_id":    pid,
-						"quantity":      item.Quantity,
+						"qty_po":        item.Quantity,
 						"unit_price":    item.UnitPrice,
 						"discount_rate": item.Discount,
 						"tax_rate":      item.TaxRate,
@@ -398,14 +548,14 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 			}
 
 			poi := map[string]interface{}{
-				"id":                uuid.New(),
-				"po_id":             poID,
-				"product_id":        pid,
-				"quantity":          item.Quantity,
-				"unit_price":        item.UnitPrice,
-				"discount_rate":     item.Discount,
-				"tax_rate":          item.TaxRate,
-				"received_quantity": 0,
+				"id":            uuid.New(),
+				"po_id":         poID,
+				"product_id":    pid,
+				"qty_po":        item.Quantity,
+				"unit_price":    item.UnitPrice,
+				"discount_rate": item.Discount,
+				"tax_rate":      item.TaxRate,
+				"qty_receive":   0,
 			}
 			if err := tx.Table("purchase_order_items").Create(poi).Error; err != nil {
 				return err
@@ -438,9 +588,8 @@ func (s *PurchaseService) UpdatePurchaseOrderStatus(id string, status string) re
 		return response.NewErrorResponse("Purchase order not found")
 	}
 
-	// Use raw UPDATE ... RETURNING to avoid reflection issues with chained Update().Scan().
 	var result map[string]interface{}
-	res := s.db.Raw("UPDATE purchase_orders SET status = ? WHERE id = ? RETURNING *", status, poID).Scan(&result)
+	res := s.db.Raw("UPDATE purchase_orders SET status_po = ? WHERE id = ? RETURNING *", status, poID).Scan(&result)
 	if res.Error != nil {
 		return response.NewErrorResponse("Purchase order not found")
 	}
@@ -456,7 +605,7 @@ func (s *PurchaseService) CancelPurchaseOrder(id string) response.ApiResponse {
 		return response.NewErrorResponse("Purchase order not found")
 	}
 
-	res := s.db.Table("purchase_orders").Where("id = ?", poID).Update("status", "CANCELLED")
+	res := s.db.Table("purchase_orders").Where("id = ?", poID).Update("status_po", "CANCELLED")
 	if res.Error != nil {
 		return response.NewErrorResponse("Purchase order not found")
 	}

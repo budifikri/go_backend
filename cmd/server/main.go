@@ -81,8 +81,6 @@ func main() {
 		&models.Supplier{},
 		&models.PurchaseOrder{},
 		&models.PurchaseOrderItem{},
-		&models.GoodsReceivedNote{},
-		&models.GrnItem{},
 		&models.Promotion{},
 		&models.PromotionProduct{},
 		&models.PromotionCategory{},
@@ -126,7 +124,6 @@ func main() {
 	customerService := services.NewCustomerService(customerRepo)
 	supplierService := services.NewSupplierService(supplierRepo)
 	purchaseService := services.NewPurchaseService(db, purchaseRepo)
-	grnService := services.NewGrnService(db)
 	promotionService := services.NewPromotionService(db, promotionRepo)
 	priceTierService := services.NewPriceTierService(db)
 	financeService := services.NewFinanceService(db, financeRepo)
@@ -145,7 +142,6 @@ func main() {
 	customerHandler := handlers.NewCustomerHandler(customerService)
 	supplierHandler := handlers.NewSupplierHandler(supplierService)
 	purchaseHandler := handlers.NewPurchaseHandler(purchaseService)
-	grnHandler := handlers.NewGrnHandler(grnService)
 	promotionHandler := handlers.NewPromotionHandler(promotionService)
 	priceTierHandler := handlers.NewPriceTierHandler(priceTierService)
 	financeHandler := handlers.NewFinanceHandler(financeService)
@@ -316,17 +312,10 @@ func main() {
 	purchases.Post("/", purchaseHandler.CreatePurchaseOrder)
 	purchases.Put("/:id", purchaseHandler.UpdatePurchaseOrder)
 	purchases.Put("/:id/status", purchaseHandler.UpdatePurchaseOrderStatus)
+	purchases.Put("/:id/approve", purchaseHandler.ApprovePurchaseOrder)
+	purchases.Put("/:id/receive", purchaseHandler.ReceivePurchaseOrder)
 	purchases.Post("/:id/cancel", purchaseHandler.CancelPurchaseOrder)
 	purchases.Delete("/:id", purchaseHandler.DeletePurchaseOrder)
-
-	// GRN routes
-	grn := protected.Group("/grn")
-	grn.Post("/", grnHandler.CreateGrn)
-	grn.Get("/", grnHandler.ListGrns)
-	grn.Get("/:id", grnHandler.GetGrn)
-	grn.Put("/:id", grnHandler.UpdateGrn)
-	grn.Delete("/:id", grnHandler.CancelGrn)
-	grn.Put("/:id/verify", grnHandler.VerifyGrn)
 
 	// Promotions routes
 	promotions := protected.Group("/promotions")

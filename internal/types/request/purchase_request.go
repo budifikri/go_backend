@@ -28,3 +28,13 @@ type UpdatePurchaseOrderRequest struct {
 type UpdatePurchaseOrderStatusRequest struct {
 	Status string `json:"status"`
 }
+
+type ReceivePurchaseOrderItemRequest struct {
+	ID         string `json:"id"`
+	QtyReceive int    `json:"qty_receive"`
+}
+
+type ReceivePurchaseOrderRequest struct {
+	Items         []ReceivePurchaseOrderItemRequest `json:"items"`
+	StatusReceive string                            `json:"status_receive"`
+}

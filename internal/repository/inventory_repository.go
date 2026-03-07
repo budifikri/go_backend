@@ -138,6 +138,12 @@ func (r *InventoryRepository) UpdateQuantity(productID, warehouseID uuid.UUID, q
 		}).Error
 }
 
+func (r *InventoryRepository) AddStock(productID, warehouseID uuid.UUID, qty int) error {
+	return r.db.Model(&models.Inventory{}).
+		Where("product_id = ? AND warehouse_id = ?", productID, warehouseID).
+		UpdateColumn("quantity", gorm.Expr("quantity + ?", qty)).Error
+}
+
 func (r *InventoryRepository) CreateStockMovement(movement *models.StockMovement) error {
 	return r.db.Create(movement).Error
 }
