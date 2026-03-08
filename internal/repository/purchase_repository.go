@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -110,6 +112,8 @@ func (r *PurchaseRepository) GetPurchaseOrderByID(id uuid.UUID) (*PurchaseOrderR
 func (r *PurchaseRepository) GetPurchaseOrderItems(poID uuid.UUID) ([]PurchaseOrderItemRow, error) {
 	var items []PurchaseOrderItemRow
 
+	log.Printf("[DEBUG] GetPurchaseOrderItems called with poID: %s", poID.String())
+
 	selectClause := `
 		poi.id, poi.po_id, poi.product_id, poi.qty_po, poi.qty_receive,
 		poi.unit_price,
@@ -130,7 +134,13 @@ func (r *PurchaseRepository) GetPurchaseOrderItems(poID uuid.UUID) ([]PurchaseOr
 		Order("poi.id").
 		Scan(&items).Error
 	if err != nil {
+		log.Printf("[DEBUG] GetPurchaseOrderItems error: %v", err)
 		return nil, err
+	}
+	log.Printf("[DEBUG] GetPurchaseOrderItems returned %d items for poID: %s", len(items), poID.String())
+	for i, item := range items {
+		log.Printf("[DEBUG] Item %d: id=%s, po_id=%s, product_id=%s, qty=%d, unit_price=%s",
+			i, item.ID.String(), item.PoID.String(), item.ProductID.String(), item.QtyPo, item.UnitPrice)
 	}
 	return items, nil
 }

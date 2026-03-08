@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -164,6 +165,12 @@ func (s *PurchaseService) GetPurchaseOrderByID(id string) response.ApiResponse {
 }
 
 func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) response.ApiResponse {
+	log.Printf("[DEBUG] CreatePurchaseOrder called with %d items", len(input.Items))
+	for i, item := range input.Items {
+		log.Printf("[DEBUG] Input item %d: product_id=%s, quantity=%d, unit_price=%f",
+			i, item.ProductID, item.Quantity, item.UnitPrice)
+	}
+
 	supplierID, err := uuid.Parse(input.SupplierID)
 	if err != nil {
 		return response.NewErrorResponse("Invalid request data")
@@ -252,15 +259,20 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 				"tax_rate":      item.TaxRate,
 				"qty_receive":   0,
 			}
+			log.Printf("[DEBUG] Creating item for po_id=%s, product_id=%s, qty=%d, unit_price=%f",
+				createdPOID.String(), pid.String(), item.Quantity, item.UnitPrice)
 			if err := tx.Table("purchase_order_items").Create(poi).Error; err != nil {
+				log.Printf("[ERROR] Failed to create item: %v", err)
 				return err
 			}
 		}
 
 		totalAmount := subtotal + taxAmount
+		log.Printf("[DEBUG] Calculated totals: subtotal=%f, taxAmount=%f, totalAmount=%f", subtotal, taxAmount, totalAmount)
 		if err := tx.Table("purchase_orders").
 			Where("id = ?", createdPOID).
 			Updates(map[string]interface{}{"subtotal": subtotal, "tax_amount": taxAmount, "total_amount": totalAmount, "updated_at": time.Now()}).Error; err != nil {
+			log.Printf("[ERROR] Failed to update PO totals: %v", err)
 			return err
 		}
 
