@@ -18,12 +18,14 @@ type CreatePurchaseOrderRequest struct {
 }
 
 type UpdatePurchaseOrderRequest struct {
-	SupplierID   string                     `json:"supplier_id"`
-	WarehouseID  string                     `json:"warehouse_id"`
-	OrderDate    string                     `json:"order_date"`
-	ExpectedDate string                     `json:"expected_date"`
-	Items        []PurchaseOrderItemRequest `json:"items"`
-	Notes        *string                    `json:"notes"`
+	SupplierID    string                     `json:"supplier_id"`
+	WarehouseID   string                     `json:"warehouse_id"`
+	OrderDate     string                     `json:"order_date"`
+	ExpectedDate  string                     `json:"expected_date"`
+	Items         []PurchaseOrderItemRequest `json:"items"`
+	Notes         *string                    `json:"notes"`
+	StatusPo      string                     `json:"status_po"`
+	StatusReceive string                     `json:"status_receive"`
 }
 
 type UpdatePurchaseOrderStatusRequest struct {

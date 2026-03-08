@@ -181,12 +181,14 @@ func (h *PurchaseHandler) UpdatePurchaseOrder(c *fiber.Ctx) error {
 	}
 
 	result := h.purchaseService.UpdatePurchaseOrder(c.Params("id"), services.UpdatePurchaseOrderInput{
-		SupplierID:   req.SupplierID,
-		WarehouseID:  req.WarehouseID,
-		OrderDate:    orderDate,
-		ExpectedDate: expected,
-		Items:        items,
-		Notes:        req.Notes,
+		SupplierID:    req.SupplierID,
+		WarehouseID:   req.WarehouseID,
+		OrderDate:     orderDate,
+		ExpectedDate:  expected,
+		Items:         items,
+		Notes:         req.Notes,
+		StatusPo:      req.StatusPo,
+		StatusReceive: req.StatusReceive,
 	})
 	if !result.Success {
 		if result.Error == "Purchase order not found" {

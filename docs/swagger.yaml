@@ -775,6 +775,10 @@ definitions:
         type: string
       order_date:
         type: string
+      status_po:
+        type: string
+      status_receive:
+        type: string
       supplier_id:
         type: string
       warehouse_id:

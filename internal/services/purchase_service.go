@@ -43,12 +43,14 @@ type CreatePurchaseOrderInput struct {
 }
 
 type UpdatePurchaseOrderInput struct {
-	SupplierID   string
-	WarehouseID  string
-	OrderDate    time.Time
-	ExpectedDate time.Time
-	Items        []CreatePurchaseOrderItemInput
-	Notes        *string
+	SupplierID    string
+	WarehouseID   string
+	OrderDate     time.Time
+	ExpectedDate  time.Time
+	Items         []CreatePurchaseOrderItemInput
+	Notes         *string
+	StatusPo      string
+	StatusReceive string
 }
 
 type ReceivePurchaseOrderItemInput struct {
@@ -529,6 +531,12 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 			updates["notes"] = *input.Notes
 		} else {
 			updates["notes"] = nil
+		}
+		if input.StatusPo != "" {
+			updates["status_po"] = input.StatusPo
+		}
+		if input.StatusReceive != "" {
+			updates["status_receive"] = input.StatusReceive
 		}
 
 		if err := tx.Table("purchase_orders").Where("id = ?", poID).Updates(updates).Error; err != nil {
