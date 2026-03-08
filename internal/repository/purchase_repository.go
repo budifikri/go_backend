@@ -79,6 +79,12 @@ func (r *PurchaseRepository) FindPurchaseOrders(filters map[string]string, limit
 		like := "%" + v + "%"
 		query = query.Where("po.po_number ILIKE ? OR s.name ILIKE ? OR w.name ILIKE ?", like, like, like)
 	}
+	if v := filters["date_from"]; v != "" {
+		query = query.Where("po.order_date >= ?", v)
+	}
+	if v := filters["date_to"]; v != "" {
+		query = query.Where("po.order_date <= ?", v)
+	}
 
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err
