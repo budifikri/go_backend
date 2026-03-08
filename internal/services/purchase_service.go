@@ -45,6 +45,7 @@ type CreatePurchaseOrderInput struct {
 type UpdatePurchaseOrderInput struct {
 	SupplierID   string
 	WarehouseID  string
+	OrderDate    time.Time
 	ExpectedDate time.Time
 	Items        []CreatePurchaseOrderItemInput
 	Notes        *string
@@ -58,6 +59,7 @@ type ReceivePurchaseOrderItemInput struct {
 type ReceivePurchaseOrderInput struct {
 	Items         []ReceivePurchaseOrderItemInput
 	StatusReceive string
+	ReceiveDate   time.Time
 }
 
 func (s *PurchaseService) GetPurchaseOrders(filters map[string]string, limit, offset int) response.PaginatedResponse {
@@ -75,6 +77,7 @@ func (s *PurchaseService) GetPurchaseOrders(filters map[string]string, limit, of
 			"warehouse_id":      po.WarehouseID,
 			"order_date":        po.OrderDate,
 			"expected_delivery": po.ExpectedDelivery,
+			"receive_date":      po.ReceiveDate,
 			"payment_terms":     po.PaymentTerms,
 			"status_po":         po.StatusPo,
 			"status_receive":    po.StatusReceive,
@@ -136,6 +139,7 @@ func (s *PurchaseService) GetPurchaseOrderByID(id string) response.ApiResponse {
 		"warehouse_id":      po.WarehouseID,
 		"order_date":        po.OrderDate,
 		"expected_delivery": po.ExpectedDelivery,
+		"receive_date":      po.ReceiveDate,
 		"payment_terms":     po.PaymentTerms,
 		"status_po":         po.StatusPo,
 		"status_receive":    po.StatusReceive,
@@ -295,6 +299,7 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 		"warehouse_id":      po.WarehouseID,
 		"order_date":        po.OrderDate,
 		"expected_delivery": po.ExpectedDelivery,
+		"receive_date":      po.ReceiveDate,
 		"payment_terms":     po.PaymentTerms,
 		"status_po":         po.StatusPo,
 		"status_receive":    po.StatusReceive,
@@ -337,6 +342,32 @@ func (s *PurchaseService) ApprovePurchaseOrder(id string) response.ApiResponse {
 	})
 	if err != nil {
 		return response.NewErrorResponse("Failed to approve purchase order")
+	}
+
+	return s.GetPurchaseOrderByID(id)
+}
+
+func (s *PurchaseService) SetPendingPurchaseOrder(id string) response.ApiResponse {
+	poID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	po, err := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	if err != nil || po == nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	if po.StatusPo != "DRAFT" && po.StatusPo != "APPROVE" {
+		return response.NewErrorResponse("Only DRAFT or APPROVE purchase orders can be set to PENDING")
+	}
+
+	err = s.purchaseRepo.UpdatePurchaseOrder(poID, map[string]interface{}{
+		"status_po":  "PENDING",
+		"updated_at": time.Now(),
+	})
+	if err != nil {
+		return response.NewErrorResponse("Failed to set purchase order to PENDING")
 	}
 
 	return s.GetPurchaseOrderByID(id)
@@ -435,6 +466,10 @@ func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseO
 			"updated_at":     time.Now(),
 		}
 
+		if input.StatusReceive == "RECEIVE" && !input.ReceiveDate.IsZero() {
+			updates["receive_date"] = input.ReceiveDate
+		}
+
 		if err := tx.Table("purchase_orders").Where("id = ?", poID).Updates(updates).Error; err != nil {
 			return err
 		}
@@ -486,6 +521,7 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 		updates := map[string]interface{}{
 			"supplier_id":       supplierID,
 			"warehouse_id":      warehouseID,
+			"order_date":        input.OrderDate,
 			"expected_delivery": input.ExpectedDate,
 			"updated_at":        time.Now(),
 		}

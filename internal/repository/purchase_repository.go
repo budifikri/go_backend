@@ -12,6 +12,7 @@ type PurchaseOrderRow struct {
 	WarehouseID      uuid.UUID `json:"warehouse_id" gorm:"column:warehouse_id"`
 	OrderDate        string    `json:"order_date" gorm:"column:order_date"`
 	ExpectedDelivery *string   `json:"expected_delivery" gorm:"column:expected_delivery"`
+	ReceiveDate      *string   `json:"receive_date" gorm:"column:receive_date"`
 	PaymentTerms     string    `json:"payment_terms" gorm:"column:payment_terms"`
 	StatusPo         string    `json:"status_po" gorm:"column:status_po"`
 	StatusReceive    string    `json:"status_receive" gorm:"column:status_receive"`

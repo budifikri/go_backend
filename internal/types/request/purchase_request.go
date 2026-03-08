@@ -20,6 +20,7 @@ type CreatePurchaseOrderRequest struct {
 type UpdatePurchaseOrderRequest struct {
 	SupplierID   string                     `json:"supplier_id"`
 	WarehouseID  string                     `json:"warehouse_id"`
+	OrderDate    string                     `json:"order_date"`
 	ExpectedDate string                     `json:"expected_date"`
 	Items        []PurchaseOrderItemRequest `json:"items"`
 	Notes        *string                    `json:"notes"`
@@ -37,4 +38,5 @@ type ReceivePurchaseOrderItemRequest struct {
 type ReceivePurchaseOrderRequest struct {
 	Items         []ReceivePurchaseOrderItemRequest `json:"items"`
 	StatusReceive string                            `json:"status_receive"`
+	ReceiveDate   string                            `json:"receive_date"`
 }

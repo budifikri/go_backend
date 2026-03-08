@@ -4834,6 +4834,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/purchases/{id}/pending": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Purchases"
+                ],
+                "summary": "Set purchase order to PENDING",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Purchase Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/purchases/{id}/receive": {
             "put": {
                 "security": [
@@ -8086,6 +8144,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/request.ReceivePurchaseOrderItemRequest"
                     }
                 },
+                "receive_date": {
+                    "type": "string"
+                },
                 "status_receive": {
                     "type": "string"
                 }
@@ -8496,6 +8557,9 @@ const docTemplate = `{
                     }
                 },
                 "notes": {
+                    "type": "string"
+                },
+                "order_date": {
                     "type": "string"
                 },
                 "supplier_id": {

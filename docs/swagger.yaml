@@ -495,6 +495,8 @@ definitions:
         items:
           $ref: '#/definitions/request.ReceivePurchaseOrderItemRequest'
         type: array
+      receive_date:
+        type: string
       status_receive:
         type: string
     type: object
@@ -770,6 +772,8 @@ definitions:
           $ref: '#/definitions/request.PurchaseOrderItemRequest'
         type: array
       notes:
+        type: string
+      order_date:
         type: string
       supplier_id:
         type: string
@@ -4006,6 +4010,43 @@ paths:
       security:
       - BearerAuth: []
       summary: Cancel purchase order
+      tags:
+      - Purchases
+  /api/purchases/{id}/pending:
+    put:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Set purchase order to PENDING
       tags:
       - Purchases
   /api/purchases/{id}/receive:

@@ -85,6 +85,7 @@ type PurchaseOrder struct {
 	WarehouseID      uuid.UUID     `gorm:"column:warehouse_id;type:uuid;notNull;index" json:"warehouse_id"`
 	OrderDate        time.Time     `gorm:"column:order_date;notNull;default:now();index" json:"order_date"`
 	ExpectedDelivery *time.Time    `gorm:"column:expected_delivery" json:"expected_delivery,omitempty"`
+	ReceiveDate      *time.Time    `gorm:"column:receive_date" json:"receive_date,omitempty"`
 	PaymentTerms     PaymentTerms  `gorm:"column:payment_terms;type:varchar(20);notNull;default:'NET_30'" json:"payment_terms"`
 	StatusPo         StatusPo      `gorm:"column:status_po;type:varchar(20);notNull;default:'DRAFT'" json:"status_po"`
 	StatusReceive    StatusReceive `gorm:"column:status_receive;type:varchar(20);notNull;default:'DRAFT'" json:"status_receive"`

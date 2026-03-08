@@ -313,6 +313,7 @@ func main() {
 	purchases.Put("/:id", purchaseHandler.UpdatePurchaseOrder)
 	purchases.Put("/:id/status", purchaseHandler.UpdatePurchaseOrderStatus)
 	purchases.Put("/:id/approve", purchaseHandler.ApprovePurchaseOrder)
+	purchases.Put("/:id/pending", purchaseHandler.SetPendingPurchaseOrder)
 	purchases.Put("/:id/receive", purchaseHandler.ReceivePurchaseOrder)
 	purchases.Post("/:id/cancel", purchaseHandler.CancelPurchaseOrder)
 	purchases.Delete("/:id", purchaseHandler.DeletePurchaseOrder)

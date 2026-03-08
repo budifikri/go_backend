@@ -149,6 +149,17 @@ func (h *PurchaseHandler) UpdatePurchaseOrder(c *fiber.Ctx) error {
 		))
 	}
 
+	orderDate := time.Now()
+	if req.OrderDate != "" {
+		orderDate, _ = time.Parse(time.RFC3339, req.OrderDate)
+		if orderDate.IsZero() {
+			orderDate, _ = time.Parse("2006-01-02", req.OrderDate)
+		}
+		if orderDate.IsZero() {
+			orderDate = time.Now()
+		}
+	}
+
 	expected, err := time.Parse(time.RFC3339, req.ExpectedDate)
 	if err != nil {
 		if t2, err2 := time.Parse("2006-01-02", req.ExpectedDate); err2 == nil {
@@ -172,6 +183,7 @@ func (h *PurchaseHandler) UpdatePurchaseOrder(c *fiber.Ctx) error {
 	result := h.purchaseService.UpdatePurchaseOrder(c.Params("id"), services.UpdatePurchaseOrderInput{
 		SupplierID:   req.SupplierID,
 		WarehouseID:  req.WarehouseID,
+		OrderDate:    orderDate,
 		ExpectedDate: expected,
 		Items:        items,
 		Notes:        req.Notes,
@@ -272,6 +284,29 @@ func (h *PurchaseHandler) ApprovePurchaseOrder(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// SetPendingPurchaseOrder godoc
+// @Summary Set purchase order to PENDING
+// @Tags Purchases
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id}/pending [put]
+func (h *PurchaseHandler) SetPendingPurchaseOrder(c *fiber.Ctx) error {
+	result := h.purchaseService.SetPendingPurchaseOrder(c.Params("id"))
+	if !result.Success {
+		if result.Error == "Purchase order not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
 // ReceivePurchaseOrder godoc
 // @Summary Receive purchase order items
 // @Tags Purchases
@@ -304,9 +339,21 @@ func (h *PurchaseHandler) ReceivePurchaseOrder(c *fiber.Ctx) error {
 		})
 	}
 
+	receiveDate := time.Now()
+	if req.ReceiveDate != "" {
+		receiveDate, _ = time.Parse(time.RFC3339, req.ReceiveDate)
+		if receiveDate.IsZero() {
+			receiveDate, _ = time.Parse("2006-01-02", req.ReceiveDate)
+		}
+		if receiveDate.IsZero() {
+			receiveDate = time.Now()
+		}
+	}
+
 	result := h.purchaseService.ReceivePurchaseOrder(c.Params("id"), services.ReceivePurchaseOrderInput{
 		Items:         items,
 		StatusReceive: req.StatusReceive,
+		ReceiveDate:   receiveDate,
 	})
 	if !result.Success {
 		if result.Error == "Purchase order not found" {
