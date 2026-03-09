@@ -89,6 +89,7 @@ type PurchaseOrder struct {
 	PaymentTerms     PaymentTerms  `gorm:"column:payment_terms;type:varchar(20);notNull;default:'NET_30'" json:"payment_terms"`
 	StatusPo         StatusPo      `gorm:"column:status_po;type:varchar(20);notNull;default:'DRAFT'" json:"status_po"`
 	StatusReceive    StatusReceive `gorm:"column:status_receive;type:varchar(20);notNull;default:'DRAFT'" json:"status_receive"`
+	ReceiveNumber    string        `gorm:"column:receive_number;type:varchar(50)" json:"receive_number"`
 	NoteReceive      string        `gorm:"column:note_receive;type:text" json:"note_receive"`
 	Subtotal         float64       `gorm:"column:subtotal;type:decimal(15,2);notNull;default:0" json:"subtotal"`
 	TaxAmount        float64       `gorm:"column:tax_amount;type:decimal(15,2);notNull;default:0" json:"tax_amount"`

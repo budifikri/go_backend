@@ -20,6 +20,7 @@ type PurchaseOrderRow struct {
 	PaymentTerms     string    `json:"payment_terms" gorm:"column:payment_terms"`
 	StatusPo         string    `json:"status_po" gorm:"column:status_po"`
 	StatusReceive    string    `json:"status_receive" gorm:"column:status_receive"`
+	ReceiveNumber    *string   `json:"receive_number" gorm:"column:receive_number"`
 	NoteReceive      *string   `json:"note_receive" gorm:"column:note_receive"`
 	Subtotal         string    `json:"subtotal" gorm:"column:subtotal"`
 	TaxAmount        string    `json:"tax_amount" gorm:"column:tax_amount"`
