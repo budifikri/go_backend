@@ -191,7 +191,31 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 		return response.NewErrorResponse("Invalid request data")
 	}
 
-	poNumber := fmt.Sprintf("PO-%d", time.Now().UnixMilli())
+	// Generate PO Number: PO-{YY}{3 digit company}-{6 digit sequence}
+	// Example: PO-26000-000001
+	companyIDStr := companyID.String()
+	companyPrefix := companyIDStr[len(companyIDStr)-3:]
+	year := time.Now().Format("06")
+
+	var lastPO struct {
+		PoNumber string `gorm:"column:po_number"`
+	}
+	s.db.Table("purchase_orders").
+		Select("po_number").
+		Where("company_id = ? AND po_number LIKE ?", companyID, "PO-"+year+companyPrefix+"-").
+		Order("po_number DESC").
+		Limit(1).Scan(&lastPO)
+
+	sequence := 1
+	if lastPO.PoNumber != "" {
+		parts := strings.Split(lastPO.PoNumber, "-")
+		if len(parts) == 3 {
+			seq, _ := strconv.Atoi(parts[2])
+			sequence = seq + 1
+		}
+	}
+
+	poNumber := fmt.Sprintf("PO-%s%s-%06d", year, companyPrefix, sequence)
 
 	var createdPOID uuid.UUID
 	err = s.db.Transaction(func(tx *gorm.DB) error {
