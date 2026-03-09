@@ -83,16 +83,34 @@ func (r *PurchaseRepository) FindPurchaseOrders(filters map[string]string, limit
 		query = query.Where("po.po_number ILIKE ? OR s.name ILIKE ? OR w.name ILIKE ?", like, like, like)
 	}
 	if v := filters["date_from"]; v != "" {
-		query = query.Where("po.order_date >= ?", v)
+		// Parse date and create timestamp in Asia/Jakarta timezone (UTC+7)
+		// to match the database timezone
+		if t, err := time.Parse("2006-01-02", v); err == nil {
+			jakartaLoc, _ := time.LoadLocation("Asia/Jakarta")
+			startOfDay := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, jakartaLoc)
+			if filters["date_to"] == "" {
+				query = query.Where("po.order_date >= ?", startOfDay)
+			}
+		}
 	}
 	if v := filters["date_to"]; v != "" {
-		// Parse the date and add 1 day to make the range inclusive
-		// This handles the case where order_date has a time component
+		// Parse date and create timestamp in Asia/Jakarta timezone (UTC+7)
 		if t, err := time.Parse("2006-01-02", v); err == nil {
-			nextDay := t.AddDate(0, 0, 1).Format("2006-01-02")
-			query = query.Where("po.order_date < ?", nextDay)
-		} else {
-			query = query.Where("po.order_date <= ?", v)
+			jakartaLoc, _ := time.LoadLocation("Asia/Jakarta")
+			endOfDay := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 999999999, jakartaLoc)
+			if filters["date_from"] == "" {
+				query = query.Where("po.order_date <= ?", endOfDay)
+			} else {
+				// Both date_from and date_to are provided - need to get date_from value
+				if vFrom := filters["date_from"]; vFrom != "" {
+					if tFrom, err := time.Parse("2006-01-02", vFrom); err == nil {
+						jakartaLoc, _ := time.LoadLocation("Asia/Jakarta")
+						startOfDay := time.Date(tFrom.Year(), tFrom.Month(), tFrom.Day(), 0, 0, 0, 0, jakartaLoc)
+						endOfDay := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 999999999, jakartaLoc)
+						query = query.Where("po.order_date >= ? AND po.order_date <= ?", startOfDay, endOfDay)
+					}
+				}
+			}
 		}
 	}
 
