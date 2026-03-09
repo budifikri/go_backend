@@ -2,6 +2,7 @@ package repository
 
 import (
 	"log"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -63,11 +64,12 @@ func (r *PurchaseRepository) FindPurchaseOrders(filters map[string]string, limit
 		Joins("LEFT JOIN suppliers s ON s.id = po.supplier_id").
 		Joins("LEFT JOIN warehouses w ON w.id = po.warehouse_id")
 
-	if v := filters["status"]; v != "" {
-		query = query.Where("po.status_po = ?", v)
+	// Support case-insensitive filtering for statuses
+	if v := filters["status_po"]; v != "" {
+		query = query.Where("LOWER(po.status_po) = ?", strings.ToLower(v))
 	}
 	if v := filters["status_receive"]; v != "" {
-		query = query.Where("po.status_receive = ?", v)
+		query = query.Where("LOWER(po.status_receive) = ?", strings.ToLower(v))
 	}
 	if v := filters["supplier_id"]; v != "" {
 		query = query.Where("po.supplier_id = ?", v)

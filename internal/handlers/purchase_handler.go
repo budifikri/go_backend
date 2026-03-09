@@ -38,7 +38,13 @@ func NewPurchaseHandler(purchaseService *services.PurchaseService) *PurchaseHand
 // @Router /api/purchases [get]
 func (h *PurchaseHandler) GetPurchaseOrders(c *fiber.Ctx) error {
 	filters := map[string]string{}
-	filters["status"] = c.Query("status")
+	// Support both status and status_po/status_receive for filtering
+	// Backwards compatibility: if 'status' is provided, it filters status_po
+	filters["status_po"] = c.Query("status_po")
+	if filters["status_po"] == "" {
+		filters["status_po"] = c.Query("status")
+	}
+	filters["status_receive"] = c.Query("status_receive")
 	filters["supplier_id"] = c.Query("supplier_id")
 	filters["warehouse_id"] = c.Query("warehouse_id")
 	filters["search"] = c.Query("search")

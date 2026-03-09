@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -82,8 +83,8 @@ func (s *PurchaseService) GetPurchaseOrders(filters map[string]string, limit, of
 			"expected_delivery": po.ExpectedDelivery,
 			"receive_date":      po.ReceiveDate,
 			"payment_terms":     po.PaymentTerms,
-			"status_po":         po.StatusPo,
-			"status_receive":    po.StatusReceive,
+			"status_po":         strings.ToLower(po.StatusPo),
+			"status_receive":    strings.ToLower(po.StatusReceive),
 			"note_receive":      po.NoteReceive,
 			"subtotal":          toFloat(po.Subtotal),
 			"tax_amount":        toFloat(po.TaxAmount),
@@ -562,10 +563,8 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 			}
 		}
 
-		deleteQuery := tx.Exec("DELETE FROM purchase_order_items WHERE po_id = ?", poID)
-		if deleteQuery.Error != nil {
-			return deleteQuery.Error
-		}
+		// Only delete items that are NOT in the new items list
+		// This preserves existing items that are still in the update
 		if len(itemIDsToKeep) > 0 {
 			notInClause := ""
 			for i, itemID := range itemIDsToKeep {
@@ -575,6 +574,9 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 				notInClause += "'" + itemID + "'"
 			}
 			tx.Exec("DELETE FROM purchase_order_items WHERE po_id = ? AND id NOT IN ("+notInClause+")", poID)
+		} else {
+			// No items to keep means delete all
+			tx.Exec("DELETE FROM purchase_order_items WHERE po_id = ?", poID)
 		}
 
 		subtotal := 0.0
