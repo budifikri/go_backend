@@ -3,6 +3,7 @@ package repository
 import (
 	"log"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -85,7 +86,14 @@ func (r *PurchaseRepository) FindPurchaseOrders(filters map[string]string, limit
 		query = query.Where("po.order_date >= ?", v)
 	}
 	if v := filters["date_to"]; v != "" {
-		query = query.Where("po.order_date <= ?", v)
+		// Parse the date and add 1 day to make the range inclusive
+		// This handles the case where order_date has a time component
+		if t, err := time.Parse("2006-01-02", v); err == nil {
+			nextDay := t.AddDate(0, 0, 1).Format("2006-01-02")
+			query = query.Where("po.order_date < ?", nextDay)
+		} else {
+			query = query.Where("po.order_date <= ?", v)
+		}
 	}
 
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
