@@ -191,31 +191,40 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 		return response.NewErrorResponse("Invalid request data")
 	}
 
-	// Generate PO Number: PO-{YY}{3 digit company}-{6 digit sequence}
-	// Example: PO-26000-000001
+	// Generate PO Number: PO-{YY}-{4digit company_id}-{6digit sequence}
+	// Example: PO-26-cabf-000001, PO-26-cabf-000002, ...
 	companyIDStr := companyID.String()
-	companyPrefix := companyIDStr[len(companyIDStr)-3:]
+	companyPrefix := strings.ToUpper(companyIDStr[len(companyIDStr)-4:])
 	year := time.Now().Format("06")
 
 	var lastPO struct {
 		PoNumber string `gorm:"column:po_number"`
 	}
 	s.db.Table("purchase_orders").
-		Select("po_number").
-		Where("company_id = ? AND po_number LIKE ?", companyID, "PO-"+year+companyPrefix+"-").
+		Where("po_number LIKE ?", fmt.Sprintf("PO-%s-%s-", year, companyPrefix)).
 		Order("po_number DESC").
 		Limit(1).Scan(&lastPO)
 
 	sequence := 1
 	if lastPO.PoNumber != "" {
 		parts := strings.Split(lastPO.PoNumber, "-")
-		if len(parts) == 3 {
-			seq, _ := strconv.Atoi(parts[2])
-			sequence = seq + 1
+		if len(parts) >= 3 {
+			seqStr := parts[len(parts)-1]
+			var digits string
+			for _, c := range seqStr {
+				if c >= '0' && c <= '9' {
+					digits += string(c)
+				}
+			}
+			if digits != "" {
+				if seq, err := strconv.Atoi(digits); err == nil {
+					sequence = seq + 1
+				}
+			}
 		}
 	}
 
-	poNumber := fmt.Sprintf("PO-%s%s-%06d", year, companyPrefix, sequence)
+	poNumber := fmt.Sprintf("PO-%s-%s-%06d", year, companyPrefix, sequence)
 
 	var createdPOID uuid.UUID
 	err = s.db.Transaction(func(tx *gorm.DB) error {
