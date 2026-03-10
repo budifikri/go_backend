@@ -12,7 +12,6 @@ import (
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type PurchaseService struct {
@@ -258,30 +257,21 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 			po["notes"] = *input.Notes
 		}
 
-		var poRow map[string]interface{}
-		if err := tx.Table("purchase_orders").Clauses(clause.Returning{}).Create(po).Scan(&poRow).Error; err != nil {
+		if err := tx.Table("purchase_orders").Create(po).Error; err != nil {
 			return err
 		}
 
-		var ok bool
-		createdPOID, ok = poRow["id"].(uuid.UUID)
-		if !ok {
-			var idStr string
-			if v, ok := poRow["id"].(string); ok {
-				idStr = v
-			}
-			if idStr != "" {
-				if p, err := uuid.Parse(idStr); err == nil {
-					createdPOID = p
-				}
-			}
+		// Always resolve created PO id from generated po_number.
+		// Scanning RETURNING into map is driver-dependent (uuid may come back as []byte/string).
+		var tmp struct {
+			ID uuid.UUID `gorm:"column:id"`
 		}
+		if err := tx.Table("purchase_orders").Select("id").Where("po_number = ?", poNumber).Limit(1).Scan(&tmp).Error; err != nil {
+			return err
+		}
+		createdPOID = tmp.ID
 		if createdPOID == uuid.Nil {
-			var tmp struct {
-				ID uuid.UUID `gorm:"column:id"`
-			}
-			_ = tx.Table("purchase_orders").Select("id").Where("po_number = ?", poNumber).Limit(1).Scan(&tmp).Error
-			createdPOID = tmp.ID
+			return fmt.Errorf("failed to resolve created purchase order id")
 		}
 
 		subtotal := 0.0
@@ -589,7 +579,7 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 			ReceiveNumber string `gorm:"column:receive_number"`
 		}
 		s.db.Table("purchase_orders").
-			Where("receive_number LIKE ?", fmt.Sprintf("RN-%s-%s-", year, companyPrefix)).
+			Where("receive_number LIKE ?", fmt.Sprintf("RN-%s-%s-%%", year, companyPrefix)).
 			Order("receive_number DESC").
 			Limit(1).Scan(&lastRN)
 
