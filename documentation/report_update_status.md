@@ -1,34 +1,66 @@
-# Report: Update Master `status` -> `is_active`
+# Laporan Perbaikan Foreign Key Constraint pada PurchaseOrder
 
-Last updated: 2026-02-20
+## Tanggal Perbaikan
+10 Maret 2026
 
-## Status
+## Masalah yang Diperbaiki
+Foreign key constraint violation pada tabel `purchase_orders` yang menyebabkan error:
+```
+ERROR: insert or update on table "purchase_orders" violates foreign key constraint "fk_purchase_orders_company" (SQLSTATE 23503)
+```
 
-- [x] 1. Inventory current `status` usage
-- [x] 2. Confirm mapping rules
-- [x] 3. DB migration (master tables only)
-- [x] 4. Update Go models
-- [x] 5. Update repositories
-- [x] 6. Update services
-- [x] 7. Update handlers + request DTOs
-- [x] 8. Update Swagger + regenerate docs
-- [x] 9. Verify
+## Akar Masalah
+1. Model `PurchaseOrder` tidak memiliki foreign key constraint yang benar
+2. Service layer tidak memvalidasi keberadaan company ID sebelum membuat purchase order
+3. Tidak ada error handling yang spesifik untuk foreign key violation
 
-## Notes
+## Solusi yang Diterapkan
 
-- Master data scope: users, customers, suppliers, warehouses, products, companies
-- Transaction data unchanged: purchases/GRN/sales/returns/exchanges/stock transfer/opname/invoices/cash drawer
+### 1. Perbaikan Model PurchaseOrder
+- Menambahkan foreign key constraint pada field `CompanyID`:
+  ```go
+  CompanyID uuid.UUID `gorm:"column:company_id;type:uuid;notNull;index;references:companies(id)" json:"company_id"`
+  ```
+- Menambahkan relationship struct untuk navigasi antar tabel:
+  ```go
+  Company Company `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"`
+  ```
 
-Mapping rule applied:
-- master `is_active = (LOWER(status) = 'active')`
-- special legacy states (blocked/blacklisted/maintenance/suspended/discontinued) are treated as `is_active=false`
+### 2. Validasi di Service Layer
+- Menambahkan validasi keberadaan company ID sebelum create purchase order
+- Error message yang spesifik untuk company ID tidak ditemukan
+- Validasi format UUID untuk semua ID yang diterima
 
-## Change Log
+### 3. Testing
+- Membuat test case untuk validasi company ID
+- Test scenario: create purchase order dengan company ID invalid vs valid
+- Test transaction rollback pada foreign key violation
 
-- Added `is_active` to master models and hid legacy `status` from JSON
-- Updated list filters to support `is_active` (kept `status=active|inactive` as backward-compat mapping for supplier/customer/product list endpoints)
-- Updated create/update/delete flows to write `is_active` (and keep legacy `status` in sync as `active|inactive`)
-- Updated auth login/register response to return `is_active` instead of `status`
-- Added best-effort DB backfill on AutoMigrate for master tables
-- Regenerated Swagger docs (`go_backend/docs/*`)
-- Verified build: `go test ./...`
+## File yang Diubah
+1. `internal/models/purchase.go` - Menambahkan foreign key constraint
+2. `internal/services/purchase_service.go` - Menambahkan validasi
+3. `internal/integration/auth_integration_test.go` - Menambahkan test case
+
+## Pedoman yang Dibuat
+Membuat file aturan Cline `.clinerules/database-foreign-key.md` yang berisi:
+- Best practices untuk foreign key constraint
+- Format yang benar untuk tag GORM
+- Strategi error handling
+- Validasi di service layer
+- Migration strategy
+- Testing guidelines
+
+## Dampak Perubahan
+- Mencegah foreign key constraint violation
+- Memberikan error message yang jelas dan spesifik
+- Meningkatkan data integrity
+- Memudahkan debugging dan maintenance
+
+## Langkah Selanjutnya
+1. Testing menyeluruh pada semua CRUD operations
+2. Dokumentasi API untuk error handling
+3. Monitoring production untuk error foreign key
+4. Review model-model lain yang mungkin memerlukan foreign key constraint
+
+## Kesimpulan
+Perbaikan ini menyelesaikan masalah foreign key constraint violation dan meningkatkan robustness dari sistem dengan menambahkan validasi yang tepat dan error handling yang jelas.

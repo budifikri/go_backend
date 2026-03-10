@@ -95,7 +95,7 @@ type PurchaseOrder struct {
 	TaxAmount        float64       `gorm:"column:tax_amount;type:decimal(15,2);notNull;default:0" json:"tax_amount"`
 	DiscountAmount   float64       `gorm:"column:discount_amount;type:decimal(15,2);notNull;default:0" json:"discount_amount"`
 	TotalAmount      float64       `gorm:"column:total_amount;type:decimal(15,2);notNull;default:0" json:"total_amount"`
-	CompanyID        uuid.UUID     `gorm:"column:company_id;type:uuid;notNull;index" json:"company_id"`
+	CompanyID        uuid.UUID     `gorm:"column:company_id;type:uuid;notNull;index;references:companies(id)" json:"company_id"`
 	Notes            string        `gorm:"type:text" json:"notes,omitempty"`
 	CreatedBy        uuid.UUID     `gorm:"column:created_by;type:uuid;notNull" json:"created_by"`
 	ApprovedBy       *uuid.UUID    `gorm:"column:approved_by;type:uuid" json:"approved_by,omitempty"`
@@ -103,6 +103,8 @@ type PurchaseOrder struct {
 	UpdatedAt        time.Time     `gorm:"autoUpdateTime" json:"updated_at"`
 
 	Items []PurchaseOrderItem `gorm:"foreignKey:PoID" json:"items,omitempty"`
+
+	Company Company `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"`
 }
 
 func (po *PurchaseOrder) BeforeCreate(tx *gorm.DB) error {

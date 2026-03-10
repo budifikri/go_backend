@@ -186,10 +186,20 @@ func (s *PurchaseService) CreatePurchaseOrder(input CreatePurchaseOrderInput) re
 	if err != nil {
 		return response.NewErrorResponse("Invalid request data")
 	}
-	companyID, err := uuid.Parse(input.CompanyID)
-	if err != nil {
-		return response.NewErrorResponse("Invalid request data")
-	}
+companyID, err := uuid.Parse(input.CompanyID)
+if err != nil {
+	return response.NewErrorResponse("Invalid request data")
+}
+
+// Validate company existence
+var company models.Company
+err = s.db.Table("companies").Where("id = ?", companyID).Limit(1).Scan(&company).Error
+if err != nil {
+	return response.NewErrorResponse("Failed to validate company existence")
+}
+if company.ID == uuid.Nil {
+	return response.NewErrorResponse("Company dengan ID tersebut tidak ditemukan")
+}
 
 	// Generate PO Number: PO-{YY}-{4digit company_id}-{6digit sequence}
 	// Example: PO-26-cabf-000001, PO-26-cabf-000002, ...

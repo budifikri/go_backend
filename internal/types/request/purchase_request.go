@@ -12,6 +12,7 @@ type PurchaseOrderItemRequest struct {
 type CreatePurchaseOrderRequest struct {
 	SupplierID   string                     `json:"supplier_id"`
 	WarehouseID  string                     `json:"warehouse_id"`
+	CompanyID    string                     `json:"company_id"`
 	ExpectedDate string                     `json:"expected_date"`
 	Items        []PurchaseOrderItemRequest `json:"items"`
 	Notes        *string                    `json:"notes"`
