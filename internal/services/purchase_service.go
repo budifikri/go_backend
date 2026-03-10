@@ -65,6 +65,19 @@ type ReceivePurchaseOrderInput struct {
 	ReceiveDate   time.Time
 }
 
+func normalizeStatusPo(value string) string {
+	v := strings.ToUpper(strings.TrimSpace(value))
+	// Frontend may send "approved"; some flows may send "approve".
+	if v == "APPROVED" {
+		return "APPROVE"
+	}
+	return v
+}
+
+func normalizeStatusReceive(value string) string {
+	return strings.ToUpper(strings.TrimSpace(value))
+}
+
 func (s *PurchaseService) GetPurchaseOrders(companyID *string, filters map[string]string, limit, offset int) response.PaginatedResponse {
 	rows, total, err := s.purchaseRepo.FindPurchaseOrders(companyID, filters, limit, offset)
 	if err != nil {
@@ -384,7 +397,7 @@ func (s *PurchaseService) ApprovePurchaseOrder(id string) response.ApiResponse {
 		return response.NewErrorResponse("Purchase order not found")
 	}
 
-	if po.StatusPo != "DRAFT" {
+	if normalizeStatusPo(po.StatusPo) != "DRAFT" {
 		return response.NewErrorResponse("Only DRAFT purchase orders can be approved")
 	}
 
@@ -410,7 +423,8 @@ func (s *PurchaseService) SetPendingPurchaseOrder(id string) response.ApiRespons
 		return response.NewErrorResponse("Purchase order not found")
 	}
 
-	if po.StatusPo != "DRAFT" && po.StatusPo != "APPROVE" {
+	currentStatus := normalizeStatusPo(po.StatusPo)
+	if currentStatus != "DRAFT" && currentStatus != "APPROVE" {
 		return response.NewErrorResponse("Only DRAFT or APPROVE purchase orders can be set to PENDING")
 	}
 
@@ -436,11 +450,11 @@ func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseO
 		return response.NewErrorResponse("Purchase order not found")
 	}
 
-	if po.StatusPo != "APPROVE" {
+	if normalizeStatusPo(po.StatusPo) != "APPROVE" {
 		return response.NewErrorResponse("Only APPROVED purchase orders can receive items")
 	}
 
-	if po.StatusReceive == "RECEIVE" {
+	if normalizeStatusReceive(po.StatusReceive) == "RECEIVE" {
 		return response.NewErrorResponse("Purchase order already fully received")
 	}
 
@@ -472,7 +486,7 @@ func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseO
 						return err
 					}
 
-					if reqItem.QtyReceive > oldReceive && input.StatusReceive == "RECEIVE" {
+					if reqItem.QtyReceive > oldReceive && normalizeStatusReceive(input.StatusReceive) == "RECEIVE" {
 						qtyToAdd := reqItem.QtyReceive - oldReceive
 						if qtyToAdd > 0 {
 							err := tx.Model(&models.Inventory{}).
@@ -518,7 +532,7 @@ func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseO
 			"updated_at":     time.Now(),
 		}
 
-		if input.StatusReceive == "RECEIVE" && !input.ReceiveDate.IsZero() {
+		if normalizeStatusReceive(input.StatusReceive) == "RECEIVE" && !input.ReceiveDate.IsZero() {
 			updates["receive_date"] = input.ReceiveDate
 		}
 
@@ -558,16 +572,23 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 	if err != nil || po == nil {
 		return response.NewErrorResponse("Purchase order not found")
 	}
+	log.Printf("[DEBUG] UpdatePurchaseOrder: poID=%s, status_po=%s, receive_number=%v", poID, po.StatusPo, po.ReceiveNumber)
 	// Allow update if status is DRAFT, PENDING, or APPROVE (for receive_number generation)
-	if po.StatusPo != "DRAFT" && po.StatusPo != "PENDING" && po.StatusPo != "APPROVE" {
+	currentStatus := normalizeStatusPo(po.StatusPo)
+	if currentStatus != "DRAFT" && currentStatus != "PENDING" && currentStatus != "APPROVE" {
+		log.Printf("[DEBUG] UpdatePurchaseOrder: Invalid status_po=%s (normalized=%s)", po.StatusPo, currentStatus)
 		return response.NewErrorResponse("Purchase order cannot be updated")
 	}
+
+	// Normalize incoming statuses (frontend may send lowercase/synonyms)
+	input.StatusPo = normalizeStatusPo(input.StatusPo)
+	input.StatusReceive = normalizeStatusReceive(input.StatusReceive)
 
 	// Generate receive number if status_po=approved and receive_number is null
 	var receiveNumber string
 	// Check if receive_number is empty (null in DB is nil pointer in Go)
 	hasReceiveNumber := po.ReceiveNumber != nil && *po.ReceiveNumber != ""
-	if (strings.ToUpper(input.StatusPo) == "APPROVED" || strings.ToUpper(input.StatusPo) == "APPROVE") && !hasReceiveNumber {
+	if input.StatusPo == "APPROVE" && !hasReceiveNumber {
 		// Get company_id from the existing PO
 		companyID := po.CompanyID
 		companyIDStr := companyID.String()
@@ -608,6 +629,7 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 	itemsExisting, _ := s.purchaseRepo.GetPurchaseOrderItems(poID)
 	for _, it := range itemsExisting {
 		if it.QtyReceive > 0 {
+			log.Printf("[DEBUG] UpdatePurchaseOrder: Item %s has qty_receive=%d", it.ID, it.QtyReceive)
 			return response.NewErrorResponse("Purchase order cannot be updated")
 		}
 	}
@@ -731,7 +753,8 @@ func (s *PurchaseService) UpdatePurchaseOrderStatus(id string, status string) re
 	}
 
 	var result map[string]interface{}
-	res := s.db.Raw("UPDATE purchase_orders SET status_po = ? WHERE id = ? RETURNING *", status, poID).Scan(&result)
+	normalized := normalizeStatusPo(status)
+	res := s.db.Raw("UPDATE purchase_orders SET status_po = ? WHERE id = ? RETURNING *", normalized, poID).Scan(&result)
 	if res.Error != nil {
 		return response.NewErrorResponse("Purchase order not found")
 	}
