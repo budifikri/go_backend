@@ -113,6 +113,7 @@ func (s *AuthService) Register(req struct {
 	Password string `json:"password"`
 	FullName string `json:"full_name"`
 	Role     string `json:"role"`
+	CompanyName string `json:"company_name"`
 }) response.ApiResponse {
 	var existingUser models.User
 	result := s.db.Where("username = ? OR email = ?", req.Username, req.Email).First(&existingUser)
@@ -120,8 +121,33 @@ func (s *AuthService) Register(req struct {
 		return response.NewErrorResponse(ErrUserExists.Error())
 	}
 
+	// Create company first
+	company := models.Company{
+		ID:   uuid.New(),
+		Code: req.Username, // Use username as company code
+		Nama: req.CompanyName,
+		Email: req.Email,
+		Status: models.CompanyStatusActive,
+		IsActive: true,
+	}
+
+	// Use transaction to ensure consistency
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+
+	if err := tx.Create(&company).Error; err != nil {
+		tx.Rollback()
+		return response.NewErrorResponse("Failed to create company")
+	}
+
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
+		tx.Rollback()
 		return response.NewErrorResponse("Failed to hash password")
 	}
 
@@ -139,21 +165,26 @@ func (s *AuthService) Register(req struct {
 		Role:      role,
 		Status:    models.StatusActive,
 		IsActive:  true,
-		CompanyID: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+		CompanyID: company.ID,
 	}
 
-	if err := s.db.Create(&user).Error; err != nil {
+	if err := tx.Create(&user).Error; err != nil {
+		tx.Rollback()
 		return response.NewErrorResponse("Failed to create user")
 	}
 
 	expiresAt := s.jwtUtil.GetTokenExpiry()
-	token, _ := s.jwtUtil.GenerateToken(utils.JWTPayload{
+	token, err := s.jwtUtil.GenerateToken(utils.JWTPayload{
 		UserID:    user.ID.String(),
 		Username:  user.Username,
 		Email:     user.Email,
 		CompanyID: user.CompanyID.String(),
 		Role:      string(user.Role),
 	})
+	if err != nil {
+		tx.Rollback()
+		return response.NewErrorResponse("Failed to generate token")
+	}
 
 	session := models.UserSession{
 		ID:        uuid.New(),
@@ -161,18 +192,32 @@ func (s *AuthService) Register(req struct {
 		Token:     token,
 		ExpiresAt: expiresAt,
 	}
-	s.db.Create(&session)
+	if err := tx.Create(&session).Error; err != nil {
+		tx.Rollback()
+		return response.NewErrorResponse("Failed to create session")
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return response.NewErrorResponse("Transaction failed")
+	}
 
 	return response.NewSuccessResponse(LoginResponse{
 		UserID:    user.ID.String(),
 		Username:  user.Username,
 		Email:     user.Email,
-		FullName:  user.FullName,
+		FullName:  req.FullName,
 		Role:      string(user.Role),
 		IsActive:  user.IsActive,
 		Token:     token,
 		ExpiresAt: expiresAt,
 		LastLogin: time.Now(),
+		Company: struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		}{
+			ID:   company.ID.String(),
+			Name: company.Nama,
+		},
 	}, "Registration successful")
 }
 

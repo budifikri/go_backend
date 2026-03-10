@@ -13,6 +13,7 @@ type RegisterRequest struct {
 	Password string `json:"password" validate:"required,min=6,max=128"`
 	FullName string `json:"full_name" validate:"required,min=2,max=100"`
 	Role     string `json:"role" validate:"omitempty,oneof=admin manager cashier staff"`
+	CompanyName string `json:"company_name" validate:"required,min=1,max=200"`
 }
 
 // ForgotPasswordRequest represents forgot password request
