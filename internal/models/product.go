@@ -18,14 +18,14 @@ const (
 
 // Unit model
 type Unit struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	Code        string    `gorm:"type:varchar(10);uniqueIndex;notNull" json:"code"`
-	Name        string    `gorm:"type:varchar(50);notNull" json:"name"`
-	Description string    `gorm:"type:text" json:"description,omitempty"`
-	IsActive    bool      `gorm:"default:true;notNull" json:"is_active"`
-	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
+	ID          uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Code        string     `gorm:"type:varchar(10);uniqueIndex;notNull" json:"code"`
+	Name        string     `gorm:"type:varchar(50);notNull" json:"name"`
+	Description string     `gorm:"type:text" json:"description,omitempty"`
+	IsActive    bool       `gorm:"default:true;notNull" json:"is_active"`
+	CompanyID   *uuid.UUID `gorm:"type:uuid" json:"company_id,omitempty"`
+	CreatedAt   time.Time  `gorm:"autoCreateTime" json:"created_at"`
 }
-
 func (u *Unit) BeforeCreate(tx *gorm.DB) error {
 	if u.ID == uuid.Nil {
 		u.ID = uuid.New()

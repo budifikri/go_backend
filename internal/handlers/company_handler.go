@@ -3,6 +3,7 @@ package handlers
 import (
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gofiber/fiber/v2"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
@@ -34,7 +35,18 @@ func NewCompanyHandler(companyService *services.CompanyService) *CompanyHandler 
 func (h *CompanyHandler) GetCompanies(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	result := h.companyService.GetCompanies(c.Query("search"), limit, offset)
+	
+	// Get company_id from user context - users can only see their own company
+	var companyID *uuid.UUID
+	user := middleware.GetUserFromContext(c)
+	if user != nil && user.CompanyID != "" {
+		id, err := uuid.Parse(user.CompanyID)
+		if err == nil {
+			companyID = &id
+		}
+	}
+	
+	result := h.companyService.GetCompanies(companyID, c.Query("search"), limit, offset)
 	return c.JSON(result)
 }
 

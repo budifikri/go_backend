@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gofiber/fiber/v2"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
@@ -467,7 +468,17 @@ func (h *ProductHandler) GetUnits(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
 
-	result := h.productService.GetUnitsWithQuery(search, isActive, limit, offset)
+	// Get company_id from user context
+	var companyID *uuid.UUID
+	user := middleware.GetUserFromContext(c)
+	if user != nil && user.CompanyID != "" {
+		id, err := uuid.Parse(user.CompanyID)
+		if err == nil {
+			companyID = &id
+		}
+	}
+
+	result := h.productService.GetUnitsWithQuery(companyID, search, isActive, limit, offset)
 	return c.JSON(result)
 }
 

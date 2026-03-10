@@ -21,7 +21,7 @@ func NewCompanyService(db *gorm.DB) *CompanyService {
 	return &CompanyService{db: db}
 }
 
-func (s *CompanyService) GetCompanies(search string, limit, offset int) response.PaginatedResponse {
+func (s *CompanyService) GetCompanies(companyID *uuid.UUID, search string, limit, offset int) response.PaginatedResponse {
 	var companies []models.Company
 	var total int64
 
@@ -33,6 +33,9 @@ func (s *CompanyService) GetCompanies(search string, limit, offset int) response
 	}
 
 	query := s.db.Model(&models.Company{})
+	if companyID != nil {
+		query = query.Where("id = ?", companyID)
+	}
 	if search != "" {
 		like := "%" + strings.ToLower(search) + "%"
 		query = query.Where("LOWER(code) LIKE ? OR LOWER(nama) LIKE ? OR LOWER(email) LIKE ?", like, like, like)

@@ -67,12 +67,14 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		Password string `json:"password"`
 		FullName string `json:"full_name"`
 		Role     string `json:"role"`
+		CompanyName string `json:"company_name"`
 	}{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
 		FullName: req.FullName,
 		Role:     req.Role,
+		CompanyName: req.CompanyName,
 	})
 
 	if !result.Success {

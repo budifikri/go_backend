@@ -7803,6 +7803,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "company_id": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },

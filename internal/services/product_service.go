@@ -639,8 +639,8 @@ func (s *ProductService) DeleteCategory(id, actorUserID, actorCompanyID string) 
 	return response.NewSuccessResponse(nil, "Category deleted successfully")
 }
 
-func (s *ProductService) GetUnits() response.ApiResponse {
-	units, err := s.unitRepo.FindAll()
+func (s *ProductService) GetUnits(companyID *uuid.UUID) response.ApiResponse {
+	units, err := s.unitRepo.FindAll(companyID)
 	if err != nil {
 		return response.NewErrorResponse("Failed to fetch units")
 	}
@@ -648,7 +648,7 @@ func (s *ProductService) GetUnits() response.ApiResponse {
 	return response.NewSuccessResponse(units, "")
 }
 
-func (s *ProductService) GetUnitsWithQuery(search *string, isActive *bool, limit, offset int) response.PaginatedResponse {
+func (s *ProductService) GetUnitsWithQuery(companyID *uuid.UUID, search *string, isActive *bool, limit, offset int) response.PaginatedResponse {
 	if limit <= 0 {
 		limit = 50
 	}
@@ -656,12 +656,12 @@ func (s *ProductService) GetUnitsWithQuery(search *string, isActive *bool, limit
 		offset = 0
 	}
 
-	units, err := s.unitRepo.FindAllWithQuery(search, isActive, &limit, &offset)
+	units, err := s.unitRepo.FindAllWithQuery(companyID, search, isActive, &limit, &offset)
 	if err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
 
-	total, err := s.unitRepo.Count(search, isActive)
+	total, err := s.unitRepo.Count(companyID, search, isActive)
 	if err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}

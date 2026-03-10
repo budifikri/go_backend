@@ -90,20 +90,27 @@ func NewUnitRepository(db *gorm.DB) *UnitRepository {
 	return &UnitRepository{db: db}
 }
 
-func (r *UnitRepository) FindAll() ([]models.Unit, error) {
+func (r *UnitRepository) FindAll(companyID *uuid.UUID) ([]models.Unit, error) {
 	var units []models.Unit
-	if err := r.db.Where("is_active = ?", true).Order("code ASC").Find(&units).Error; err != nil {
+	query := r.db.Model(&models.Unit{}).Order("code ASC")
+	if companyID != nil {
+		query = query.Where("company_id = ?", companyID)
+	}
+	if err := query.Where("is_active = ?", true).Find(&units).Error; err != nil {
 		return nil, err
 	}
 	return units, nil
 }
 
-func (r *UnitRepository) FindAllWithQuery(search *string, isActive *bool, limit, offset *int) ([]models.Unit, error) {
+func (r *UnitRepository) FindAllWithQuery(companyID *uuid.UUID, search *string, isActive *bool, limit, offset *int) ([]models.Unit, error) {
 	var units []models.Unit
 	q := r.db.Model(&models.Unit{}).Order("code ASC")
 	// If isActive is nil: include both active and inactive.
 	if isActive != nil {
 		q = q.Where("is_active = ?", *isActive)
+	}
+	if companyID != nil {
+		q = q.Where("company_id = ?", companyID)
 	}
 	if search != nil && *search != "" {
 		like := "%%" + *search + "%%"
@@ -121,8 +128,11 @@ func (r *UnitRepository) FindAllWithQuery(search *string, isActive *bool, limit,
 	return units, nil
 }
 
-func (r *UnitRepository) Count(search *string, isActive *bool) (int64, error) {
+func (r *UnitRepository) Count(companyID *uuid.UUID, search *string, isActive *bool) (int64, error) {
 	q := r.db.Model(&models.Unit{})
+	if companyID != nil {
+		q = q.Where("company_id = ?", companyID)
+	}
 	if isActive != nil {
 		q = q.Where("is_active = ?", *isActive)
 	}

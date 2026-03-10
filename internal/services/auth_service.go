@@ -43,6 +43,10 @@ type LoginResponse struct {
 	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"expires_at"`
 	LastLogin time.Time `json:"last_login"`
+	Company   struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"company"`
 }
 
 // Login authenticates user
@@ -93,6 +97,20 @@ func (s *AuthService) Login(username, password string) response.ApiResponse {
 	now := time.Now()
 	s.db.Model(&user).Update("last_login", now)
 
+	// Get company data
+	var company models.Company
+	companyData := struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}{
+		ID:   "",
+		Name: "",
+	}
+	if err := s.db.First(&company, user.CompanyID).Error; err == nil {
+		companyData.ID = company.ID.String()
+		companyData.Name = company.Nama
+	}
+
 	return response.NewSuccessResponse(LoginResponse{
 		UserID:    user.ID.String(),
 		Username:  user.Username,
@@ -103,6 +121,7 @@ func (s *AuthService) Login(username, password string) response.ApiResponse {
 		Token:     token,
 		ExpiresAt: expiresAt,
 		LastLogin: now,
+		Company:   companyData,
 	}, "Login successful")
 }
 
