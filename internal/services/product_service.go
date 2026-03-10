@@ -688,6 +688,7 @@ type CreateUnitInput struct {
 	Code        string
 	Name        string
 	Description *string
+	CompanyID   string
 }
 
 func (s *ProductService) CreateUnit(input CreateUnitInput, actorUserID, actorCompanyID string) response.ApiResponse {
@@ -699,12 +700,21 @@ func (s *ProductService) CreateUnit(input CreateUnitInput, actorUserID, actorCom
 		return response.NewErrorResponse("Unit code already exists")
 	}
 
+	var companyUUID *uuid.UUID
+	if input.CompanyID != "" {
+		id, err := uuid.Parse(input.CompanyID)
+		if err == nil {
+			companyUUID = &id
+		}
+	}
+
 	unit := models.Unit{
 		ID:          uuid.New(),
 		Code:        input.Code,
 		Name:        input.Name,
 		Description: "",
 		IsActive:    true,
+		CompanyID:   companyUUID,
 	}
 	if input.Description != nil {
 		unit.Description = *input.Description

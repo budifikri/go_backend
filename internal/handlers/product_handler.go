@@ -536,7 +536,7 @@ func (h *ProductHandler) CreateUnit(c *fiber.Ctx) error {
 		actorUserID = user.UserID
 		actorCompanyID = user.CompanyID
 	}
-	result := h.productService.CreateUnit(services.CreateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description}, actorUserID, actorCompanyID)
+	result := h.productService.CreateUnit(services.CreateUnitInput{Code: req.Code, Name: req.Name, Description: req.Description, CompanyID: actorCompanyID}, actorUserID, actorCompanyID)
 	if !result.Success {
 		if result.Error == "Unit code already exists" {
 			return c.Status(fiber.StatusConflict).JSON(result)
