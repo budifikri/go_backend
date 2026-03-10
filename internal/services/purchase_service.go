@@ -66,8 +66,8 @@ type ReceivePurchaseOrderInput struct {
 	ReceiveDate   time.Time
 }
 
-func (s *PurchaseService) GetPurchaseOrders(filters map[string]string, limit, offset int) response.PaginatedResponse {
-	rows, total, err := s.purchaseRepo.FindPurchaseOrders(filters, limit, offset)
+func (s *PurchaseService) GetPurchaseOrders(companyID *string, filters map[string]string, limit, offset int) response.PaginatedResponse {
+	rows, total, err := s.purchaseRepo.FindPurchaseOrders(companyID, filters, limit, offset)
 	if err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
@@ -567,8 +567,51 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 	if err != nil || po == nil {
 		return response.NewErrorResponse("Purchase order not found")
 	}
-	if po.StatusPo != "DRAFT" && po.StatusPo != "PENDING" {
+	// Allow update if status is DRAFT, PENDING, or APPROVE (for receive_number generation)
+	if po.StatusPo != "DRAFT" && po.StatusPo != "PENDING" && po.StatusPo != "APPROVE" {
 		return response.NewErrorResponse("Purchase order cannot be updated")
+	}
+
+	// Generate receive number if status_po=approved and receive_number is null
+	var receiveNumber string
+	// Check if receive_number is empty (null in DB is nil pointer in Go)
+	hasReceiveNumber := po.ReceiveNumber != nil && *po.ReceiveNumber != ""
+	if (strings.ToUpper(input.StatusPo) == "APPROVED" || strings.ToUpper(input.StatusPo) == "APPROVE") && !hasReceiveNumber {
+		// Get company_id from the existing PO
+		companyID := po.CompanyID
+		companyIDStr := companyID.String()
+		companyPrefix := strings.ToUpper(companyIDStr[len(companyIDStr)-4:])
+		year := time.Now().Format("06")
+
+		// Get the last receive number for this company
+		var lastRN struct {
+			ReceiveNumber string `gorm:"column:receive_number"`
+		}
+		s.db.Table("purchase_orders").
+			Where("receive_number LIKE ?", fmt.Sprintf("RN-%s-%s-", year, companyPrefix)).
+			Order("receive_number DESC").
+			Limit(1).Scan(&lastRN)
+
+		sequence := 1
+		if lastRN.ReceiveNumber != "" {
+			parts := strings.Split(lastRN.ReceiveNumber, "-")
+			if len(parts) >= 3 {
+				seqStr := parts[len(parts)-1]
+				var digits string
+				for _, c := range seqStr {
+					if c >= '0' && c <= '9' {
+						digits += string(c)
+					}
+				}
+				if digits != "" {
+					if seq, err := strconv.Atoi(digits); err == nil {
+						sequence = seq + 1
+					}
+				}
+			}
+		}
+
+		receiveNumber = fmt.Sprintf("RN-%s-%s-%06d", year, companyPrefix, sequence)
 	}
 
 	itemsExisting, _ := s.purchaseRepo.GetPurchaseOrderItems(poID)
@@ -596,6 +639,10 @@ func (s *PurchaseService) UpdatePurchaseOrder(id string, input UpdatePurchaseOrd
 		}
 		if input.StatusReceive != "" {
 			updates["status_receive"] = input.StatusReceive
+		}
+		// Add receive_number to updates if generated
+		if receiveNumber != "" {
+			updates["receive_number"] = receiveNumber
 		}
 
 		if err := tx.Table("purchase_orders").Where("id = ?", poID).Updates(updates).Error; err != nil {

@@ -37,6 +37,12 @@ func NewPurchaseHandler(purchaseService *services.PurchaseService) *PurchaseHand
 // @Security BearerAuth
 // @Router /api/purchases [get]
 func (h *PurchaseHandler) GetPurchaseOrders(c *fiber.Ctx) error {
+	user := middleware.GetUserFromContext(c)
+	var companyID *string
+	if user != nil && user.CompanyID != "" {
+		companyID = &user.CompanyID
+	}
+
 	filters := map[string]string{}
 	// Support both status and status_po/status_receive for filtering
 	// Backwards compatibility: if 'status' is provided, it filters status_po
@@ -53,7 +59,7 @@ func (h *PurchaseHandler) GetPurchaseOrders(c *fiber.Ctx) error {
 
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
-	result := h.purchaseService.GetPurchaseOrders(filters, limit, offset)
+	result := h.purchaseService.GetPurchaseOrders(companyID, filters, limit, offset)
 	return c.JSON(result)
 }
 

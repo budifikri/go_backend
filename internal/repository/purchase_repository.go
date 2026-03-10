@@ -57,7 +57,7 @@ func NewPurchaseRepository(db *gorm.DB) *PurchaseRepository {
 	return &PurchaseRepository{db: db}
 }
 
-func (r *PurchaseRepository) FindPurchaseOrders(filters map[string]string, limit, offset int) ([]PurchaseOrderRow, int64, error) {
+func (r *PurchaseRepository) FindPurchaseOrders(companyID *string, filters map[string]string, limit, offset int) ([]PurchaseOrderRow, int64, error) {
 	var rows []PurchaseOrderRow
 	var total int64
 
@@ -65,6 +65,11 @@ func (r *PurchaseRepository) FindPurchaseOrders(filters map[string]string, limit
 		Select("po.*, s.name AS supplier_name, w.name AS warehouse_name").
 		Joins("LEFT JOIN suppliers s ON s.id = po.supplier_id").
 		Joins("LEFT JOIN warehouses w ON w.id = po.warehouse_id")
+
+	// Filter by company_id (required for multi-tenant isolation)
+	if companyID != nil && *companyID != "" {
+		query = query.Where("po.company_id = ?", *companyID)
+	}
 
 	// Support case-insensitive filtering for statuses
 	if v := filters["status_po"]; v != "" {

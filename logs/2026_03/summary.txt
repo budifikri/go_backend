@@ -2,7 +2,9 @@
 
 Table          | CREATE | UPDATE | DELETE | ERROR
 ---------------|--------|--------|--------|-------
-products       |      1 |      0 |      0 |     0
-units          |      1 |      0 |      0 |     0
+categories     |      1 |      0 |      0 |     0
+products       |      0 |      1 |      0 |     0
+units          |      0 |      0 |     16 |     0
+warehouses     |      0 |      0 |      0 |     1
 ---------------|--------|--------|--------|-------
-TOTAL          |      2 |      0 |      0 |     0
+TOTAL          |      1 |      1 |     16 |     1
