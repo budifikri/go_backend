@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -373,10 +374,43 @@ func (r *InventoryRepository) GetNextTransferNumber() (string, error) {
 	return "TRF-" + time.Now().Format("20060102") + "-" + formatInt(count+1, 3), nil
 }
 
-func (r *InventoryRepository) GetNextOpnameNumber() (string, error) {
-	var count int64
-	r.db.Model(&models.StockOpname{}).Count(&count)
-	return "OPN-" + time.Now().Format("20060102") + "-" + formatInt(count+1, 3), nil
+func (r *InventoryRepository) GetNextOpnameNumber(companyID string) (string, error) {
+	year := time.Now().Format("06")
+
+	companyPrefix := ""
+	if companyID != "" {
+		if len(companyID) >= 4 {
+			companyPrefix = strings.ToLower(companyID[len(companyID)-4:])
+		}
+	}
+
+	var lastOpname struct {
+		OpnameNumber string `gorm:"column:opname_number"`
+	}
+	r.db.Table("stock_opnames").
+		Where("opname_number LIKE ?", fmt.Sprintf("OP-%s-%s-%%", year, companyPrefix)).
+		Order("opname_number DESC").
+		Limit(1).Scan(&lastOpname)
+
+	sequence := 1
+	if lastOpname.OpnameNumber != "" {
+		parts := strings.Split(lastOpname.OpnameNumber, "-")
+		if len(parts) >= 3 {
+			seqStr := parts[len(parts)-1]
+			var digits string
+			for _, c := range seqStr {
+				if c >= '0' && c <= '9' {
+					digits += string(c)
+				}
+			}
+			if digits != "" {
+				fmt.Sscanf(digits, "%d", &sequence)
+				sequence++
+			}
+		}
+	}
+
+	return fmt.Sprintf("OP-%s-%s-%s", year, companyPrefix, formatInt(int64(sequence), 6)), nil
 }
 
 func (r *InventoryRepository) CreateStockTransferItem(item *models.StockTransferItem) error {
@@ -394,6 +428,10 @@ func (r *InventoryRepository) DeleteStockOpname(id uuid.UUID) error {
 		}
 		return tx.Delete(&models.StockOpname{}, "id = ?", id).Error
 	})
+}
+
+func (r *InventoryRepository) UpdateStockOpnameItemsStatus(opnameID uuid.UUID, status string) error {
+	return r.db.Model(&models.StockOpnameItem{}).Where("opname_id = ?", opnameID).Update("status", status).Error
 }
 
 func formatInt(n int64, width int) string {

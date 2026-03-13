@@ -239,8 +239,10 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 	}
 	user := middleware.GetUserFromContext(c)
 	userID := ""
+	companyID := ""
 	if user != nil {
 		userID = user.UserID
+		companyID = user.CompanyID
 	}
 	items := make([]struct {
 		ProductID      string
@@ -258,6 +260,7 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 	}
 	result := h.inventoryService.CreateStockOpname(struct {
 		WarehouseID string
+		CompanyID   string
 		OpnameDate  string
 		Items       []struct {
 			ProductID      string
@@ -268,6 +271,7 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 		Notes string
 	}{
 		WarehouseID: req.WarehouseID,
+		CompanyID:   companyID,
 		OpnameDate:  req.OpnameDate,
 		Items:       items,
 		Notes:       req.Notes,
@@ -295,6 +299,12 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/stock-opname [get]
 func (h *InventoryHandler) GetStockOpnames(c *fiber.Ctx) error {
+	user := middleware.GetUserFromContext(c)
+	var companyID *string
+	if user != nil && user.CompanyID != "" {
+		companyID = &user.CompanyID
+	}
+
 	filters := make(map[string]interface{})
 	if warehouseID := c.Query("warehouse_id"); warehouseID != "" {
 		filters["warehouse_id"] = warehouseID
@@ -313,7 +323,7 @@ func (h *InventoryHandler) GetStockOpnames(c *fiber.Ctx) error {
 	}
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
-	result := h.inventoryService.GetStockOpnames(filters, limit, offset)
+	result := h.inventoryService.GetStockOpnames(companyID, filters, limit, offset)
 	return c.JSON(result)
 }
 

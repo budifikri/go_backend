@@ -160,6 +160,7 @@ type StockOpname struct {
 	OpnameNumber string            `gorm:"type:varchar(50);uniqueIndex;notNull" json:"opname_number"`
 	WarehouseID  uuid.UUID         `gorm:"type:uuid;notNull" json:"warehouse_id"`
 	UserID       uuid.UUID         `gorm:"type:uuid;notNull" json:"user_id"`
+	CompanyID    uuid.UUID         `gorm:"type:uuid;notNull" json:"company_id"`
 	OpnameDate   time.Time         `gorm:"notNull" json:"opname_date"`
 	Status       StockOpnameStatus `gorm:"type:varchar(20);notNull;default:'draft'" json:"status"`
 	Notes        string            `gorm:"type:text" json:"notes,omitempty"`
@@ -168,6 +169,7 @@ type StockOpname struct {
 
 	Warehouse *Warehouse        `gorm:"foreignKey:WarehouseID" json:"warehouse,omitempty"`
 	User      *User             `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Company   *Company          `gorm:"foreignKey:CompanyID" json:"company,omitempty"`
 	Items     []StockOpnameItem `gorm:"foreignKey:OpnameID" json:"items,omitempty"`
 }
 

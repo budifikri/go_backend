@@ -404,8 +404,11 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 		}
 
 		var ref interface{} = nil
-		if mt == models.MovementTypeOpname {
-			ref = "Stock Opname"
+		if mt == models.MovementTypeOpname && m.ReferenceID != nil {
+			opname, _ := s.inventoryRepo.GetStockOpnameByID(*m.ReferenceID)
+			if opname != nil {
+				ref = opname.OpnameNumber
+			}
 		} else if m.ReferenceID != nil {
 			ref = m.ReferenceID.String()
 		}
@@ -620,6 +623,7 @@ func (s *InventoryService) ReceiveStockTransfer(transferID string, items []struc
 
 func (s *InventoryService) CreateStockOpname(req struct {
 	WarehouseID string
+	CompanyID   string
 	OpnameDate  string
 	Items       []struct {
 		ProductID      string
@@ -639,14 +643,16 @@ func (s *InventoryService) CreateStockOpname(req struct {
 		return response.NewErrorResponse("Warehouse not found")
 	}
 
-	opnameNumber, _ := s.inventoryRepo.GetNextOpnameNumber()
+	opnameNumber, _ := s.inventoryRepo.GetNextOpnameNumber(req.CompanyID)
 	uid, _ := uuid.Parse(userID)
+	companyUID, _ := uuid.Parse(req.CompanyID)
 
 	opname := models.StockOpname{
 		ID:           uuid.New(),
 		OpnameNumber: opnameNumber,
 		WarehouseID:  warehouseID,
 		UserID:       uid,
+		CompanyID:    companyUID,
 		Status:       models.StockOpnameStatusDraft,
 		Notes:        req.Notes,
 	}
@@ -688,7 +694,10 @@ func (s *InventoryService) CreateStockOpname(req struct {
 	return s.GetStockOpnameByID(opname.ID.String())
 }
 
-func (s *InventoryService) GetStockOpnames(filters map[string]interface{}, limit, offset int) response.PaginatedResponse {
+func (s *InventoryService) GetStockOpnames(companyID *string, filters map[string]interface{}, limit, offset int) response.PaginatedResponse {
+	if companyID != nil {
+		filters["company_id"] = *companyID
+	}
 	opnames, total, err := s.inventoryRepo.FindStockOpnames(filters, limit, offset)
 	if err != nil {
 		return response.PaginatedResponse{
@@ -915,11 +924,18 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 	}
 
 	if isApprovalTransition {
+		s.inventoryRepo.UpdateStockOpnameItemsStatus(opnameID, "done")
+
 		for _, item := range items {
 			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, opname.WarehouseID)
 			if inventory != nil {
 				newQty := inventory.Quantity + item.Difference
 				s.inventoryRepo.UpdateQuantity(item.ProductID, opname.WarehouseID, newQty)
+
+				notes := item.Notes
+				if notes == "" {
+					notes = "Stock opname adjustment - approved"
+				}
 
 				movement := models.StockMovement{
 					ID:            uuid.New(),
@@ -929,7 +945,7 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 					Quantity:      item.Difference,
 					ReferenceType: "STOCK_OPNAME",
 					ReferenceID:   &opnameID,
-					Notes:         "Stock opname adjustment - approved",
+					Notes:         notes,
 				}
 				s.inventoryRepo.CreateStockMovement(&movement)
 			}
