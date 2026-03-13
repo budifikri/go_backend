@@ -87,7 +87,7 @@ func (r *ProductRepository) Create(product *models.Product) error {
 
 func (r *ProductRepository) Update(product *models.Product) error {
 	log.Printf("[DEBUG] ProductRepo.Update: id=%s, UnitID=%s", product.ID, product.UnitID)
-	err := r.db.Model(product).Select("unit_id", "category_id", "name", "description", "cost_price", "retail_price", "tax_rate", "reorder_point", "is_active", "status", "updated_at").Updates(product).Error
+	err := r.db.Model(product).Select("sku", "barcode", "unit_id", "category_id", "name", "description", "cost_price", "retail_price", "tax_rate", "reorder_point", "is_active", "status", "updated_at").Updates(product).Error
 	if err != nil {
 		log.Printf("[DEBUG] ProductRepo.Update: error=%v", err)
 	}

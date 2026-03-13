@@ -62,6 +62,7 @@ type StockOpnameUpdateItemRequest struct {
 type StockOpnameUpdateRequest struct {
 	WarehouseID string                         `json:"warehouse_id"`
 	OpnameDate  string                         `json:"opname_date"`
+	Status      string                         `json:"status"`
 	Notes       string                         `json:"notes"`
 	Items       []StockOpnameUpdateItemRequest `json:"items"`
 }

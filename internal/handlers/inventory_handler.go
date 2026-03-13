@@ -416,6 +416,7 @@ func (h *InventoryHandler) UpdateStockOpname(c *fiber.Ctx) error {
 	reqService := services.UpdateStockOpnameRequest{
 		WarehouseID: req.WarehouseID,
 		OpnameDate:  req.OpnameDate,
+		Status:      req.Status,
 		Notes:       req.Notes,
 	}
 	for _, item := range req.Items {
