@@ -500,7 +500,7 @@ func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseO
 								ID:            uuid.New(),
 								ProductID:     items[i].ProductID,
 								WarehouseID:   po.WarehouseID,
-								MovementType:  "IN",
+								MovementType:  models.MovementTypePurchase,
 								Quantity:      qtyToAdd,
 								ReferenceType: "PO",
 								ReferenceID:   &poID,

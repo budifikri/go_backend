@@ -448,3 +448,15 @@ func formatInt(n int64, width int) string {
 	}
 	return result
 }
+
+func (r *InventoryRepository) GetPurchaseOrderByID(id uuid.UUID) (poNumber, receiveNumber string, err error) {
+	var row struct {
+		PoNumber      string `gorm:"column:po_number"`
+		ReceiveNumber string `gorm:"column:receive_number"`
+	}
+	err = r.db.Table("purchase_orders").Where("id = ?", id).Select("po_number", "receive_number").Scan(&row).Error
+	if err != nil {
+		return "", "", err
+	}
+	return row.PoNumber, row.ReceiveNumber, nil
+}

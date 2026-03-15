@@ -409,6 +409,13 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 			if opname != nil {
 				ref = opname.OpnameNumber
 			}
+		} else if mt == models.MovementTypePurchase && m.ReferenceID != nil {
+			poNum, receiveNum, _ := s.inventoryRepo.GetPurchaseOrderByID(*m.ReferenceID)
+			if receiveNum != "" {
+				ref = receiveNum
+			} else if poNum != "" {
+				ref = poNum
+			}
 		} else if m.ReferenceID != nil {
 			ref = m.ReferenceID.String()
 		}
