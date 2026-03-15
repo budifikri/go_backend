@@ -234,25 +234,61 @@ func (s *InventoryService) AdjustInventory(req struct {
 	}, "Inventory adjusted successfully")
 }
 
-func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate string) response.ApiResponse {
+func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate string, limit, offset int) response.PaginatedResponse {
 	pid, err := uuid.Parse(productID)
 	if err != nil {
-		return response.NewErrorResponse("Invalid product ID")
+		return response.PaginatedResponse{
+			Success: false,
+			Data:    []interface{}{},
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
+		}
 	}
 
 	wid, err := uuid.Parse(warehouseID)
 	if err != nil {
-		return response.NewErrorResponse("Invalid warehouse ID")
+		return response.PaginatedResponse{
+			Success: false,
+			Data:    []interface{}{},
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
+		}
 	}
 
 	product, err := s.productRepo.FindByID(pid)
 	if err != nil || product == nil {
-		return response.NewErrorResponse("Product not found")
+		return response.PaginatedResponse{
+			Success: false,
+			Data:    []interface{}{},
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
+		}
 	}
 
 	warehouse, err := s.warehouseRepo.FindByID(wid)
 	if err != nil || warehouse == nil {
-		return response.NewErrorResponse("Warehouse not found")
+		return response.PaginatedResponse{
+			Success: false,
+			Data:    []interface{}{},
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
+		}
 	}
 
 	// Parse dates (expected YYYY-MM-DD). Keep behavior safe if omitted.
@@ -260,14 +296,32 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 	if fromDate != "" {
 		t, err := time.Parse("2006-01-02", fromDate)
 		if err != nil {
-			return response.NewErrorResponse("Invalid from_date format. Expected YYYY-MM-DD")
+			return response.PaginatedResponse{
+				Success: false,
+				Data:    []interface{}{},
+				Pagination: response.Pagination{
+					Total:   0,
+					Limit:   limit,
+					Offset:  offset,
+					HasMore: false,
+				},
+			}
 		}
 		from = &t
 	}
 	if toDate != "" {
 		t, err := time.Parse("2006-01-02", toDate)
 		if err != nil {
-			return response.NewErrorResponse("Invalid to_date format. Expected YYYY-MM-DD")
+			return response.PaginatedResponse{
+				Success: false,
+				Data:    []interface{}{},
+				Pagination: response.Pagination{
+					Total:   0,
+					Limit:   limit,
+					Offset:  offset,
+					HasMore: false,
+				},
+			}
 		}
 		// Match TS: created_at < to_date + 1 day
 		t2 := t.AddDate(0, 0, 1)
@@ -282,7 +336,7 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 		}
 	}
 
-	movements, _ := s.inventoryRepo.GetStockCard(pid, wid, from, toExclusive)
+	movements, total, _ := s.inventoryRepo.GetStockCard(pid, wid, from, toExclusive, limit, offset)
 
 	// Build transactions with running balance (match TS test expectations)
 	transactions := make([]map[string]interface{}, 0, len(movements))
@@ -446,31 +500,33 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 		}
 	}
 
-	return response.NewSuccessResponse(map[string]interface{}{
-		"item": map[string]interface{}{
-			"id":       product.ID,
-			"code":     product.SKU,
-			"name":     product.Name,
-			"category": categoryName,
-			"unit":     unitStr,
+	return response.NewPaginatedResponse([]interface{}{
+		map[string]interface{}{
+			"item": map[string]interface{}{
+				"id":       product.ID,
+				"code":     product.SKU,
+				"name":     product.Name,
+				"category": categoryName,
+				"unit":     unitStr,
+			},
+			"warehouse": map[string]interface{}{
+				"id":   warehouse.ID,
+				"name": warehouse.Name,
+				"rack": "-",
+			},
+			"period": map[string]string{
+				"from": fromDate,
+				"to":   toDate,
+			},
+			"summary": map[string]int{
+				"openingBalance": openingBalance,
+				"totalIn":        totalIn,
+				"totalOut":       totalOut,
+				"closingBalance": runningBalance,
+			},
+			"transactions": transactions,
 		},
-		"warehouse": map[string]interface{}{
-			"id":   warehouse.ID,
-			"name": warehouse.Name,
-			"rack": "-",
-		},
-		"period": map[string]string{
-			"from": fromDate,
-			"to":   toDate,
-		},
-		"summary": map[string]int{
-			"openingBalance": openingBalance,
-			"totalIn":        totalIn,
-			"totalOut":       totalOut,
-			"closingBalance": runningBalance,
-		},
-		"transactions": transactions,
-	}, "Stock card retrieved successfully")
+	}, total, limit, offset)
 }
 
 func (s *InventoryService) CreateStockTransfer(req struct {

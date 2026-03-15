@@ -175,22 +175,26 @@ func (r *InventoryRepository) GetOpeningBalance(productID, warehouseID uuid.UUID
 	return balance, nil
 }
 
-func (r *InventoryRepository) GetStockCard(productID, warehouseID uuid.UUID, fromDate, toDate *time.Time) ([]models.StockMovement, error) {
+func (r *InventoryRepository) GetStockCard(productID, warehouseID uuid.UUID, fromDate, toDate *time.Time, limit, offset int) ([]models.StockMovement, int64, error) {
 	var movements []models.StockMovement
-	query := r.db.Where("product_id = ? AND warehouse_id = ?", productID, warehouseID)
+	var total int64
+	query := r.db.Model(&models.StockMovement{}).Where("product_id = ? AND warehouse_id = ?", productID, warehouseID)
 
 	if fromDate != nil {
 		query = query.Where("created_at >= ?", fromDate)
 	}
 	if toDate != nil {
-		// Treat toDate as an exclusive upper bound (matches TS: created_at < to_date + 1 day)
 		query = query.Where("created_at < ?", toDate)
 	}
 
-	if err := query.Order("created_at ASC").Find(&movements).Error; err != nil {
-		return nil, err
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return movements, nil
+
+	if err := query.Order("created_at ASC").Offset(offset).Limit(limit).Find(&movements).Error; err != nil {
+		return nil, 0, err
+	}
+	return movements, total, nil
 }
 
 func (r *InventoryRepository) GetInventoryByProduct(productID uuid.UUID) ([]models.Inventory, error) {

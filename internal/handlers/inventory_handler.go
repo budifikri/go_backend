@@ -65,7 +65,9 @@ func (h *InventoryHandler) GetInventory(c *fiber.Ctx) error {
 // @Param warehouse_id query string true "Warehouse ID"
 // @Param from_date query string false "From date"
 // @Param to_date query string false "To date"
-// @Success 200 {object} response.ApiResponse
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
+// @Success 200 {object} response.PaginatedResponse
 // @Failure 400 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
 // @Security BearerAuth
@@ -76,7 +78,9 @@ func (h *InventoryHandler) GetStockCard(c *fiber.Ctx) error {
 	if productID == "" || warehouseID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("product_id and warehouse_id required"))
 	}
-	result := h.inventoryService.GetStockCard(productID, warehouseID, c.Query("from_date"), c.Query("to_date"))
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	result := h.inventoryService.GetStockCard(productID, warehouseID, c.Query("from_date"), c.Query("to_date"), limit, offset)
 	return c.JSON(result)
 }
 
