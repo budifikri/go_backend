@@ -402,14 +402,17 @@ func (h *PurchaseHandler) CreatePurchaseReturn(c *fiber.Ctx) error {
 
 	user := middleware.GetUserFromContext(c)
 	userID := ""
+	companyID := ""
 	if user != nil {
 		userID = user.UserID
+		companyID = user.CompanyID
 	}
 
 	result := h.purchaseService.CreatePurchaseReturn(services.CreatePurchaseReturnInput{
 		PoID:        req.PoID,
-		SupplierID:  req.PoID,
-		WarehouseID: "",
+		SupplierID:  req.SupplierID,
+		WarehouseID: req.WarehouseID,
+		CompanyID:   companyID,
 		ReturnDate:  req.ReturnDate,
 		Reason:      req.Reason,
 		Items: func() []services.CreatePurchaseReturnItemInput {

@@ -54,10 +54,12 @@ type PurchaseReturnItemRequest struct {
 }
 
 type CreatePurchaseReturnRequest struct {
-	PoID       string                      `json:"po_id"`
-	ReturnDate string                      `json:"return_date"`
-	Reason     string                      `json:"reason"`
-	Items      []PurchaseReturnItemRequest `json:"items"`
+	PoID        string                      `json:"po_id"`
+	SupplierID  string                      `json:"supplier_id"`
+	WarehouseID string                      `json:"warehouse_id"`
+	ReturnDate  string                      `json:"return_date"`
+	Reason      string                      `json:"reason"`
+	Items       []PurchaseReturnItemRequest `json:"items"`
 }
 
 type UpdatePurchaseReturnStatusRequest struct {

@@ -810,20 +810,39 @@ type CreatePurchaseReturnInput struct {
 	PoID        string
 	SupplierID  string
 	WarehouseID string
+	CompanyID   string
 	ReturnDate  string
 	Reason      string
 	Items       []CreatePurchaseReturnItemInput
 }
 
 func (s *PurchaseService) CreatePurchaseReturn(input CreatePurchaseReturnInput, userID string) response.ApiResponse {
-	poID, err := uuid.Parse(input.PoID)
-	if err != nil {
-		return response.NewErrorResponse("Invalid PO ID")
+	var poID uuid.UUID
+	var po *repository.PurchaseOrderRow
+	var err error
+	var companyID uuid.UUID
+
+	// Get companyID from input (JWT user)
+	if input.CompanyID != "" {
+		companyID, err = uuid.Parse(input.CompanyID)
+		if err != nil {
+			return response.NewErrorResponse("Invalid company ID")
+		}
 	}
 
-	po, err := s.purchaseRepo.GetPurchaseOrderByID(poID)
-	if err != nil || po == nil {
-		return response.NewErrorResponse("Purchase order not found")
+	// If po_id provided, get company from PO if not set
+	if input.PoID != "" {
+		poID, err = uuid.Parse(input.PoID)
+		if err != nil {
+			return response.NewErrorResponse("Invalid PO ID")
+		}
+		po, err = s.purchaseRepo.GetPurchaseOrderByID(poID)
+		if err != nil || po == nil {
+			return response.NewErrorResponse("Purchase order not found")
+		}
+		if companyID == uuid.Nil {
+			companyID = po.CompanyID
+		}
 	}
 
 	supplierID, err := uuid.Parse(input.SupplierID)
@@ -836,7 +855,10 @@ func (s *PurchaseService) CreatePurchaseReturn(input CreatePurchaseReturnInput, 
 		return response.NewErrorResponse("Invalid warehouse ID")
 	}
 
-	companyID := po.CompanyID
+	if companyID == uuid.Nil {
+		return response.NewErrorResponse("Company ID is required")
+	}
+
 	returnNumber, _ := s.purchaseRepo.GetNextReturnNumber(companyID.String())
 	uid, _ := uuid.Parse(userID)
 
