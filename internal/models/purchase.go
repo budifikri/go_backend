@@ -140,3 +140,67 @@ func (poi *PurchaseOrderItem) BeforeCreate(tx *gorm.DB) error {
 func (PurchaseOrderItem) TableName() string {
 	return "purchase_order_items"
 }
+
+// PurchaseReturnStatus enum
+type PurchaseReturnStatus string
+
+const (
+	PurchaseReturnStatusDraft     PurchaseReturnStatus = "DRAFT"
+	PurchaseReturnStatusApproved  PurchaseReturnStatus = "APPROVED"
+	PurchaseReturnStatusDone      PurchaseReturnStatus = "DONE"
+	PurchaseReturnStatusCancelled PurchaseReturnStatus = "CANCELLED"
+)
+
+// PurchaseReturn model
+type PurchaseReturn struct {
+	ID           uuid.UUID            `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	ReturnNumber string               `gorm:"column:return_number;type:varchar(50);uniqueIndex;notNull" json:"return_number"`
+	PoID         uuid.UUID            `gorm:"column:po_id;type:uuid;notNull;index" json:"po_id"`
+	SupplierID   uuid.UUID            `gorm:"column:supplier_id;type:uuid;notNull;index" json:"supplier_id"`
+	WarehouseID  uuid.UUID            `gorm:"column:warehouse_id;type:uuid;notNull;index" json:"warehouse_id"`
+	CompanyID    uuid.UUID            `gorm:"column:company_id;type:uuid;notNull;index" json:"company_id"`
+	ReturnDate   time.Time            `gorm:"column:return_date;notNull;default:now();index" json:"return_date"`
+	Status       PurchaseReturnStatus `gorm:"type:varchar(20);notNull;default:'DRAFT'" json:"status"`
+	Reason       string               `gorm:"type:text" json:"reason"`
+	TotalAmount  float64              `gorm:"column:total_amount;type:decimal(15,2);notNull;default:0" json:"total_amount"`
+	CreatedBy    uuid.UUID            `gorm:"column:created_by;type:uuid;notNull" json:"created_by"`
+	ApprovedBy   *uuid.UUID           `gorm:"column:approved_by;type:uuid" json:"approved_by,omitempty"`
+	CreatedAt    time.Time            `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt    time.Time            `gorm:"autoUpdateTime" json:"updated_at"`
+
+	Items []PurchaseReturnItem `gorm:"foreignKey:ReturnID" json:"items,omitempty"`
+}
+
+func (pr *PurchaseReturn) BeforeCreate(tx *gorm.DB) error {
+	if pr.ID == uuid.Nil {
+		pr.ID = uuid.New()
+	}
+	return nil
+}
+
+func (PurchaseReturn) TableName() string {
+	return "purchase_returns"
+}
+
+// PurchaseReturnItem model
+type PurchaseReturnItem struct {
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	ReturnID  uuid.UUID `gorm:"column:return_id;type:uuid;notNull;index" json:"return_id"`
+	PoItemID  uuid.UUID `gorm:"column:po_item_id;type:uuid;notNull;index" json:"po_item_id"`
+	ProductID uuid.UUID `gorm:"column:product_id;type:uuid;notNull;index" json:"product_id"`
+	Quantity  int       `gorm:"notNull" json:"quantity"`
+	UnitPrice float64   `gorm:"column:unit_price;type:decimal(15,2);notNull" json:"unit_price"`
+	Amount    float64   `gorm:"type:decimal(15,2);notNull" json:"amount"`
+	Notes     string    `gorm:"type:text" json:"notes,omitempty"`
+}
+
+func (pri *PurchaseReturnItem) BeforeCreate(tx *gorm.DB) error {
+	if pri.ID == uuid.Nil {
+		pri.ID = uuid.New()
+	}
+	return nil
+}
+
+func (PurchaseReturnItem) TableName() string {
+	return "purchase_return_items"
+}

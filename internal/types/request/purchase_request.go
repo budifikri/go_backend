@@ -43,3 +43,23 @@ type ReceivePurchaseOrderRequest struct {
 	StatusReceive string                            `json:"status_receive"`
 	ReceiveDate   string                            `json:"receive_date"`
 }
+
+type PurchaseReturnItemRequest struct {
+	PoItemID  string  `json:"po_item_id"`
+	ProductID string  `json:"product_id"`
+	Quantity  int     `json:"quantity"`
+	UnitPrice float64 `json:"unit_price"`
+	Amount    float64 `json:"amount"`
+	Notes     string  `json:"notes"`
+}
+
+type CreatePurchaseReturnRequest struct {
+	PoID       string                      `json:"po_id"`
+	ReturnDate string                      `json:"return_date"`
+	Reason     string                      `json:"reason"`
+	Items      []PurchaseReturnItemRequest `json:"items"`
+}
+
+type UpdatePurchaseReturnStatusRequest struct {
+	Status string `json:"status"`
+}

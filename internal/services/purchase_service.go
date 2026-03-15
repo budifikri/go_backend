@@ -796,3 +796,313 @@ func toFloat(v string) float64 {
 	f, _ := strconv.ParseFloat(v, 64)
 	return f
 }
+
+type CreatePurchaseReturnItemInput struct {
+	PoItemID  string
+	ProductID string
+	Quantity  int
+	UnitPrice float64
+	Amount    float64
+	Notes     string
+}
+
+type CreatePurchaseReturnInput struct {
+	PoID        string
+	SupplierID  string
+	WarehouseID string
+	ReturnDate  string
+	Reason      string
+	Items       []CreatePurchaseReturnItemInput
+}
+
+func (s *PurchaseService) CreatePurchaseReturn(input CreatePurchaseReturnInput, userID string) response.ApiResponse {
+	poID, err := uuid.Parse(input.PoID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid PO ID")
+	}
+
+	po, err := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	if err != nil || po == nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	supplierID, err := uuid.Parse(input.SupplierID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid supplier ID")
+	}
+
+	warehouseID, err := uuid.Parse(input.WarehouseID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid warehouse ID")
+	}
+
+	companyID := po.CompanyID
+	returnNumber, _ := s.purchaseRepo.GetNextReturnNumber(companyID.String())
+	uid, _ := uuid.Parse(userID)
+
+	pr := models.PurchaseReturn{
+		ID:           uuid.New(),
+		ReturnNumber: returnNumber,
+		PoID:         poID,
+		SupplierID:   supplierID,
+		WarehouseID:  warehouseID,
+		CompanyID:    companyID,
+		Status:       models.PurchaseReturnStatusDraft,
+		Reason:       input.Reason,
+		CreatedBy:    uid,
+	}
+
+	if input.ReturnDate != "" {
+		t, err := time.Parse("2006-01-02", input.ReturnDate)
+		if err == nil {
+			pr.ReturnDate = t
+		}
+	}
+
+	if err := s.purchaseRepo.CreatePurchaseReturn(&pr); err != nil {
+		return response.NewErrorResponse("Failed to create purchase return: " + err.Error())
+	}
+
+	totalAmount := 0.0
+	for _, item := range input.Items {
+		poItemID, _ := uuid.Parse(item.PoItemID)
+		productID, _ := uuid.Parse(item.ProductID)
+
+		returnItem := models.PurchaseReturnItem{
+			ID:        uuid.New(),
+			ReturnID:  pr.ID,
+			PoItemID:  poItemID,
+			ProductID: productID,
+			Quantity:  item.Quantity,
+			UnitPrice: item.UnitPrice,
+			Amount:    item.Amount,
+			Notes:     item.Notes,
+		}
+		s.db.Create(&returnItem)
+		totalAmount += item.Amount
+	}
+
+	s.purchaseRepo.UpdatePurchaseReturn(pr.ID, map[string]interface{}{
+		"total_amount": totalAmount,
+	})
+
+	return s.GetPurchaseReturnByID(pr.ID.String())
+}
+
+func (s *PurchaseService) GetPurchaseReturns(companyID *string, filters map[string]string, limit, offset int) response.PaginatedResponse {
+	filtersIfc := make(map[string]interface{})
+	for k, v := range filters {
+		filtersIfc[k] = v
+	}
+	rows, total, err := s.purchaseRepo.FindPurchaseReturns(companyID, filtersIfc, limit, offset)
+	if err != nil {
+		return response.PaginatedResponse{
+			Success: false,
+			Data:    []interface{}{},
+			Pagination: response.Pagination{
+				Total:   0,
+				Limit:   limit,
+				Offset:  offset,
+				HasMore: false,
+			},
+		}
+	}
+
+	data := make([]interface{}, len(rows))
+	for i, row := range rows {
+		items, _ := s.purchaseRepo.GetPurchaseReturnItems(row.ID)
+		data[i] = map[string]interface{}{
+			"id":             row.ID,
+			"return_number":  row.ReturnNumber,
+			"po_id":          row.PoID,
+			"po_number":      row.PoNumber,
+			"supplier_id":    row.SupplierID,
+			"supplier_name":  row.SupplierName,
+			"warehouse_id":   row.WarehouseID,
+			"warehouse_name": row.WarehouseName,
+			"company_id":     row.CompanyID,
+			"return_date":    row.ReturnDate.Format("2006-01-02"),
+			"status":         row.Status,
+			"reason":         row.Reason,
+			"total_amount":   row.TotalAmount,
+			"created_by":     row.CreatedBy,
+			"approved_by":    row.ApprovedBy,
+			"created_at":     row.CreatedAt,
+			"updated_at":     row.UpdatedAt,
+			"items":          items,
+		}
+	}
+
+	return response.NewPaginatedResponse(data, total, limit, offset)
+}
+
+func (s *PurchaseService) GetPurchaseReturnByID(id string) response.ApiResponse {
+	prID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid purchase return ID")
+	}
+
+	pr, err := s.purchaseRepo.GetPurchaseReturnByID(prID)
+	if err != nil || pr == nil {
+		return response.NewErrorResponse("Purchase return not found")
+	}
+
+	items, _ := s.purchaseRepo.GetPurchaseReturnItems(pr.ID)
+
+	return response.NewSuccessResponse(map[string]interface{}{
+		"id":             pr.ID,
+		"return_number":  pr.ReturnNumber,
+		"po_id":          pr.PoID,
+		"po_number":      pr.PoNumber,
+		"supplier_id":    pr.SupplierID,
+		"supplier_name":  pr.SupplierName,
+		"warehouse_id":   pr.WarehouseID,
+		"warehouse_name": pr.WarehouseName,
+		"company_id":     pr.CompanyID,
+		"return_date":    pr.ReturnDate.Format("2006-01-02"),
+		"status":         pr.Status,
+		"reason":         pr.Reason,
+		"total_amount":   pr.TotalAmount,
+		"created_by":     pr.CreatedBy,
+		"approved_by":    pr.ApprovedBy,
+		"created_at":     pr.CreatedAt,
+		"updated_at":     pr.UpdatedAt,
+		"items":          items,
+	}, "Purchase return retrieved successfully")
+}
+
+func (s *PurchaseService) UpdatePurchaseReturn(id string, input CreatePurchaseReturnInput) response.ApiResponse {
+	prID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid purchase return ID")
+	}
+
+	pr, err := s.purchaseRepo.GetPurchaseReturnByID(prID)
+	if err != nil || pr == nil {
+		return response.NewErrorResponse("Purchase return not found")
+	}
+
+	if pr.Status != models.PurchaseReturnStatusDraft {
+		return response.NewErrorResponse("Only draft purchase returns can be updated")
+	}
+
+	updates := map[string]interface{}{
+		"reason": input.Reason,
+	}
+
+	if input.ReturnDate != "" {
+		t, err := time.Parse("2006-01-02", input.ReturnDate)
+		if err == nil {
+			updates["return_date"] = t
+		}
+	}
+
+	if err := s.purchaseRepo.UpdatePurchaseReturn(prID, updates); err != nil {
+		return response.NewErrorResponse("Failed to update purchase return")
+	}
+
+	if len(input.Items) > 0 {
+		s.db.Where("return_id = ?", prID).Delete(&models.PurchaseReturnItem{})
+
+		totalAmount := 0.0
+		for _, item := range input.Items {
+			poItemID, _ := uuid.Parse(item.PoItemID)
+			productID, _ := uuid.Parse(item.ProductID)
+
+			returnItem := models.PurchaseReturnItem{
+				ID:        uuid.New(),
+				ReturnID:  prID,
+				PoItemID:  poItemID,
+				ProductID: productID,
+				Quantity:  item.Quantity,
+				UnitPrice: item.UnitPrice,
+				Amount:    item.Amount,
+				Notes:     item.Notes,
+			}
+			s.db.Create(&returnItem)
+			totalAmount += item.Amount
+		}
+
+		s.purchaseRepo.UpdatePurchaseReturn(prID, map[string]interface{}{
+			"total_amount": totalAmount,
+		})
+	}
+
+	return s.GetPurchaseReturnByID(id)
+}
+
+func (s *PurchaseService) UpdatePurchaseReturnStatus(id, status, userID string) response.ApiResponse {
+	prID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid purchase return ID")
+	}
+
+	pr, err := s.purchaseRepo.GetPurchaseReturnByID(prID)
+	if err != nil || pr == nil {
+		return response.NewErrorResponse("Purchase return not found")
+	}
+
+	currentStatus := pr.Status
+
+	if status == "APPROVED" && currentStatus == models.PurchaseReturnStatusDraft {
+		uid, _ := uuid.Parse(userID)
+		s.purchaseRepo.UpdatePurchaseReturn(prID, map[string]interface{}{
+			"status":      models.PurchaseReturnStatusApproved,
+			"approved_by": uid,
+		})
+	} else if status == "DONE" && currentStatus == models.PurchaseReturnStatusApproved {
+		items, _ := s.purchaseRepo.GetPurchaseReturnItems(prID)
+		for _, item := range items {
+			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, pr.WarehouseID)
+			if inventory != nil {
+				newQty := inventory.Quantity - item.Quantity
+				s.inventoryRepo.UpdateQuantity(item.ProductID, pr.WarehouseID, newQty)
+
+				movement := models.StockMovement{
+					ID:            uuid.New(),
+					ProductID:     item.ProductID,
+					WarehouseID:   pr.WarehouseID,
+					MovementType:  models.MovementTypeReturn,
+					Quantity:      -item.Quantity,
+					ReferenceType: "PURCHASE_RETURN",
+					ReferenceID:   &prID,
+					Notes:         "Purchase Return",
+				}
+				s.inventoryRepo.CreateStockMovement(&movement)
+			}
+		}
+		s.purchaseRepo.UpdatePurchaseReturn(prID, map[string]interface{}{
+			"status": models.PurchaseReturnStatusDone,
+		})
+	} else if status == "CANCELLED" && currentStatus == models.PurchaseReturnStatusDraft {
+		s.purchaseRepo.UpdatePurchaseReturn(prID, map[string]interface{}{
+			"status": models.PurchaseReturnStatusCancelled,
+		})
+	} else {
+		return response.NewErrorResponse("Invalid status transition")
+	}
+
+	return s.GetPurchaseReturnByID(id)
+}
+
+func (s *PurchaseService) DeletePurchaseReturn(id string) response.ApiResponse {
+	prID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid purchase return ID")
+	}
+
+	pr, err := s.purchaseRepo.GetPurchaseReturnByID(prID)
+	if err != nil || pr == nil {
+		return response.NewErrorResponse("Purchase return not found")
+	}
+
+	if pr.Status != models.PurchaseReturnStatusDraft {
+		return response.NewErrorResponse("Only draft purchase returns can be deleted")
+	}
+
+	if err := s.purchaseRepo.DeletePurchaseReturn(prID); err != nil {
+		return response.NewErrorResponse("Failed to delete purchase return: " + err.Error())
+	}
+
+	return response.NewSuccessResponse(nil, "Purchase return deleted successfully")
+}

@@ -1,11 +1,13 @@
 package repository
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pos-retail/go_backend/internal/models"
 	"gorm.io/gorm"
 )
 
@@ -219,4 +221,147 @@ func (r *PurchaseRepository) Delete(id uuid.UUID) error {
 		}
 		return nil
 	})
+}
+
+type PurchaseReturnRow struct {
+	models.PurchaseReturn
+	SupplierName  *string `gorm:"column:supplier_name"`
+	WarehouseName *string `gorm:"column:warehouse_name"`
+	PoNumber      *string `gorm:"column:po_number"`
+}
+
+func (r *PurchaseRepository) GetNextReturnNumber(companyID string) (string, error) {
+	year := time.Now().Format("06")
+
+	companyPrefix := ""
+	if companyID != "" {
+		if len(companyID) >= 4 {
+			companyPrefix = strings.ToLower(companyID[len(companyID)-4:])
+		}
+	}
+
+	var lastReturn struct {
+		ReturnNumber string `gorm:"column:return_number"`
+	}
+	r.db.Table("purchase_returns").
+		Where("return_number LIKE ?", fmt.Sprintf("PR-%s-%s-%%", year, companyPrefix)).
+		Order("return_number DESC").
+		Limit(1).Scan(&lastReturn)
+
+	sequence := 1
+	if lastReturn.ReturnNumber != "" {
+		parts := strings.Split(lastReturn.ReturnNumber, "-")
+		if len(parts) >= 3 {
+			seqStr := parts[len(parts)-1]
+			var digits string
+			for _, c := range seqStr {
+				if c >= '0' && c <= '9' {
+					digits += string(c)
+				}
+			}
+			if digits != "" {
+				fmt.Sscanf(digits, "%d", &sequence)
+				sequence++
+			}
+		}
+	}
+
+	return fmt.Sprintf("PR-%s-%s-%s", year, companyPrefix, formatInt(int64(sequence), 6)), nil
+}
+
+func (r *PurchaseRepository) CreatePurchaseReturn(pr *models.PurchaseReturn) error {
+	return r.db.Create(pr).Error
+}
+
+func (r *PurchaseRepository) GetPurchaseReturnByID(id uuid.UUID) (*PurchaseReturnRow, error) {
+	var row PurchaseReturnRow
+	err := r.db.Table("purchase_returns pr").
+		Select("pr.*, s.name AS supplier_name, w.name AS warehouse_name, po.po_number").
+		Joins("LEFT JOIN suppliers s ON s.id = pr.supplier_id").
+		Joins("LEFT JOIN warehouses w ON w.id = pr.warehouse_id").
+		Joins("LEFT JOIN purchase_orders po ON po.id = pr.po_id").
+		Where("pr.id = ?", id).
+		Limit(1).
+		Scan(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	if row.ID == uuid.Nil {
+		return nil, nil
+	}
+	return &row, nil
+}
+
+func (r *PurchaseRepository) FindPurchaseReturns(companyID *string, filters map[string]interface{}, limit, offset int) ([]PurchaseReturnRow, int64, error) {
+	var rows []PurchaseReturnRow
+	var total int64
+
+	query := r.db.Table("purchase_returns pr").
+		Select("pr.*, s.name AS supplier_name, w.name AS warehouse_name, po.po_number").
+		Joins("LEFT JOIN suppliers s ON s.id = pr.supplier_id").
+		Joins("LEFT JOIN warehouses w ON w.id = pr.warehouse_id").
+		Joins("LEFT JOIN purchase_orders po ON po.id = pr.po_id")
+
+	if companyID != nil && *companyID != "" {
+		companyUUID, err := uuid.Parse(*companyID)
+		if err == nil {
+			query = query.Where("pr.company_id = ?", companyUUID)
+		}
+	}
+
+	if warehouseID, ok := filters["warehouse_id"].(string); ok && warehouseID != "" {
+		wid, err := uuid.Parse(warehouseID)
+		if err == nil {
+			query = query.Where("pr.warehouse_id = ?", wid)
+		}
+	}
+
+	if status, ok := filters["status"].(string); ok && status != "" {
+		query = query.Where("pr.status = ?", status)
+	}
+
+	if fromDate, ok := filters["from_date"].(string); ok && fromDate != "" {
+		query = query.Where("pr.return_date >= ?", fromDate)
+	}
+
+	if toDate, ok := filters["to_date"].(string); ok && toDate != "" {
+		query = query.Where("pr.return_date <= ?", toDate)
+	}
+
+	if search, ok := filters["search"].(string); ok && search != "" {
+		like := "%" + search + "%"
+		query = query.Where("pr.return_number ILIKE ? OR po.po_number ILIKE ? OR s.name ILIKE ?", like, like, like)
+	}
+
+	query.Count(&total)
+
+	if err := query.Order("pr.created_at DESC").Offset(offset).Limit(limit).Find(&rows).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return rows, total, nil
+}
+
+func (r *PurchaseRepository) UpdatePurchaseReturn(id uuid.UUID, updates map[string]interface{}) error {
+	return r.db.Table("purchase_returns").Where("id = ?", id).Updates(updates).Error
+}
+
+func (r *PurchaseRepository) DeletePurchaseReturn(id uuid.UUID) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Table("purchase_return_items").Where("return_id = ?", id).Delete(nil).Error; err != nil {
+			return err
+		}
+		if err := tx.Table("purchase_returns").Where("id = ?", id).Delete(nil).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (r *PurchaseRepository) GetPurchaseReturnItems(returnID uuid.UUID) ([]models.PurchaseReturnItem, error) {
+	var items []models.PurchaseReturnItem
+	if err := r.db.Where("return_id = ?", returnID).Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
 }

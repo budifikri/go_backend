@@ -81,6 +81,8 @@ func main() {
 		&models.Supplier{},
 		&models.PurchaseOrder{},
 		&models.PurchaseOrderItem{},
+		&models.PurchaseReturn{},
+		&models.PurchaseReturnItem{},
 		&models.Promotion{},
 		&models.PromotionProduct{},
 		&models.PromotionCategory{},
@@ -317,6 +319,15 @@ func main() {
 	purchases.Put("/:id/receive", purchaseHandler.ReceivePurchaseOrder)
 	purchases.Post("/:id/cancel", purchaseHandler.CancelPurchaseOrder)
 	purchases.Delete("/:id", purchaseHandler.DeletePurchaseOrder)
+
+	// Purchase returns routes
+	purchaseReturns := protected.Group("/purchase-returns")
+	purchaseReturns.Get("/", purchaseHandler.GetPurchaseReturns)
+	purchaseReturns.Get("/:id", purchaseHandler.GetPurchaseReturn)
+	purchaseReturns.Post("/", purchaseHandler.CreatePurchaseReturn)
+	purchaseReturns.Put("/:id", purchaseHandler.UpdatePurchaseReturn)
+	purchaseReturns.Put("/:id/status", purchaseHandler.UpdatePurchaseReturnStatus)
+	purchaseReturns.Delete("/:id", purchaseHandler.DeletePurchaseReturn)
 
 	// Promotions routes
 	promotions := protected.Group("/promotions")

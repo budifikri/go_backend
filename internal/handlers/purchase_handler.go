@@ -381,3 +381,208 @@ func (h *PurchaseHandler) ReceivePurchaseOrder(c *fiber.Ctx) error {
 	}
 	return c.JSON(result)
 }
+
+// CreatePurchaseReturn godoc
+// @Summary Create purchase return
+// @Tags PurchaseReturns
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body request.CreatePurchaseReturnRequest true "Purchase return payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchase-returns [post]
+func (h *PurchaseHandler) CreatePurchaseReturn(c *fiber.Ctx) error {
+	var req request.CreatePurchaseReturnRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+	}
+
+	user := middleware.GetUserFromContext(c)
+	userID := ""
+	if user != nil {
+		userID = user.UserID
+	}
+
+	result := h.purchaseService.CreatePurchaseReturn(services.CreatePurchaseReturnInput{
+		PoID:        req.PoID,
+		SupplierID:  req.PoID,
+		WarehouseID: "",
+		ReturnDate:  req.ReturnDate,
+		Reason:      req.Reason,
+		Items: func() []services.CreatePurchaseReturnItemInput {
+			items := make([]services.CreatePurchaseReturnItemInput, len(req.Items))
+			for i, item := range req.Items {
+				items[i] = services.CreatePurchaseReturnItemInput{
+					PoItemID:  item.PoItemID,
+					ProductID: item.ProductID,
+					Quantity:  item.Quantity,
+					UnitPrice: item.UnitPrice,
+					Amount:    item.Amount,
+					Notes:     item.Notes,
+				}
+			}
+			return items
+		}(),
+	}, userID)
+
+	if !result.Success {
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// GetPurchaseReturns godoc
+// @Summary List purchase returns
+// @Tags PurchaseReturns
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
+// @Param warehouse_id query string false "Warehouse ID"
+// @Param status query string false "Status"
+// @Param from_date query string false "From date"
+// @Param to_date query string false "To date"
+// @Param search query string false "Search"
+// @Success 200 {object} response.PaginatedResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchase-returns [get]
+func (h *PurchaseHandler) GetPurchaseReturns(c *fiber.Ctx) error {
+	user := middleware.GetUserFromContext(c)
+	var companyID *string
+	if user != nil && user.CompanyID != "" {
+		companyID = &user.CompanyID
+	}
+
+	filters := map[string]string{}
+	filters["warehouse_id"] = c.Query("warehouse_id")
+	filters["status"] = c.Query("status")
+	filters["from_date"] = c.Query("from_date")
+	filters["to_date"] = c.Query("to_date")
+	filters["search"] = c.Query("search")
+
+	limit := c.QueryInt("limit", 50)
+	offset := c.QueryInt("offset", 0)
+	result := h.purchaseService.GetPurchaseReturns(companyID, filters, limit, offset)
+	return c.JSON(result)
+}
+
+// GetPurchaseReturn godoc
+// @Summary Get purchase return
+// @Tags PurchaseReturns
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Return ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchase-returns/{id} [get]
+func (h *PurchaseHandler) GetPurchaseReturn(c *fiber.Ctx) error {
+	result := h.purchaseService.GetPurchaseReturnByID(c.Params("id"))
+	if !result.Success {
+		if result.Error == "Purchase return not found" {
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// UpdatePurchaseReturn godoc
+// @Summary Update purchase return
+// @Tags PurchaseReturns
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Return ID"
+// @Param body body request.CreatePurchaseReturnRequest true "Purchase return payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchase-returns/{id} [put]
+func (h *PurchaseHandler) UpdatePurchaseReturn(c *fiber.Ctx) error {
+	var req request.CreatePurchaseReturnRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+	}
+
+	result := h.purchaseService.UpdatePurchaseReturn(c.Params("id"), services.CreatePurchaseReturnInput{
+		PoID:       req.PoID,
+		ReturnDate: req.ReturnDate,
+		Reason:     req.Reason,
+		Items: func() []services.CreatePurchaseReturnItemInput {
+			items := make([]services.CreatePurchaseReturnItemInput, len(req.Items))
+			for i, item := range req.Items {
+				items[i] = services.CreatePurchaseReturnItemInput{
+					PoItemID:  item.PoItemID,
+					ProductID: item.ProductID,
+					Quantity:  item.Quantity,
+					UnitPrice: item.UnitPrice,
+					Amount:    item.Amount,
+					Notes:     item.Notes,
+				}
+			}
+			return items
+		}(),
+	})
+
+	if !result.Success {
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// UpdatePurchaseReturnStatus godoc
+// @Summary Update purchase return status
+// @Tags PurchaseReturns
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Return ID"
+// @Param body body request.UpdatePurchaseReturnStatusRequest true "Status payload"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchase-returns/{id}/status [put]
+func (h *PurchaseHandler) UpdatePurchaseReturnStatus(c *fiber.Ctx) error {
+	var req request.UpdatePurchaseReturnStatusRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
+	}
+
+	user := middleware.GetUserFromContext(c)
+	userID := ""
+	if user != nil {
+		userID = user.UserID
+	}
+
+	result := h.purchaseService.UpdatePurchaseReturnStatus(c.Params("id"), req.Status, userID)
+	if !result.Success {
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+// DeletePurchaseReturn godoc
+// @Summary Delete purchase return
+// @Tags PurchaseReturns
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Return ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchase-returns/{id} [delete]
+func (h *PurchaseHandler) DeletePurchaseReturn(c *fiber.Ctx) error {
+	result := h.purchaseService.DeletePurchaseReturn(c.Params("id"))
+	if !result.Success {
+		return c.Status(fiber.StatusBadRequest).JSON(result)
+	}
+	return c.JSON(result)
+}

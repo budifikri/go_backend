@@ -187,6 +187,19 @@ definitions:
       warehouse_id:
         type: string
     type: object
+  request.CreatePurchaseReturnRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/request.PurchaseReturnItemRequest'
+        type: array
+      po_id:
+        type: string
+      reason:
+        type: string
+      return_date:
+        type: string
+    type: object
   request.CreateReturnRequest:
     properties:
       items:
@@ -483,6 +496,21 @@ definitions:
         type: integer
       tax_rate:
         type: number
+      unit_price:
+        type: number
+    type: object
+  request.PurchaseReturnItemRequest:
+    properties:
+      amount:
+        type: number
+      notes:
+        type: string
+      po_item_id:
+        type: string
+      product_id:
+        type: string
+      quantity:
+        type: integer
       unit_price:
         type: number
     type: object
@@ -796,6 +824,11 @@ definitions:
         type: string
     type: object
   request.UpdatePurchaseOrderStatusRequest:
+    properties:
+      status:
+        type: string
+    type: object
+  request.UpdatePurchaseReturnStatusRequest:
     properties:
       status:
         type: string
@@ -3771,6 +3804,235 @@ paths:
       summary: Update promotion
       tags:
       - Promotions
+  /api/purchase-returns:
+    get:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Warehouse ID
+        in: query
+        name: warehouse_id
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: From date
+        in: query
+        name: from_date
+        type: string
+      - description: To date
+        in: query
+        name: to_date
+        type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PaginatedResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: List purchase returns
+      tags:
+      - PurchaseReturns
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase return payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreatePurchaseReturnRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Create purchase return
+      tags:
+      - PurchaseReturns
+  /api/purchase-returns/{id}:
+    delete:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Return ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete purchase return
+      tags:
+      - PurchaseReturns
+    get:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Return ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get purchase return
+      tags:
+      - PurchaseReturns
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Return ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Purchase return payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreatePurchaseReturnRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update purchase return
+      tags:
+      - PurchaseReturns
+  /api/purchase-returns/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Return ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdatePurchaseReturnStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update purchase return status
+      tags:
+      - PurchaseReturns
   /api/purchases:
     get:
       parameters:
