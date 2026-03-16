@@ -190,8 +190,10 @@ type PurchaseReturnItem struct {
 	ProductID uuid.UUID `gorm:"column:product_id;type:uuid;notNull;index" json:"product_id"`
 	Quantity  int       `gorm:"notNull" json:"quantity"`
 	UnitPrice float64   `gorm:"column:unit_price;type:decimal(15,2);notNull" json:"unit_price"`
-	Amount    float64   `gorm:"type:decimal(15,2);notNull" json:"amount"`
-	Notes     string    `gorm:"type:text" json:"notes,omitempty"`
+	Discount  float64   `gorm:"column:discount;type:decimal(15,2);default:0" json:"discount"`
+	TaxRate   float64   `gorm:"column:tax_rate;type:decimal(5,2);default:0" json:"tax_rate"`
+	Amount    float64   `gorm:"column:amount;type:decimal(15,2);notNull" json:"amount"`
+	Notes     string    `gorm:"column:notes;type:text" json:"notes,omitempty"`
 }
 
 func (pri *PurchaseReturnItem) BeforeCreate(tx *gorm.DB) error {

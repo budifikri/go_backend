@@ -49,6 +49,8 @@ type PurchaseReturnItemRequest struct {
 	ProductID string  `json:"product_id"`
 	Quantity  int     `json:"quantity"`
 	UnitPrice float64 `json:"unit_price"`
+	Discount  float64 `json:"discount"`
+	TaxRate   float64 `json:"tax_rate"`
 	Amount    float64 `json:"amount"`
 	Notes     string  `json:"notes"`
 }
@@ -59,6 +61,7 @@ type CreatePurchaseReturnRequest struct {
 	WarehouseID string                      `json:"warehouse_id"`
 	ReturnDate  string                      `json:"return_date"`
 	Reason      string                      `json:"reason"`
+	Status      string                      `json:"status"`
 	Items       []PurchaseReturnItemRequest `json:"items"`
 }
 

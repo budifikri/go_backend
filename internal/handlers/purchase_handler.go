@@ -418,12 +418,19 @@ func (h *PurchaseHandler) CreatePurchaseReturn(c *fiber.Ctx) error {
 		Items: func() []services.CreatePurchaseReturnItemInput {
 			items := make([]services.CreatePurchaseReturnItemInput, len(req.Items))
 			for i, item := range req.Items {
+				// Calculate amount: (quantity * unit_price) - discount + tax
+				amount := (float64(item.Quantity) * item.UnitPrice) - item.Discount
+				tax := amount * (item.TaxRate / 100)
+				amount = amount + tax
+
 				items[i] = services.CreatePurchaseReturnItemInput{
 					PoItemID:  item.PoItemID,
 					ProductID: item.ProductID,
 					Quantity:  item.Quantity,
 					UnitPrice: item.UnitPrice,
-					Amount:    item.Amount,
+					Discount:  item.Discount,
+					TaxRate:   item.TaxRate,
+					Amount:    amount,
 					Notes:     item.Notes,
 				}
 			}
@@ -463,8 +470,8 @@ func (h *PurchaseHandler) GetPurchaseReturns(c *fiber.Ctx) error {
 	filters := map[string]string{}
 	filters["warehouse_id"] = c.Query("warehouse_id")
 	filters["status"] = c.Query("status")
-	filters["from_date"] = c.Query("from_date")
-	filters["to_date"] = c.Query("to_date")
+	filters["from_date"] = c.Query("date_from")
+	filters["to_date"] = c.Query("date_to")
 	filters["search"] = c.Query("search")
 
 	limit := c.QueryInt("limit", 50)
@@ -517,6 +524,7 @@ func (h *PurchaseHandler) UpdatePurchaseReturn(c *fiber.Ctx) error {
 		PoID:       req.PoID,
 		ReturnDate: req.ReturnDate,
 		Reason:     req.Reason,
+		Status:     req.Status,
 		Items: func() []services.CreatePurchaseReturnItemInput {
 			items := make([]services.CreatePurchaseReturnItemInput, len(req.Items))
 			for i, item := range req.Items {
@@ -525,6 +533,8 @@ func (h *PurchaseHandler) UpdatePurchaseReturn(c *fiber.Ctx) error {
 					ProductID: item.ProductID,
 					Quantity:  item.Quantity,
 					UnitPrice: item.UnitPrice,
+					Discount:  item.Discount,
+					TaxRate:   item.TaxRate,
 					Amount:    item.Amount,
 					Notes:     item.Notes,
 				}

@@ -160,8 +160,8 @@ func (r *InventoryRepository) GetOpeningBalance(productID, warehouseID uuid.UUID
 	err := r.db.Raw(`
 		SELECT COALESCE(SUM(
 			CASE
-				WHEN movement_type IN ('ADJUSTMENT_IN','PURCHASE','TRANSFER_IN','RETURN','EXCHANGE_IN') THEN quantity
-				WHEN movement_type IN ('SALE','ADJUSTMENT_OUT','TRANSFER_OUT','DAMAGE','EXCHANGE_OUT') THEN -quantity
+				WHEN movement_type IN ('ADJUSTMENT_IN','PURCHASE','TRANSFER_IN','EXCHANGE_IN') THEN quantity
+				WHEN movement_type IN ('SALE','ADJUSTMENT_OUT','TRANSFER_OUT','DAMAGE','EXCHANGE_OUT','RETURN') THEN -quantity
 				WHEN movement_type IN ('OPNAME') THEN quantity
 				ELSE 0
 			END

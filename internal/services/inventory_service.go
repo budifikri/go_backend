@@ -36,17 +36,20 @@ type InventoryService struct {
 	inventoryRepo *repository.InventoryRepository
 	productRepo   *repository.ProductRepository
 	warehouseRepo *repository.WarehouseRepository
+	purchaseRepo  *repository.PurchaseRepository
 }
 
 func NewInventoryService(
 	inventoryRepo *repository.InventoryRepository,
 	productRepo *repository.ProductRepository,
 	warehouseRepo *repository.WarehouseRepository,
+	purchaseRepo *repository.PurchaseRepository,
 ) *InventoryService {
 	return &InventoryService{
 		inventoryRepo: inventoryRepo,
 		productRepo:   productRepo,
 		warehouseRepo: warehouseRepo,
+		purchaseRepo:  purchaseRepo,
 	}
 }
 
@@ -410,7 +413,6 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 			models.MovementTypeAdjustmentIn: true,
 			models.MovementTypePurchase:     true,
 			models.MovementTypeTransferIn:   true,
-			models.MovementTypeReturn:       true,
 			models.MovementTypeExchangeIn:   true,
 		}
 		return inTypes[mt]
@@ -470,8 +472,11 @@ func (s *InventoryService) GetStockCard(productID, warehouseID, fromDate, toDate
 			} else if poNum != "" {
 				ref = poNum
 			}
-		} else if m.ReferenceID != nil {
-			ref = m.ReferenceID.String()
+		} else if mt == models.MovementTypeReturn && m.ReferenceID != nil {
+			pr, _ := s.purchaseRepo.GetPurchaseReturnByID(*m.ReferenceID)
+			if pr != nil {
+				ref = pr.ReturnNumber
+			}
 		}
 
 		transactions = append(transactions, map[string]interface{}{

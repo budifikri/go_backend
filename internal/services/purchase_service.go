@@ -20,8 +20,8 @@ type PurchaseService struct {
 	inventoryRepo *repository.InventoryRepository
 }
 
-func NewPurchaseService(db *gorm.DB, purchaseRepo *repository.PurchaseRepository) *PurchaseService {
-	return &PurchaseService{db: db, purchaseRepo: purchaseRepo}
+func NewPurchaseService(db *gorm.DB, purchaseRepo *repository.PurchaseRepository, inventoryRepo *repository.InventoryRepository) *PurchaseService {
+	return &PurchaseService{db: db, purchaseRepo: purchaseRepo, inventoryRepo: inventoryRepo}
 }
 
 type CreatePurchaseOrderItemInput struct {
@@ -802,6 +802,8 @@ type CreatePurchaseReturnItemInput struct {
 	ProductID string
 	Quantity  int
 	UnitPrice float64
+	Discount  float64
+	TaxRate   float64
 	Amount    float64
 	Notes     string
 }
@@ -813,6 +815,7 @@ type CreatePurchaseReturnInput struct {
 	CompanyID   string
 	ReturnDate  string
 	Reason      string
+	Status      string
 	Items       []CreatePurchaseReturnItemInput
 }
 
@@ -890,6 +893,14 @@ func (s *PurchaseService) CreatePurchaseReturn(input CreatePurchaseReturnInput, 
 		poItemID, _ := uuid.Parse(item.PoItemID)
 		productID, _ := uuid.Parse(item.ProductID)
 
+		// Calculate amount if not provided: (quantity * unit_price) - discount + tax
+		amount := item.Amount
+		if amount == 0 && item.Quantity > 0 && item.UnitPrice > 0 {
+			amount = (float64(item.Quantity) * item.UnitPrice) - item.Discount
+			tax := amount * (item.TaxRate / 100)
+			amount = amount + tax
+		}
+
 		returnItem := models.PurchaseReturnItem{
 			ID:        uuid.New(),
 			ReturnID:  pr.ID,
@@ -897,11 +908,13 @@ func (s *PurchaseService) CreatePurchaseReturn(input CreatePurchaseReturnInput, 
 			ProductID: productID,
 			Quantity:  item.Quantity,
 			UnitPrice: item.UnitPrice,
-			Amount:    item.Amount,
+			Discount:  item.Discount,
+			TaxRate:   item.TaxRate,
+			Amount:    amount,
 			Notes:     item.Notes,
 		}
 		s.db.Create(&returnItem)
-		totalAmount += item.Amount
+		totalAmount += amount
 	}
 
 	s.purchaseRepo.UpdatePurchaseReturn(pr.ID, map[string]interface{}{
@@ -933,6 +946,39 @@ func (s *PurchaseService) GetPurchaseReturns(companyID *string, filters map[stri
 	data := make([]interface{}, len(rows))
 	for i, row := range rows {
 		items, _ := s.purchaseRepo.GetPurchaseReturnItems(row.ID)
+
+		// Calculate totals
+		subtotal := 0.0
+		tax := 0.0
+		for j, itemMap := range items {
+			quantity := 0
+			unitPrice := 0.0
+			discount := 0.0
+			taxRate := 0.0
+
+			if qty, ok := itemMap["quantity"].(float64); ok {
+				quantity = int(qty)
+			}
+			if up, ok := itemMap["unit_price"].(float64); ok {
+				unitPrice = up
+			}
+			if disc, ok := itemMap["discount"].(float64); ok {
+				discount = disc
+			}
+			if tr, ok := itemMap["tax_rate"].(float64); ok {
+				taxRate = tr
+			}
+			if amt, ok := itemMap["amount"].(float64); ok {
+				subtotal += amt
+				tax += amt * (taxRate / 100)
+			}
+
+			// Add line_total
+			lineTotal := (float64(quantity) * unitPrice) - discount
+			items[j]["line_total"] = lineTotal
+		}
+		grandTotal := subtotal + tax
+
 		data[i] = map[string]interface{}{
 			"id":             row.ID,
 			"return_number":  row.ReturnNumber,
@@ -952,6 +998,9 @@ func (s *PurchaseService) GetPurchaseReturns(companyID *string, filters map[stri
 			"created_at":     row.CreatedAt,
 			"updated_at":     row.UpdatedAt,
 			"items":          items,
+			"subtotal":       subtotal,
+			"tax":            tax,
+			"grand_total":    grandTotal,
 		}
 	}
 
@@ -970,6 +1019,38 @@ func (s *PurchaseService) GetPurchaseReturnByID(id string) response.ApiResponse 
 	}
 
 	items, _ := s.purchaseRepo.GetPurchaseReturnItems(pr.ID)
+
+	// Calculate totals and add line_total to items
+	subtotal := 0.0
+	tax := 0.0
+	for i, itemMap := range items {
+		quantity := 0
+		unitPrice := 0.0
+		discount := 0.0
+		taxRate := 0.0
+
+		if qty, ok := itemMap["quantity"].(float64); ok {
+			quantity = int(qty)
+		}
+		if up, ok := itemMap["unit_price"].(float64); ok {
+			unitPrice = up
+		}
+		if disc, ok := itemMap["discount"].(float64); ok {
+			discount = disc
+		}
+		if tr, ok := itemMap["tax_rate"].(float64); ok {
+			taxRate = tr
+		}
+		if amt, ok := itemMap["amount"].(float64); ok {
+			subtotal += amt
+			tax += amt * (taxRate / 100)
+		}
+
+		// Add line_total (before tax)
+		lineTotal := (float64(quantity) * unitPrice) - discount
+		items[i]["line_total"] = lineTotal
+	}
+	grandTotal := subtotal + tax
 
 	return response.NewSuccessResponse(map[string]interface{}{
 		"id":             pr.ID,
@@ -990,6 +1071,9 @@ func (s *PurchaseService) GetPurchaseReturnByID(id string) response.ApiResponse 
 		"created_at":     pr.CreatedAt,
 		"updated_at":     pr.UpdatedAt,
 		"items":          items,
+		"subtotal":       subtotal,
+		"tax":            tax,
+		"grand_total":    grandTotal,
 	}, "Purchase return retrieved successfully")
 }
 
@@ -1031,6 +1115,14 @@ func (s *PurchaseService) UpdatePurchaseReturn(id string, input CreatePurchaseRe
 			poItemID, _ := uuid.Parse(item.PoItemID)
 			productID, _ := uuid.Parse(item.ProductID)
 
+			// Calculate amount if not provided: (quantity * unit_price) - discount + tax
+			amount := item.Amount
+			if amount == 0 && item.Quantity > 0 && item.UnitPrice > 0 {
+				amount = (float64(item.Quantity) * item.UnitPrice) - item.Discount
+				tax := amount * (item.TaxRate / 100)
+				amount = amount + tax
+			}
+
 			returnItem := models.PurchaseReturnItem{
 				ID:        uuid.New(),
 				ReturnID:  prID,
@@ -1038,16 +1130,23 @@ func (s *PurchaseService) UpdatePurchaseReturn(id string, input CreatePurchaseRe
 				ProductID: productID,
 				Quantity:  item.Quantity,
 				UnitPrice: item.UnitPrice,
-				Amount:    item.Amount,
+				Discount:  item.Discount,
+				TaxRate:   item.TaxRate,
+				Amount:    amount,
 				Notes:     item.Notes,
 			}
 			s.db.Create(&returnItem)
-			totalAmount += item.Amount
+			totalAmount += amount
 		}
 
 		s.purchaseRepo.UpdatePurchaseReturn(prID, map[string]interface{}{
 			"total_amount": totalAmount,
 		})
+	}
+
+	// Handle status update if provided
+	if input.Status != "" {
+		return s.UpdatePurchaseReturnStatus(id, input.Status, "")
 	}
 
 	return s.GetPurchaseReturnByID(id)
@@ -1065,27 +1164,76 @@ func (s *PurchaseService) UpdatePurchaseReturnStatus(id, status, userID string) 
 	}
 
 	currentStatus := pr.Status
+	statusUpper := strings.ToUpper(status)
 
-	if status == "APPROVED" && currentStatus == models.PurchaseReturnStatusDraft {
+	if statusUpper == "APPROVED" && currentStatus == models.PurchaseReturnStatusDraft {
+		// Reduce stock and create stock movement when approved
+		items, _ := s.purchaseRepo.GetPurchaseReturnItems(prID)
+		for _, itemMap := range items {
+			productIDStr := itemMap["product_id"].(string)
+			productID, _ := uuid.Parse(productIDStr)
+
+			// Handle quantity as int, int32, int64, or float64
+			quantity := 0
+			if qty, ok := itemMap["quantity"].(float64); ok {
+				quantity = int(qty)
+			} else if qty, ok := itemMap["quantity"].(int64); ok {
+				quantity = int(qty)
+			} else if qty, ok := itemMap["quantity"].(int); ok {
+				quantity = qty
+			}
+
+			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(productID, pr.WarehouseID)
+			if inventory != nil {
+				newQty := inventory.Quantity - quantity
+				s.inventoryRepo.UpdateQuantity(productID, pr.WarehouseID, newQty)
+
+				movement := models.StockMovement{
+					ID:            uuid.New(),
+					ProductID:     productID,
+					WarehouseID:   pr.WarehouseID,
+					MovementType:  models.MovementTypeReturn,
+					Quantity:      quantity,
+					ReferenceType: "PURCHASE_RETURN",
+					ReferenceID:   &prID,
+					Notes:         "Purchase Return - Approved",
+				}
+				s.inventoryRepo.CreateStockMovement(&movement)
+			}
+		}
+
 		uid, _ := uuid.Parse(userID)
 		s.purchaseRepo.UpdatePurchaseReturn(prID, map[string]interface{}{
 			"status":      models.PurchaseReturnStatusApproved,
 			"approved_by": uid,
 		})
-	} else if status == "DONE" && currentStatus == models.PurchaseReturnStatusApproved {
+	} else if statusUpper == "DONE" && currentStatus == models.PurchaseReturnStatusApproved {
 		items, _ := s.purchaseRepo.GetPurchaseReturnItems(prID)
-		for _, item := range items {
-			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, pr.WarehouseID)
+		for _, itemMap := range items {
+			productIDStr := itemMap["product_id"].(string)
+			productID, _ := uuid.Parse(productIDStr)
+
+			// Handle quantity as int, int32, int64, or float64
+			quantity := 0
+			if qty, ok := itemMap["quantity"].(float64); ok {
+				quantity = int(qty)
+			} else if qty, ok := itemMap["quantity"].(int64); ok {
+				quantity = int(qty)
+			} else if qty, ok := itemMap["quantity"].(int); ok {
+				quantity = qty
+			}
+
+			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(productID, pr.WarehouseID)
 			if inventory != nil {
-				newQty := inventory.Quantity - item.Quantity
-				s.inventoryRepo.UpdateQuantity(item.ProductID, pr.WarehouseID, newQty)
+				newQty := inventory.Quantity - quantity
+				s.inventoryRepo.UpdateQuantity(productID, pr.WarehouseID, newQty)
 
 				movement := models.StockMovement{
 					ID:            uuid.New(),
-					ProductID:     item.ProductID,
+					ProductID:     productID,
 					WarehouseID:   pr.WarehouseID,
 					MovementType:  models.MovementTypeReturn,
-					Quantity:      -item.Quantity,
+					Quantity:      quantity,
 					ReferenceType: "PURCHASE_RETURN",
 					ReferenceID:   &prID,
 					Notes:         "Purchase Return",
@@ -1096,7 +1244,7 @@ func (s *PurchaseService) UpdatePurchaseReturnStatus(id, status, userID string) 
 		s.purchaseRepo.UpdatePurchaseReturn(prID, map[string]interface{}{
 			"status": models.PurchaseReturnStatusDone,
 		})
-	} else if status == "CANCELLED" && currentStatus == models.PurchaseReturnStatusDraft {
+	} else if statusUpper == "CANCELLED" && currentStatus == models.PurchaseReturnStatusDraft {
 		s.purchaseRepo.UpdatePurchaseReturn(prID, map[string]interface{}{
 			"status": models.PurchaseReturnStatusCancelled,
 		})

@@ -358,9 +358,15 @@ func (r *PurchaseRepository) DeletePurchaseReturn(id uuid.UUID) error {
 	})
 }
 
-func (r *PurchaseRepository) GetPurchaseReturnItems(returnID uuid.UUID) ([]models.PurchaseReturnItem, error) {
-	var items []models.PurchaseReturnItem
-	if err := r.db.Where("return_id = ?", returnID).Find(&items).Error; err != nil {
+func (r *PurchaseRepository) GetPurchaseReturnItems(returnID uuid.UUID) ([]map[string]interface{}, error) {
+	var items []map[string]interface{}
+
+	query := r.db.Table("purchase_return_items pri").
+		Select("pri.*, p.name AS product_name, p.sku").
+		Joins("LEFT JOIN products p ON p.id = pri.product_id").
+		Where("pri.return_id = ?", returnID)
+
+	if err := query.Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return items, nil
