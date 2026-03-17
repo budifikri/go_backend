@@ -132,6 +132,7 @@ func main() {
 	cashDrawerService := services.NewCashDrawerService(db, cashDrawerRepo, financeService)
 	companyService := services.NewCompanyService(db)
 	userService := services.NewUserService(db)
+	testDataService := services.NewTestDataService(db)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -152,6 +153,7 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService)
 	healthHandler := handlers.NewHealthHandler(db, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
 	logHandler := handlers.NewLogHandler(crudLogger)
+	testDataHandler := handlers.NewTestDataHandler(testDataService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -387,6 +389,12 @@ func main() {
 	drawers.Get("/:id/summary", cashDrawerHandler.GetSummary)
 	drawers.Get("/", cashDrawerHandler.ListCashDrawers)
 	drawers.Get("/:id", cashDrawerHandler.GetCashDrawer)
+
+	// Remove data routes
+	removeData := protected.Group("/remove-data", middleware.RoleMiddleware("admin"))
+	removeData.Delete("/master", testDataHandler.DeleteMasterData)
+	removeData.Delete("/transactions", testDataHandler.DeleteTransactionData)
+	removeData.Delete("/table", testDataHandler.DeleteTableData)
 
 	// Health check
 	app.Get("/health", healthHandler.GetHealth)
