@@ -131,6 +131,23 @@ func (r *InventoryRepository) Update(inventory *models.Inventory) error {
 }
 
 func (r *InventoryRepository) UpdateQuantity(productID, warehouseID uuid.UUID, quantity int) error {
+	// Check if inventory exists
+	var existingInv models.Inventory
+	err := r.db.First(&existingInv, "product_id = ? AND warehouse_id = ?", productID, warehouseID).Error
+	if err == gorm.ErrRecordNotFound {
+		// Create new inventory record
+		newInv := models.Inventory{
+			ID:                uuid.New(),
+			ProductID:         productID,
+			WarehouseID:       warehouseID,
+			Quantity:          quantity,
+			AvailableQuantity: quantity,
+		}
+		return r.db.Create(&newInv).Error
+	} else if err != nil {
+		return err
+	}
+	// Update existing
 	return r.db.Model(&models.Inventory{}).
 		Where("product_id = ? AND warehouse_id = ?", productID, warehouseID).
 		Updates(map[string]interface{}{
@@ -140,9 +157,29 @@ func (r *InventoryRepository) UpdateQuantity(productID, warehouseID uuid.UUID, q
 }
 
 func (r *InventoryRepository) AddStock(productID, warehouseID uuid.UUID, qty int) error {
+	// Check if inventory exists
+	var existingInv models.Inventory
+	err := r.db.First(&existingInv, "product_id = ? AND warehouse_id = ?", productID, warehouseID).Error
+	if err == gorm.ErrRecordNotFound {
+		// Create new inventory record
+		newInv := models.Inventory{
+			ID:                uuid.New(),
+			ProductID:         productID,
+			WarehouseID:       warehouseID,
+			Quantity:          qty,
+			AvailableQuantity: qty,
+		}
+		return r.db.Create(&newInv).Error
+	} else if err != nil {
+		return err
+	}
+	// Update existing - add to both quantity and available_quantity
 	return r.db.Model(&models.Inventory{}).
 		Where("product_id = ? AND warehouse_id = ?", productID, warehouseID).
-		UpdateColumn("quantity", gorm.Expr("quantity + ?", qty)).Error
+		Updates(map[string]interface{}{
+			"quantity":           gorm.Expr("quantity + ?", qty),
+			"available_quantity": gorm.Expr("available_quantity + ?", qty),
+		}).Error
 }
 
 func (r *InventoryRepository) CreateStockMovement(movement *models.StockMovement) error {
