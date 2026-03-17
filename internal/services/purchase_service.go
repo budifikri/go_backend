@@ -489,11 +489,32 @@ func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseO
 					if reqItem.QtyReceive > oldReceive && normalizeStatusReceive(input.StatusReceive) == "RECEIVE" {
 						qtyToAdd := reqItem.QtyReceive - oldReceive
 						if qtyToAdd > 0 {
-							err := tx.Model(&models.Inventory{}).
-								Where("product_id = ? AND warehouse_id = ?", items[i].ProductID, po.WarehouseID).
-								UpdateColumn("quantity", gorm.Expr("quantity + ?", qtyToAdd)).Error
-							if err != nil {
-								return err
+							// Check if inventory exists, create if not
+							var existingInv models.Inventory
+							err := tx.First(&existingInv, "product_id = ? AND warehouse_id = ?", items[i].ProductID, po.WarehouseID).Error
+							if err == gorm.ErrRecordNotFound {
+								// Create new inventory record
+								newInv := models.Inventory{
+									ID:                uuid.New(),
+									ProductID:         items[i].ProductID,
+									WarehouseID:       po.WarehouseID,
+									Quantity:          qtyToAdd,
+									AvailableQuantity: qtyToAdd,
+								}
+								if err := tx.Create(&newInv).Error; err != nil {
+									return err
+								}
+							} else if err == nil {
+								// Update existing inventory
+								err := tx.Model(&models.Inventory{}).
+									Where("product_id = ? AND warehouse_id = ?", items[i].ProductID, po.WarehouseID).
+									UpdateColumn("quantity", gorm.Expr("quantity + ?", qtyToAdd)).Error
+								if err != nil {
+									return err
+								}
+								tx.Model(&models.Inventory{}).
+									Where("product_id = ? AND warehouse_id = ?", items[i].ProductID, po.WarehouseID).
+									UpdateColumn("available_quantity", gorm.Expr("available_quantity + ?", qtyToAdd))
 							}
 
 							movement := models.StockMovement{
