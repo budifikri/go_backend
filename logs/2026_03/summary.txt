@@ -2,5 +2,9 @@
 
 Table          | CREATE | UPDATE | DELETE | ERROR
 ---------------|--------|--------|--------|-------
+sale_items     |      0 |      0 |     11 |     0
+sale_payments  |      0 |      0 |     11 |     0
+sales          |      0 |      0 |     11 |     0
+test_data_transaction |      0 |      0 |      0 |    11
 ---------------|--------|--------|--------|-------
-TOTAL          |      0 |      0 |      0 |     0
+TOTAL          |      0 |      0 |     33 |    11

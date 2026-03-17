@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  github_com_pos-retail_go_backend_internal_types_request.CashInOutRequest:
+  request.CashInOutRequest:
     properties:
       amount:
         minimum: 0
@@ -11,7 +11,7 @@ definitions:
     - amount
     - reason
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CloseCashDrawerRequest:
+  request.CloseCashDrawerRequest:
     properties:
       closing_balance:
         minimum: 0
@@ -27,7 +27,7 @@ definitions:
     required:
     - closing_balance
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateCategoryRequest:
+  request.CreateCategoryRequest:
     properties:
       code:
         type: string
@@ -41,7 +41,7 @@ definitions:
     - code
     - name
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateCompanyRequest:
+  request.CreateCompanyRequest:
     properties:
       address:
         type: string
@@ -66,7 +66,7 @@ definitions:
     - email
     - nama
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateCustomerRequest:
+  request.CreateCustomerRequest:
     properties:
       address:
         type: string
@@ -91,24 +91,24 @@ definitions:
       tier:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateExchangeRequest:
+  request.CreateExchangeRequest:
     properties:
       reason:
         type: string
       received_items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ExchangeReceivedItemRequest'
+          $ref: '#/definitions/request.ExchangeReceivedItemRequest'
         type: array
       returned_items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ExchangeReturnedItemRequest'
+          $ref: '#/definitions/request.ExchangeReturnedItemRequest'
         type: array
       sale_id:
         type: string
       warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateIncomingInvoiceRequest:
+  request.CreateIncomingInvoiceRequest:
     properties:
       attachment_path:
         type: string
@@ -118,7 +118,7 @@ definitions:
         type: string
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest'
+          $ref: '#/definitions/request.FinanceInvoiceItemRequest'
         type: array
       notes:
         type: string
@@ -129,7 +129,7 @@ definitions:
     - items
     - supplier_id
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateInvoicePaymentRequest:
+  request.CreateInvoicePaymentRequest:
     properties:
       amount:
         minimum: 0
@@ -150,7 +150,7 @@ definitions:
     - amount
     - payment_method
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateOutgoingInvoiceRequest:
+  request.CreateOutgoingInvoiceRequest:
     properties:
       attachment_path:
         type: string
@@ -162,7 +162,7 @@ definitions:
         type: string
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest'
+          $ref: '#/definitions/request.FinanceInvoiceItemRequest'
         type: array
       notes:
         type: string
@@ -170,7 +170,7 @@ definitions:
     - invoice_date
     - items
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreatePurchaseOrderRequest:
+  request.CreatePurchaseOrderRequest:
     properties:
       company_id:
         type: string
@@ -178,7 +178,7 @@ definitions:
         type: string
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.PurchaseOrderItemRequest'
+          $ref: '#/definitions/request.PurchaseOrderItemRequest'
         type: array
       notes:
         type: string
@@ -187,11 +187,30 @@ definitions:
       warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateReturnRequest:
+  request.CreatePurchaseReturnRequest:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ReturnItemRequest'
+          $ref: '#/definitions/request.PurchaseReturnItemRequest'
+        type: array
+      po_id:
+        type: string
+      reason:
+        type: string
+      return_date:
+        type: string
+      status:
+        type: string
+      supplier_id:
+        type: string
+      warehouse_id:
+        type: string
+    type: object
+  request.CreateReturnRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/request.ReturnItemRequest'
         type: array
       reason:
         type: string
@@ -202,13 +221,13 @@ definitions:
       warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateSaleRequest:
+  request.CreateSaleRequest:
     properties:
       customer_id:
         type: string
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.SaleItemRequest'
+          $ref: '#/definitions/request.SaleItemRequest'
         type: array
       loyalty_points_redeem:
         type: integer
@@ -216,12 +235,12 @@ definitions:
         type: string
       payments:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.SalePaymentRequest'
+          $ref: '#/definitions/request.SalePaymentRequest'
         type: array
       warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateSupplierRequest:
+  request.CreateSupplierRequest:
     properties:
       address:
         type: string
@@ -244,7 +263,7 @@ definitions:
       tax_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateUnitRequest:
+  request.CreateUnitRequest:
     properties:
       code:
         type: string
@@ -258,7 +277,7 @@ definitions:
     - code
     - name
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateUserRequest:
+  request.CreateUserRequest:
     properties:
       email:
         maxLength: 100
@@ -290,7 +309,7 @@ definitions:
     - password
     - username
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.CreateWarehouseRequest:
+  request.CreateWarehouseRequest:
     properties:
       address:
         type: string
@@ -316,7 +335,17 @@ definitions:
     - name
     - type
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ExchangeReceivedItemRequest:
+  request.DeleteTableRequest:
+    properties:
+      tables:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - tables
+    type: object
+  request.ExchangeReceivedItemRequest:
     properties:
       product_id:
         type: string
@@ -325,7 +354,7 @@ definitions:
       unit_price:
         type: number
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ExchangeReturnedItemRequest:
+  request.ExchangeReturnedItemRequest:
     properties:
       condition:
         type: string
@@ -336,7 +365,7 @@ definitions:
       sale_item_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest:
+  request.FinanceInvoiceItemRequest:
     properties:
       description:
         type: string
@@ -359,7 +388,7 @@ definitions:
     - quantity
     - unit_price
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.InventoryAdjustmentRequest:
+  request.InventoryAdjustmentRequest:
     properties:
       adjustment_type:
         type: string
@@ -374,7 +403,7 @@ definitions:
       warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.LoginRequest:
+  request.LoginRequest:
     properties:
       password:
         maxLength: 128
@@ -388,7 +417,7 @@ definitions:
     - password
     - username
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.OpenCashDrawerRequest:
+  request.OpenCashDrawerRequest:
     properties:
       drawer_number:
         type: string
@@ -403,7 +432,7 @@ definitions:
     - opening_balance
     - warehouse_id
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ProductCreateRequest:
+  request.ProductCreateRequest:
     properties:
       barcode:
         maxLength: 50
@@ -440,7 +469,7 @@ definitions:
     - sku
     - unit_id
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ProductUpdateRequest:
+  request.ProductUpdateRequest:
     properties:
       barcode:
         maxLength: 50
@@ -471,7 +500,7 @@ definitions:
       unit_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.PurchaseOrderItemRequest:
+  request.PurchaseOrderItemRequest:
     properties:
       discount:
         type: number
@@ -486,25 +515,44 @@ definitions:
       unit_price:
         type: number
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ReceivePurchaseOrderItemRequest:
+  request.PurchaseReturnItemRequest:
+    properties:
+      amount:
+        type: number
+      discount:
+        type: number
+      notes:
+        type: string
+      po_item_id:
+        type: string
+      product_id:
+        type: string
+      quantity:
+        type: integer
+      tax_rate:
+        type: number
+      unit_price:
+        type: number
+    type: object
+  request.ReceivePurchaseOrderItemRequest:
     properties:
       id:
         type: string
       qty_receive:
         type: integer
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ReceivePurchaseOrderRequest:
+  request.ReceivePurchaseOrderRequest:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ReceivePurchaseOrderItemRequest'
+          $ref: '#/definitions/request.ReceivePurchaseOrderItemRequest'
         type: array
       receive_date:
         type: string
       status_receive:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ReceiveTransferItemRequest:
+  request.ReceiveTransferItemRequest:
     properties:
       notes:
         type: string
@@ -513,14 +561,14 @@ definitions:
       transfer_item_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ReceiveTransferRequest:
+  request.ReceiveTransferRequest:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ReceiveTransferItemRequest'
+          $ref: '#/definitions/request.ReceiveTransferItemRequest'
         type: array
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.RegisterRequest:
+  request.RegisterRequest:
     properties:
       company_name:
         maxLength: 200
@@ -555,7 +603,7 @@ definitions:
     - password
     - username
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.ReturnItemRequest:
+  request.ReturnItemRequest:
     properties:
       condition:
         type: string
@@ -568,7 +616,7 @@ definitions:
       sale_item_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.SaleItemRequest:
+  request.SaleItemRequest:
     properties:
       product_id:
         type: string
@@ -577,7 +625,7 @@ definitions:
       quantity:
         type: integer
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.SalePaymentRequest:
+  request.SalePaymentRequest:
     properties:
       amount:
         type: number
@@ -588,7 +636,7 @@ definitions:
       reference_number:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.StockOpnameItemRequest:
+  request.StockOpnameItemRequest:
     properties:
       actual_quantity:
         type: integer
@@ -599,11 +647,11 @@ definitions:
       system_quantity:
         type: integer
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.StockOpnameRequest:
+  request.StockOpnameRequest:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockOpnameItemRequest'
+          $ref: '#/definitions/request.StockOpnameItemRequest'
         type: array
       notes:
         type: string
@@ -612,12 +660,12 @@ definitions:
       warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.StockOpnameStatusRequest:
+  request.StockOpnameStatusRequest:
     properties:
       status:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.StockOpnameUpdateItemRequest:
+  request.StockOpnameUpdateItemRequest:
     properties:
       actual_quantity:
         type: integer
@@ -632,27 +680,29 @@ definitions:
       system_quantity:
         type: integer
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.StockOpnameUpdateRequest:
+  request.StockOpnameUpdateRequest:
     properties:
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockOpnameUpdateItemRequest'
+          $ref: '#/definitions/request.StockOpnameUpdateItemRequest'
         type: array
       notes:
         type: string
       opname_date:
         type: string
+      status:
+        type: string
       warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.StockTransferItemRequest:
+  request.StockTransferItemRequest:
     properties:
       product_id:
         type: string
       quantity:
         type: integer
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.StockTransferRequest:
+  request.StockTransferRequest:
     properties:
       expected_arrival:
         type: string
@@ -660,14 +710,14 @@ definitions:
         type: string
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockTransferItemRequest'
+          $ref: '#/definitions/request.StockTransferItemRequest'
         type: array
       notes:
         type: string
       to_warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateCategoryRequest:
+  request.UpdateCategoryRequest:
     properties:
       code:
         type: string
@@ -680,7 +730,7 @@ definitions:
       parent_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateCompanyRequest:
+  request.UpdateCompanyRequest:
     properties:
       address:
         type: string
@@ -701,7 +751,7 @@ definitions:
       website:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateCustomerRequest:
+  request.UpdateCustomerRequest:
     properties:
       address:
         type: string
@@ -728,7 +778,7 @@ definitions:
       tier:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateIncomingInvoiceRequest:
+  request.UpdateIncomingInvoiceRequest:
     properties:
       due_date:
         type: string
@@ -736,7 +786,7 @@ definitions:
         type: string
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest'
+          $ref: '#/definitions/request.FinanceInvoiceItemRequest'
         type: array
       notes:
         type: string
@@ -750,7 +800,7 @@ definitions:
         - CANCELLED
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateOutgoingInvoiceRequest:
+  request.UpdateOutgoingInvoiceRequest:
     properties:
       due_date:
         type: string
@@ -758,7 +808,7 @@ definitions:
         type: string
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.FinanceInvoiceItemRequest'
+          $ref: '#/definitions/request.FinanceInvoiceItemRequest'
         type: array
       notes:
         type: string
@@ -772,13 +822,13 @@ definitions:
         - CANCELLED
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdatePurchaseOrderRequest:
+  request.UpdatePurchaseOrderRequest:
     properties:
       expected_date:
         type: string
       items:
         items:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.PurchaseOrderItemRequest'
+          $ref: '#/definitions/request.PurchaseOrderItemRequest'
         type: array
       notes:
         type: string
@@ -793,12 +843,17 @@ definitions:
       warehouse_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdatePurchaseOrderStatusRequest:
+  request.UpdatePurchaseOrderStatusRequest:
     properties:
       status:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateSupplierRequest:
+  request.UpdatePurchaseReturnStatusRequest:
+    properties:
+      status:
+        type: string
+    type: object
+  request.UpdateSupplierRequest:
     properties:
       address:
         type: string
@@ -823,7 +878,7 @@ definitions:
       tax_id:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateUnitRequest:
+  request.UpdateUnitRequest:
     properties:
       code:
         type: string
@@ -834,7 +889,7 @@ definitions:
       name:
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateUserPasswordRequest:
+  request.UpdateUserPasswordRequest:
     properties:
       password:
         maxLength: 128
@@ -843,7 +898,7 @@ definitions:
     required:
     - password
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateUserRequest:
+  request.UpdateUserRequest:
     properties:
       email:
         maxLength: 100
@@ -870,7 +925,7 @@ definitions:
         minLength: 3
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UpdateWarehouseRequest:
+  request.UpdateWarehouseRequest:
     properties:
       address:
         type: string
@@ -892,14 +947,14 @@ definitions:
         - OUTLET
         type: string
     type: object
-  github_com_pos-retail_go_backend_internal_types_request.UploadCompanyLogoRequest:
+  request.UploadCompanyLogoRequest:
     properties:
       logo:
         type: string
     required:
     - logo
     type: object
-  github_com_pos-retail_go_backend_internal_types_response.ApiResponse:
+  response.ApiResponse:
     properties:
       data: {}
       error:
@@ -909,15 +964,15 @@ definitions:
       success:
         type: boolean
     type: object
-  github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse:
+  response.PaginatedResponse:
     properties:
       data: {}
       pagination:
-        $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.Pagination'
+        $ref: '#/definitions/response.Pagination'
       success:
         type: boolean
     type: object
-  github_com_pos-retail_go_backend_internal_types_response.Pagination:
+  response.Pagination:
     properties:
       has_more:
         type: boolean
@@ -945,22 +1000,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.LoginRequest'
+          $ref: '#/definitions/request.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       summary: Login
       tags:
       - Authentication
@@ -979,11 +1034,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Logout
@@ -1000,18 +1055,18 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.RegisterRequest'
+          $ref: '#/definitions/request.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       summary: Register
       tags:
       - Authentication
@@ -1055,11 +1110,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List cash drawers
@@ -1084,15 +1139,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get cash drawer
@@ -1118,22 +1173,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CashInOutRequest'
+          $ref: '#/definitions/request.CashInOutRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Add cash in
@@ -1159,22 +1214,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CashInOutRequest'
+          $ref: '#/definitions/request.CashInOutRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Add cash out
@@ -1200,22 +1255,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CloseCashDrawerRequest'
+          $ref: '#/definitions/request.CloseCashDrawerRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Close cash drawer
@@ -1240,15 +1295,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get drawer summary
@@ -1291,11 +1346,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List drawer transactions
@@ -1319,15 +1374,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get current open drawer
@@ -1348,22 +1403,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.OpenCashDrawerRequest'
+          $ref: '#/definitions/request.OpenCashDrawerRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Open cash drawer
@@ -1397,11 +1452,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List categories
@@ -1422,30 +1477,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateCategoryRequest'
+          $ref: '#/definitions/request.CreateCategoryRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create category
@@ -1471,19 +1526,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete category
@@ -1508,15 +1563,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get category details
@@ -1542,30 +1597,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateCategoryRequest'
+          $ref: '#/definitions/request.UpdateCategoryRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update category
@@ -1599,15 +1654,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List companies (admin only)
@@ -1627,26 +1682,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateCompanyRequest'
+          $ref: '#/definitions/request.CreateCompanyRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create company (admin only)
@@ -1671,23 +1726,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete company (admin only)
@@ -1711,15 +1766,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get company
@@ -1744,30 +1799,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateCompanyRequest'
+          $ref: '#/definitions/request.UpdateCompanyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update company (admin only)
@@ -1793,30 +1848,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UploadCompanyLogoRequest'
+          $ref: '#/definitions/request.UploadCompanyLogoRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Upload company logo (admin only)
@@ -1836,15 +1891,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get current user's company
@@ -1898,11 +1953,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List customers
@@ -1922,22 +1977,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateCustomerRequest'
+          $ref: '#/definitions/request.CreateCustomerRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create customer
@@ -1962,15 +2017,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete customer
@@ -1994,15 +2049,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get customer
@@ -2027,26 +2082,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateCustomerRequest'
+          $ref: '#/definitions/request.UpdateCustomerRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update customer
@@ -2081,11 +2136,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Search customers
@@ -2120,11 +2175,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List customers by active (deprecated)
@@ -2159,11 +2214,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List customers by tier
@@ -2209,11 +2264,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List exchanges
@@ -2233,22 +2288,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateExchangeRequest'
+          $ref: '#/definitions/request.CreateExchangeRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create exchange
@@ -2273,15 +2328,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get exchange
@@ -2342,11 +2397,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List inventory
@@ -2367,22 +2422,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.InventoryAdjustmentRequest'
+          $ref: '#/definitions/request.InventoryAdjustmentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Adjust inventory
@@ -2414,21 +2469,29 @@ paths:
         in: query
         name: to_date
         type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get stock card
@@ -2478,11 +2541,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List incoming invoices
@@ -2502,22 +2565,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateIncomingInvoiceRequest'
+          $ref: '#/definitions/request.CreateIncomingInvoiceRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create incoming invoice
@@ -2542,15 +2605,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get incoming invoice
@@ -2575,22 +2638,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateIncomingInvoiceRequest'
+          $ref: '#/definitions/request.UpdateIncomingInvoiceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update incoming invoice
@@ -2615,15 +2678,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Cancel incoming invoice
@@ -2649,22 +2712,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateInvoicePaymentRequest'
+          $ref: '#/definitions/request.CreateInvoicePaymentRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Add incoming invoice payment
@@ -2689,15 +2752,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Send incoming invoice
@@ -2747,11 +2810,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List outgoing invoices
@@ -2771,22 +2834,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateOutgoingInvoiceRequest'
+          $ref: '#/definitions/request.CreateOutgoingInvoiceRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create outgoing invoice
@@ -2811,15 +2874,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get outgoing invoice
@@ -2844,22 +2907,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateOutgoingInvoiceRequest'
+          $ref: '#/definitions/request.UpdateOutgoingInvoiceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update outgoing invoice
@@ -2884,15 +2947,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Cancel outgoing invoice
@@ -2918,22 +2981,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateInvoicePaymentRequest'
+          $ref: '#/definitions/request.CreateInvoicePaymentRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Add outgoing invoice payment
@@ -2958,15 +3021,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Send outgoing invoice
@@ -2998,15 +3061,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get invoice summary
@@ -3046,19 +3109,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get CRUD logs by table
@@ -3093,19 +3156,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get error logs by month
@@ -3125,15 +3188,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List available log files by month
@@ -3153,15 +3216,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Save CRUD summary to file
@@ -3181,11 +3244,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get CRUD logs summary
@@ -3223,11 +3286,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List price tiers
@@ -3254,15 +3317,15 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create price tier
@@ -3287,15 +3350,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete price tier
@@ -3319,15 +3382,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get price tier
@@ -3359,19 +3422,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update price tier
@@ -3417,11 +3480,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List products
@@ -3441,22 +3504,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ProductCreateRequest'
+          $ref: '#/definitions/request.ProductCreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create product
@@ -3481,15 +3544,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete product
@@ -3513,15 +3576,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get product
@@ -3546,22 +3609,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ProductUpdateRequest'
+          $ref: '#/definitions/request.ProductUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update product
@@ -3607,11 +3670,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List promotions
@@ -3638,15 +3701,15 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create promotion
@@ -3671,15 +3734,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete promotion
@@ -3703,15 +3766,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get promotion
@@ -3743,24 +3806,253 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update promotion
       tags:
       - Promotions
+  /api/purchase-returns:
+    get:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Warehouse ID
+        in: query
+        name: warehouse_id
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: From date
+        in: query
+        name: from_date
+        type: string
+      - description: To date
+        in: query
+        name: to_date
+        type: string
+      - description: Search
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PaginatedResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: List purchase returns
+      tags:
+      - PurchaseReturns
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase return payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreatePurchaseReturnRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Create purchase return
+      tags:
+      - PurchaseReturns
+  /api/purchase-returns/{id}:
+    delete:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Return ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete purchase return
+      tags:
+      - PurchaseReturns
+    get:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Return ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get purchase return
+      tags:
+      - PurchaseReturns
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Return ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Purchase return payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreatePurchaseReturnRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update purchase return
+      tags:
+      - PurchaseReturns
+  /api/purchase-returns/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Purchase Return ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdatePurchaseReturnStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update purchase return status
+      tags:
+      - PurchaseReturns
   /api/purchases:
     get:
       parameters:
@@ -3809,11 +4101,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List purchase orders
@@ -3833,22 +4125,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreatePurchaseOrderRequest'
+          $ref: '#/definitions/request.CreatePurchaseOrderRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create purchase order
@@ -3873,15 +4165,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete purchase order permanently
@@ -3905,15 +4197,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get purchase order
@@ -3938,26 +4230,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdatePurchaseOrderRequest'
+          $ref: '#/definitions/request.UpdatePurchaseOrderRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update purchase order
@@ -3982,19 +4274,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Approve purchase order
@@ -4019,15 +4311,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Cancel purchase order
@@ -4052,19 +4344,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Set purchase order to PENDING
@@ -4090,26 +4382,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ReceivePurchaseOrderRequest'
+          $ref: '#/definitions/request.ReceivePurchaseOrderRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Receive purchase order items
@@ -4135,31 +4427,91 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdatePurchaseOrderStatusRequest'
+          $ref: '#/definitions/request.UpdatePurchaseOrderStatusRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update purchase order status
       tags:
       - Purchases
+  /api/remove-data/master:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes all master data (units, categories, warehouses, products,
+        price_tiers, customers, suppliers, promotions) for the user's company
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Clear all master data
+      tags:
+      - Remove Data
+  /api/remove-data/table:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes data from specified tables for the user's company
+      parameters:
+      - description: Tables to delete
+        in: body
+        name: tables
+        required: true
+        schema:
+          $ref: '#/definitions/request.DeleteTableRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Clear specific tables
+      tags:
+      - Remove Data
+  /api/remove-data/transactions:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes all transaction data (sales, purchases, inventory, invoices,
+        etc) for the user's company
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Clear all transaction data
+      tags:
+      - Remove Data
   /api/returns:
     get:
       parameters:
@@ -4200,11 +4552,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List returns
@@ -4224,22 +4576,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateReturnRequest'
+          $ref: '#/definitions/request.CreateReturnRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create return
@@ -4264,15 +4616,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get return
@@ -4334,11 +4686,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List sales
@@ -4358,22 +4710,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateSaleRequest'
+          $ref: '#/definitions/request.CreateSaleRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create sale
@@ -4398,15 +4750,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get sale
@@ -4456,11 +4808,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List stock opnames
@@ -4480,22 +4832,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockOpnameRequest'
+          $ref: '#/definitions/request.StockOpnameRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create stock opname
@@ -4520,19 +4872,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete stock opname
@@ -4556,15 +4908,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get stock opname
@@ -4589,26 +4941,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockOpnameUpdateRequest'
+          $ref: '#/definitions/request.StockOpnameUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update stock opname
@@ -4634,22 +4986,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockOpnameStatusRequest'
+          $ref: '#/definitions/request.StockOpnameStatusRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update stock opname status
@@ -4670,22 +5022,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.StockTransferRequest'
+          $ref: '#/definitions/request.StockTransferRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create stock transfer
@@ -4711,22 +5063,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.ReceiveTransferRequest'
+          $ref: '#/definitions/request.ReceiveTransferRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Receive stock transfer
@@ -4780,11 +5132,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List suppliers
@@ -4804,22 +5156,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateSupplierRequest'
+          $ref: '#/definitions/request.CreateSupplierRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create supplier
@@ -4844,15 +5196,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete supplier
@@ -4876,15 +5228,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get supplier
@@ -4909,22 +5261,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateSupplierRequest'
+          $ref: '#/definitions/request.UpdateSupplierRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update supplier
@@ -4959,11 +5311,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List suppliers by payment terms
@@ -4998,11 +5350,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Search suppliers
@@ -5037,11 +5389,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List suppliers by active (deprecated)
@@ -5075,11 +5427,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List units
@@ -5100,26 +5452,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateUnitRequest'
+          $ref: '#/definitions/request.CreateUnitRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create unit
@@ -5145,15 +5497,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete unit
@@ -5178,15 +5530,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get unit details
@@ -5212,26 +5564,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateUnitRequest'
+          $ref: '#/definitions/request.UpdateUnitRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update unit
@@ -5273,15 +5625,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List users
@@ -5301,26 +5653,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateUserRequest'
+          $ref: '#/definitions/request.CreateUserRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create user
@@ -5345,19 +5697,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete user
@@ -5381,19 +5733,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get user
@@ -5418,30 +5770,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateUserRequest'
+          $ref: '#/definitions/request.UpdateUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update user
@@ -5467,30 +5819,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateUserPasswordRequest'
+          $ref: '#/definitions/request.UpdateUserPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update user password
@@ -5533,11 +5885,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.PaginatedResponse'
+            $ref: '#/definitions/response.PaginatedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: List warehouses
@@ -5558,26 +5910,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.CreateWarehouseRequest'
+          $ref: '#/definitions/request.CreateWarehouseRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Create warehouse
@@ -5603,15 +5955,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Delete warehouse
@@ -5636,15 +5988,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Get warehouse details
@@ -5670,30 +6022,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_request.UpdateWarehouseRequest'
+          $ref: '#/definitions/request.UpdateWarehouseRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_pos-retail_go_backend_internal_types_response.ApiResponse'
+            $ref: '#/definitions/response.ApiResponse'
       security:
       - BearerAuth: []
       summary: Update warehouse
