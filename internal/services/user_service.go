@@ -27,6 +27,7 @@ type CreateUserInput struct {
 	Email     string
 	Password  string
 	FullName  string
+	Phone     string
 	Role      string
 	IsActive  *bool
 	CompanyID string
@@ -37,6 +38,7 @@ type UpdateUserInput struct {
 	Email    *string
 	Password *string
 	FullName *string
+	Phone    *string
 	Role     *string
 	IsActive *bool
 }
@@ -130,6 +132,7 @@ func (s *UserService) CreateUser(input CreateUserInput) response.ApiResponse {
 		Email:     input.Email,
 		Password:  hashedPassword,
 		FullName:  input.FullName,
+		Phone:     input.Phone,
 		Role:      role,
 		Status:    status,
 		IsActive:  isActive,
@@ -172,6 +175,9 @@ func (s *UserService) UpdateUser(id, companyID string, input UpdateUserInput) re
 	}
 	if input.FullName != nil {
 		updates["full_name"] = *input.FullName
+	}
+	if input.Phone != nil {
+		updates["phone"] = *input.Phone
 	}
 	if input.Role != nil {
 		updates["role"] = *input.Role

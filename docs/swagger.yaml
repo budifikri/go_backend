@@ -292,6 +292,9 @@ definitions:
         maxLength: 128
         minLength: 6
         type: string
+      phone:
+        maxLength: 20
+        type: string
       role:
         enum:
         - admin
@@ -912,6 +915,9 @@ definitions:
       password:
         maxLength: 128
         minLength: 6
+        type: string
+      phone:
+        maxLength: 20
         type: string
       role:
         enum:
@@ -5597,7 +5603,7 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: Search by username/email/full_name
+      - description: Search by username/email/full_name/phone
         in: query
         name: search
         type: string
@@ -5648,7 +5654,8 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: User payload
+      - description: User payload (username, email, password, full_name, phone, role,
+          is_active)
         in: body
         name: body
         required: true
@@ -5765,7 +5772,8 @@ paths:
         name: id
         required: true
         type: string
-      - description: Update payload
+      - description: Update payload (username, email, password, full_name, phone,
+          role, is_active)
         in: body
         name: body
         required: true

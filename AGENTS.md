@@ -48,14 +48,22 @@ go vet ./... && go test ./...
 docker-compose up -d db
 ```
 
+### API Documentation (Swagger)
+```bash
+# IMPORTANT: Always output to docs/ folder, NOT internal/docs/
+# The app reads swagger.json from docs/ folder (see docs/register_docs_stub.go)
+# DO NOT use -o internal/docs or internal/swagger
+swag init -g cmd/server/main.go -o docs
+```
+
 ## Project Structure
 
 ```
 cmd/server/main.go       # Application entry point
+docs/                   # Swagger documentation (served at /docs)
 internal/
 ├── config/              # Configuration loading (.env)
 ├── database/           # GORM database connection
-├── docs/               # Swagger documentation
 ├── handlers/           # HTTP handlers (Fiber)
 ├── middleware/         # Auth, validation, CORS
 ├── models/              # GORM database models

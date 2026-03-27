@@ -23,7 +23,7 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 // @Tags Users
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param search query string false "Search by username/email/full_name"
+// @Param search query string false "Search by username/email/full_name/phone"
 // @Param role query string false "Role"
 // @Param is_active query bool false "Filter by active"
 // @Param limit query int false "Limit" default(50)
@@ -85,7 +85,7 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param body body request.CreateUserRequest true "User payload"
+// @Param body body request.CreateUserRequest true "User payload (username, email, password, full_name, phone, role, is_active)"
 // @Success 201 {object} response.ApiResponse
 // @Failure 400 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
@@ -116,6 +116,7 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 		Email:     req.Email,
 		Password:  req.Password,
 		FullName:  req.FullName,
+		Phone:     req.Phone,
 		Role:      req.Role,
 		IsActive:  req.IsActive,
 		CompanyID: user.CompanyID,
@@ -134,7 +135,7 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param id path string true "User ID"
-// @Param body body request.UpdateUserRequest true "Update payload"
+// @Param body body request.UpdateUserRequest true "Update payload (username, email, password, full_name, phone, role, is_active)"
 // @Success 200 {object} response.ApiResponse
 // @Failure 400 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
@@ -166,6 +167,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		Email:    req.Email,
 		Password: req.Password,
 		FullName: req.FullName,
+		Phone:    req.Phone,
 		Role:     req.Role,
 		IsActive: req.IsActive,
 	})

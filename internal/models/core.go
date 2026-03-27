@@ -28,13 +28,13 @@ const (
 
 // User model
 type User struct {
-	ID       uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	Username string    `gorm:"type:varchar(50);uniqueIndex;notNull" json:"username"`
-	Email    string    `gorm:"type:varchar(100);uniqueIndex;notNull" json:"email"`
-	Password string    `gorm:"type:text;notNull" json:"-"`
-	FullName string    `gorm:"type:varchar(100);notNull" json:"full_name"`
-	Role     UserRole  `gorm:"type:varchar(20);notNull;default:'staff'" json:"role"`
-	// Legacy multi-status column kept for DB compatibility.
+	ID        uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Username  string     `gorm:"type:varchar(50);uniqueIndex;notNull" json:"username"`
+	Email     string     `gorm:"type:varchar(100);uniqueIndex;notNull" json:"email"`
+	Password  string     `gorm:"type:text;notNull" json:"-"`
+	FullName  string     `gorm:"type:varchar(100);notNull" json:"full_name"`
+	Phone     string     `gorm:"type:varchar(20)" json:"phone"`
+	Role      UserRole   `gorm:"type:varchar(20);notNull;default:'staff'" json:"role"`
 	Status    UserStatus `gorm:"column:status;type:varchar(20);notNull;default:'active'" json:"-"`
 	IsActive  bool       `gorm:"column:is_active;notNull;default:true" json:"is_active"`
 	CompanyID uuid.UUID  `gorm:"type:uuid;notNull" json:"company_id"`

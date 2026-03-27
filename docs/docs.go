@@ -7201,7 +7201,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Search by username/email/full_name",
+                        "description": "Search by username/email/full_name/phone",
                         "name": "search",
                         "in": "query"
                     },
@@ -7278,7 +7278,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "User payload",
+                        "description": "User payload (username, email, password, full_name, phone, role, is_active)",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -7404,7 +7404,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Update payload",
+                        "description": "Update payload (username, email, password, full_name, phone, role, is_active)",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -8334,6 +8334,10 @@ const docTemplate = `{
                     "maxLength": 128,
                     "minLength": 6
                 },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 20
+                },
                 "role": {
                     "type": "string",
                     "enum": [
@@ -9239,6 +9243,10 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 128,
                     "minLength": 6
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "role": {
                     "type": "string",

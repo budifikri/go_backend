@@ -5,6 +5,7 @@ type CreateUserRequest struct {
 	Email    string `json:"email" validate:"required,email,max=100"`
 	Password string `json:"password" validate:"required,min=6,max=128"`
 	FullName string `json:"full_name" validate:"required,min=2,max=100"`
+	Phone    string `json:"phone" validate:"omitempty,max=20"`
 	Role     string `json:"role" validate:"omitempty,oneof=admin manager cashier staff"`
 	IsActive *bool  `json:"is_active" validate:"omitempty"`
 }
@@ -14,6 +15,7 @@ type UpdateUserRequest struct {
 	Email    *string `json:"email" validate:"omitempty,email,max=100"`
 	Password *string `json:"password" validate:"omitempty,min=6,max=128"`
 	FullName *string `json:"full_name" validate:"omitempty,min=2,max=100"`
+	Phone    *string `json:"phone" validate:"omitempty,max=20"`
 	Role     *string `json:"role" validate:"omitempty,oneof=admin manager cashier staff"`
 	IsActive *bool   `json:"is_active" validate:"omitempty"`
 }
