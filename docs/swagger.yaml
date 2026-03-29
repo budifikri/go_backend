@@ -223,11 +223,14 @@ definitions:
     type: object
   request.CreateSaleRequest:
     properties:
+      cash_drawer_id:
+        type: string
       customer_id:
         type: string
       items:
         items:
           $ref: '#/definitions/request.SaleItemRequest'
+        minItems: 1
         type: array
       loyalty_points_redeem:
         type: integer
@@ -237,8 +240,20 @@ definitions:
         items:
           $ref: '#/definitions/request.SalePaymentRequest'
         type: array
+      status:
+        enum:
+        - PENDING
+        - DONE
+        - CANCELLED
+        - REFUNDED
+        type: string
       warehouse_id:
         type: string
+    required:
+    - cash_drawer_id
+    - items
+    - status
+    - warehouse_id
     type: object
   request.CreateSupplierRequest:
     properties:
@@ -4711,7 +4726,7 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: Sale payload
+      - description: Sale payload (warehouse_id, cash_drawer_id, status, items)
         in: body
         name: body
         required: true

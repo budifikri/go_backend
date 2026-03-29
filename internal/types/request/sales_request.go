@@ -14,9 +14,11 @@ type SalePaymentRequest struct {
 }
 
 type CreateSaleRequest struct {
-	WarehouseID         string               `json:"warehouse_id"`
+	WarehouseID         string               `json:"warehouse_id" validate:"required"`
 	CustomerID          string               `json:"customer_id"`
-	Items               []SaleItemRequest    `json:"items"`
+	CashDrawerID        string               `json:"cash_drawer_id" validate:"required"`
+	Status              string               `json:"status" validate:"required,oneof=PENDING DONE CANCELLED REFUNDED"`
+	Items               []SaleItemRequest    `json:"items" validate:"required,min=1"`
 	Payments            []SalePaymentRequest `json:"payments"`
 	LoyaltyPointsRedeem int                  `json:"loyalty_points_redeem"`
 	Notes               string               `json:"notes"`

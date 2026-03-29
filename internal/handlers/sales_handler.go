@@ -22,7 +22,7 @@ func NewSalesHandler(salesService *services.SalesService) *SalesHandler {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param body body request.CreateSaleRequest true "Sale payload"
+// @Param body body request.CreateSaleRequest true "Sale payload (warehouse_id, cash_drawer_id, status, items)"
 // @Success 201 {object} response.ApiResponse
 // @Failure 400 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
@@ -61,6 +61,8 @@ func (h *SalesHandler) CreateSale(c *fiber.Ctx) error {
 	result := h.salesService.CreateSale(services.CreateSaleInput{
 		WarehouseID:         req.WarehouseID,
 		CustomerID:          req.CustomerID,
+		CashDrawerID:        req.CashDrawerID,
+		Status:              req.Status,
 		Items:               items,
 		Payments:            payments,
 		LoyaltyPointsRedeem: req.LoyaltyPointsRedeem,

@@ -5813,7 +5813,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Sale payload",
+                        "description": "Sale payload (warehouse_id, cash_drawer_id, status, items)",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -8225,12 +8225,22 @@ const docTemplate = `{
         },
         "request.CreateSaleRequest": {
             "type": "object",
+            "required": [
+                "cash_drawer_id",
+                "items",
+                "status",
+                "warehouse_id"
+            ],
             "properties": {
+                "cash_drawer_id": {
+                    "type": "string"
+                },
                 "customer_id": {
                     "type": "string"
                 },
                 "items": {
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/request.SaleItemRequest"
                     }
@@ -8246,6 +8256,15 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/request.SalePaymentRequest"
                     }
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "PENDING",
+                        "DONE",
+                        "CANCELLED",
+                        "REFUNDED"
+                    ]
                 },
                 "warehouse_id": {
                     "type": "string"

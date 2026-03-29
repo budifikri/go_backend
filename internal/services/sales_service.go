@@ -39,6 +39,8 @@ type CreateSalePaymentInput struct {
 type CreateSaleInput struct {
 	WarehouseID         string
 	CustomerID          string
+	CashDrawerID        string
+	Status              string
 	Items               []CreateSaleItemInput
 	Payments            []CreateSalePaymentInput
 	LoyaltyPointsRedeem int
@@ -217,6 +219,19 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 		saleNumber := fmt.Sprintf("SLS-%s-%03d", time.Now().Format("20060102"), rand.Intn(1000))
 		loyaltyEarned := int(math.Floor(totalAmount / 10000.0))
 
+		saleStatus := models.SaleStatus(input.Status)
+		if saleStatus == "" {
+			saleStatus = models.SaleStatusDone
+		}
+
+		var cashDrawerID *uuid.UUID
+		if input.CashDrawerID != "" {
+			cid, err := uuid.Parse(input.CashDrawerID)
+			if err == nil {
+				cashDrawerID = &cid
+			}
+		}
+
 		createdSale = models.Sale{
 			ID:                    uuid.New(),
 			SaleNumber:            saleNumber,
@@ -224,8 +239,9 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			CustomerID:            customerID,
 			CashierID:             cashierUUID,
 			CompanyID:             companyID,
+			CashDrawerID:          cashDrawerID,
 			SaleDate:              time.Now(),
-			Status:                models.SaleStatusDone,
+			Status:                saleStatus,
 			Subtotal:              subtotal,
 			DiscountAmount:        discountTotal,
 			TaxAmount:             taxTotal,
