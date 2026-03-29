@@ -5730,6 +5730,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Cash Drawer ID",
+                        "name": "cash_drawer_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Sale status",
                         "name": "status",
                         "in": "query"

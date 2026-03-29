@@ -103,6 +103,7 @@ func (h *SalesHandler) GetSale(c *fiber.Ctx) error {
 // @Param warehouse_id query string false "Warehouse ID"
 // @Param customer_id query string false "Customer ID"
 // @Param cashier_id query string false "Cashier ID"
+// @Param cash_drawer_id query string false "Cash Drawer ID"
 // @Param status query string false "Sale status"
 // @Param date_from query string false "From date (YYYY-MM-DD)"
 // @Param date_to query string false "To date (YYYY-MM-DD)"
@@ -120,6 +121,7 @@ func (h *SalesHandler) GetSales(c *fiber.Ctx) error {
 	filters["warehouse_id"] = c.Query("warehouse_id")
 	filters["customer_id"] = c.Query("customer_id")
 	filters["cashier_id"] = c.Query("cashier_id")
+	filters["cash_drawer_id"] = c.Query("cash_drawer_id")
 	filters["status"] = c.Query("status")
 	filters["date_from"] = c.Query("date_from")
 	filters["date_to"] = c.Query("date_to")

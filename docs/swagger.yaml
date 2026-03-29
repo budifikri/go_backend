@@ -4671,6 +4671,10 @@ paths:
         in: query
         name: cashier_id
         type: string
+      - description: Cash Drawer ID
+        in: query
+        name: cash_drawer_id
+        type: string
       - description: Sale status
         in: query
         name: status

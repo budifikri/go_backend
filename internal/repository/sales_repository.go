@@ -48,6 +48,9 @@ func (r *SalesRepository) FindSales(filters map[string]string, limit, offset int
 	if v := filters["cashier_id"]; v != "" {
 		query = query.Where("s.cashier_id = ?", v)
 	}
+	if v := filters["cash_drawer_id"]; v != "" {
+		query = query.Where("s.cash_drawer_id = ?", v)
+	}
 	if v := filters["status"]; v != "" {
 		query = query.Where("s.status = ?", v)
 	}
