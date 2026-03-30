@@ -850,22 +850,26 @@ func (s *InventoryService) UpdateStockOpnameStatus(id, status, userID string) re
 	if status == "COMPLETED" && currentStatus == models.StockOpnameStatusDraft {
 		for _, item := range opname.Items {
 			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, opname.WarehouseID)
-			if inventory != nil {
-				newQty := inventory.Quantity + item.Difference
-				s.inventoryRepo.UpdateQuantity(item.ProductID, opname.WarehouseID, newQty)
 
-				movement := models.StockMovement{
-					ID:            uuid.New(),
-					ProductID:     item.ProductID,
-					WarehouseID:   opname.WarehouseID,
-					MovementType:  models.MovementTypeOpname,
-					Quantity:      item.Difference,
-					ReferenceType: "STOCK_OPNAME",
-					ReferenceID:   &opname.ID,
-					Notes:         "Stock opname adjustment",
-				}
-				s.inventoryRepo.CreateStockMovement(&movement)
+			currentQty := 0
+			if inventory != nil {
+				currentQty = inventory.Quantity
 			}
+
+			newQty := currentQty + item.Difference
+			s.inventoryRepo.UpdateQuantity(item.ProductID, opname.WarehouseID, newQty)
+
+			movement := models.StockMovement{
+				ID:            uuid.New(),
+				ProductID:     item.ProductID,
+				WarehouseID:   opname.WarehouseID,
+				MovementType:  models.MovementTypeOpname,
+				Quantity:      item.Difference,
+				ReferenceType: "STOCK_OPNAME",
+				ReferenceID:   &opname.ID,
+				Notes:         "Stock opname adjustment",
+			}
+			s.inventoryRepo.CreateStockMovement(&movement)
 		}
 		opname.Status = models.StockOpnameStatusCompleted
 	} else if status == "APPROVED" && currentStatus == models.StockOpnameStatusCompleted {
@@ -996,27 +1000,31 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 
 		for _, item := range items {
 			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, opname.WarehouseID)
+
+			currentQty := 0
 			if inventory != nil {
-				newQty := inventory.Quantity + item.Difference
-				s.inventoryRepo.UpdateQuantity(item.ProductID, opname.WarehouseID, newQty)
-
-				notes := item.Notes
-				if notes == "" {
-					notes = "Stock opname adjustment - approved"
-				}
-
-				movement := models.StockMovement{
-					ID:            uuid.New(),
-					ProductID:     item.ProductID,
-					WarehouseID:   opname.WarehouseID,
-					MovementType:  models.MovementTypeOpname,
-					Quantity:      item.Difference,
-					ReferenceType: "STOCK_OPNAME",
-					ReferenceID:   &opnameID,
-					Notes:         notes,
-				}
-				s.inventoryRepo.CreateStockMovement(&movement)
+				currentQty = inventory.Quantity
 			}
+
+			newQty := currentQty + item.Difference
+			s.inventoryRepo.UpdateQuantity(item.ProductID, opname.WarehouseID, newQty)
+
+			notes := item.Notes
+			if notes == "" {
+				notes = "Stock opname adjustment - approved"
+			}
+
+			movement := models.StockMovement{
+				ID:            uuid.New(),
+				ProductID:     item.ProductID,
+				WarehouseID:   opname.WarehouseID,
+				MovementType:  models.MovementTypeOpname,
+				Quantity:      item.Difference,
+				ReferenceType: "STOCK_OPNAME",
+				ReferenceID:   &opnameID,
+				Notes:         notes,
+			}
+			s.inventoryRepo.CreateStockMovement(&movement)
 		}
 	}
 
