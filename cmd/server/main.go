@@ -346,6 +346,8 @@ func main() {
 	priceTiers.Post("/", priceTierHandler.CreatePriceTier)
 	priceTiers.Put("/:id", priceTierHandler.UpdatePriceTier)
 	priceTiers.Delete("/:id", priceTierHandler.DeletePriceTier)
+	priceTiers.Get("/product/:product_id", priceTierHandler.GetPriceTiersByProduct)
+	priceTiers.Post("/product/:product_id", priceTierHandler.SaveProductPriceTiers)
 
 	// Company routes
 	companies := protected.Group("/companies")

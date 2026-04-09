@@ -169,3 +169,48 @@ func (s *PriceTierService) DeletePriceTier(id string) response.ApiResponse {
 	}
 	return response.NewSuccessResponse(nil, "Price tier deleted successfully")
 }
+
+type PriceTierInput struct {
+	TierName    string  `json:"tier_name"`
+	MinQuantity int     `json:"min_quantity"`
+	MaxQuantity *int    `json:"max_quantity,omitempty"`
+	UnitPrice   float64 `json:"unit_price"`
+}
+
+func (s *PriceTierService) SaveProductPriceTiers(productID string, tiers []PriceTierInput) response.ApiResponse {
+	pid, err := uuid.Parse(productID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid product ID")
+	}
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("product_id = ?", pid).Delete(&models.PriceTier{}).Error; err != nil {
+			return err
+		}
+
+		var createdTiers []models.PriceTier
+		for _, tier := range tiers {
+			pt := models.PriceTier{
+				ID:          uuid.New(),
+				ProductID:   pid,
+				TierName:    tier.TierName,
+				MinQuantity: tier.MinQuantity,
+				MaxQuantity: tier.MaxQuantity,
+				UnitPrice:   tier.UnitPrice,
+				IsActive:    true,
+				CreatedAt:   time.Now(),
+			}
+			if err := tx.Create(&pt).Error; err != nil {
+				return err
+			}
+			createdTiers = append(createdTiers, pt)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return response.NewErrorResponse("Failed to save price tiers")
+	}
+	return response.NewSuccessResponse(nil, "Price tiers saved successfully")
+}
