@@ -342,6 +342,7 @@ func main() {
 	// Price tier routes
 	priceTiers := protected.Group("/price-tiers")
 	priceTiers.Get("/", priceTierHandler.GetPriceTiers)
+	priceTiers.Get("/report/by-product", priceTierHandler.GetPriceTierReportByProduct)
 	priceTiers.Get("/:id", priceTierHandler.GetPriceTier)
 	priceTiers.Post("/", priceTierHandler.CreatePriceTier)
 	priceTiers.Put("/:id", priceTierHandler.UpdatePriceTier)

@@ -3791,6 +3791,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/price-tiers/report/by-product": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Automatically filtered by logged-in user's company",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PriceTiers"
+                ],
+                "summary": "List grouped price tiers by product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search product name or SKU",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "all",
+                        "description": "Data scope: all|grosir",
+                        "name": "scope",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/handlers.PriceTierReportByProductRow"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/price-tiers/{id}": {
             "get": {
                 "security": [
@@ -8030,6 +8118,50 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.PriceTierReportByProductRow": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string"
+                },
+                "category_name": {
+                    "type": "string"
+                },
+                "grosir_1_price": {
+                    "type": "number"
+                },
+                "grosir_1_qty": {
+                    "type": "integer"
+                },
+                "grosir_2_price": {
+                    "type": "number"
+                },
+                "grosir_2_qty": {
+                    "type": "integer"
+                },
+                "grosir_3_price": {
+                    "type": "number"
+                },
+                "grosir_3_qty": {
+                    "type": "integer"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "retail_price": {
+                    "type": "number"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "unit_name": {
+                    "type": "string"
+                }
+            }
+        },
         "request.CashInOutRequest": {
             "type": "object",
             "required": [

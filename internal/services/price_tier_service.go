@@ -51,6 +51,93 @@ func (s *PriceTierService) GetPriceTiers(productID *string, search string, limit
 	return response.NewPaginatedResponse(rows, total, limit, offset)
 }
 
+func (s *PriceTierService) GetPriceTierReportByProduct(companyID *string, search, scope string, categoryID *string, limit, offset int) response.PaginatedResponse {
+	if limit <= 0 {
+		limit = 10
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	if scope == "" {
+		scope = "all"
+	}
+
+	rankedQuery := s.db.Table("price_tiers pt").
+		Select(`
+			pt.product_id,
+			pt.min_quantity,
+			pt.unit_price,
+			ROW_NUMBER() OVER (PARTITION BY pt.product_id ORDER BY pt.min_quantity ASC, pt.created_at ASC) AS rn
+		`).
+		Where("pt.is_active = true")
+
+	tierSummaryQuery := s.db.Table("(?) AS ranked", rankedQuery).
+		Select(`
+			product_id,
+			MAX(CASE WHEN rn = 1 THEN unit_price END) AS grosir_1_price,
+			MAX(CASE WHEN rn = 1 THEN min_quantity END) AS grosir_1_qty,
+			MAX(CASE WHEN rn = 2 THEN unit_price END) AS grosir_2_price,
+			MAX(CASE WHEN rn = 2 THEN min_quantity END) AS grosir_2_qty,
+			MAX(CASE WHEN rn = 3 THEN unit_price END) AS grosir_3_price,
+			MAX(CASE WHEN rn = 3 THEN min_quantity END) AS grosir_3_qty,
+			TRUE AS has_tier
+		`).
+		Group("product_id")
+
+	query := s.db.Table("products p").
+		Select(`
+			p.id AS product_id,
+			p.sku,
+			p.name AS product_name,
+			COALESCE(u.name, u.code, '-') AS unit_name,
+			COALESCE(c.name, '-') AS category_name,
+			p.category_id,
+			p.retail_price,
+			COALESCE(t.grosir_1_price, 0) AS grosir_1_price,
+			COALESCE(t.grosir_1_qty, 0) AS grosir_1_qty,
+			COALESCE(t.grosir_2_price, 0) AS grosir_2_price,
+			COALESCE(t.grosir_2_qty, 0) AS grosir_2_qty,
+			COALESCE(t.grosir_3_price, 0) AS grosir_3_price,
+			COALESCE(t.grosir_3_qty, 0) AS grosir_3_qty,
+			COALESCE(t.has_tier, FALSE) AS has_tier
+		`).
+		Joins("LEFT JOIN units_of_measure u ON u.id = p.unit_id").
+		Joins("LEFT JOIN categories c ON c.id = p.category_id").
+		Joins("LEFT JOIN (?) t ON t.product_id = p.id", tierSummaryQuery).
+		Where("p.is_active = true")
+
+	if companyID != nil && *companyID != "" {
+		query = query.Where("p.company_id = ?", *companyID)
+	}
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("p.name ILIKE ? OR p.sku ILIKE ?", like, like)
+	}
+	if categoryID != nil && *categoryID != "" {
+		query = query.Where("p.category_id = ?", *categoryID)
+	}
+	if scope == "grosir" {
+		query = query.Where("COALESCE(t.has_tier, FALSE) = TRUE")
+	}
+
+	var total int64
+	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
+	}
+
+	var rows []map[string]interface{}
+	err := query.
+		Order("product_name ASC").
+		Limit(limit).
+		Offset(offset).
+		Find(&rows).Error
+	if err != nil {
+		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
+	}
+
+	return response.NewPaginatedResponse(rows, total, limit, offset)
+}
+
 func (s *PriceTierService) GetPriceTierByID(id string) response.ApiResponse {
 	tid, err := uuid.Parse(id)
 	if err != nil {

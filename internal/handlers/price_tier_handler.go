@@ -4,12 +4,29 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
 	"github.com/pos-retail/go_backend/internal/types/response"
 )
 
 type PriceTierHandler struct {
 	priceTierService *services.PriceTierService
+}
+
+type PriceTierReportByProductRow struct {
+	ProductID    string  `json:"product_id"`
+	SKU          string  `json:"sku"`
+	ProductName  string  `json:"product_name"`
+	UnitName     string  `json:"unit_name"`
+	CategoryID   string  `json:"category_id"`
+	CategoryName string  `json:"category_name"`
+	RetailPrice  float64 `json:"retail_price"`
+	Grosir1Price float64 `json:"grosir_1_price"`
+	Grosir1Qty   int     `json:"grosir_1_qty"`
+	Grosir2Price float64 `json:"grosir_2_price"`
+	Grosir2Qty   int     `json:"grosir_2_qty"`
+	Grosir3Price float64 `json:"grosir_3_price"`
+	Grosir3Qty   int     `json:"grosir_3_qty"`
 }
 
 func NewPriceTierHandler(priceTierService *services.PriceTierService) *PriceTierHandler {
@@ -38,6 +55,38 @@ func (h *PriceTierHandler) GetPriceTiers(c *fiber.Ctx) error {
 	offset := c.QueryInt("offset", 0)
 
 	result := h.priceTierService.GetPriceTiers(pid, c.Query("search"), limit, offset)
+	return c.JSON(result)
+}
+
+// GetPriceTierReportByProduct godoc
+// @Summary List grouped price tiers by product
+// @Description Automatically filtered by logged-in user's company
+// @Tags PriceTiers
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param search query string false "Search product name or SKU"
+// @Param scope query string false "Data scope: all|grosir" default(all)
+// @Param category_id query string false "Category ID"
+// @Param limit query int false "Limit" default(10)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse{data=[]handlers.PriceTierReportByProductRow}
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/price-tiers/report/by-product [get]
+func (h *PriceTierHandler) GetPriceTierReportByProduct(c *fiber.Ctx) error {
+	var companyID *string
+	if user := middleware.GetUserFromContext(c); user != nil && user.CompanyID != "" {
+		companyID = &user.CompanyID
+	}
+	var categoryID *string
+	if v := c.Query("category_id"); v != "" {
+		categoryID = &v
+	}
+	scope := c.Query("scope", "all")
+	limit := c.QueryInt("limit", 10)
+	offset := c.QueryInt("offset", 0)
+
+	result := h.priceTierService.GetPriceTierReportByProduct(companyID, c.Query("search"), scope, categoryID, limit, offset)
 	return c.JSON(result)
 }
 
