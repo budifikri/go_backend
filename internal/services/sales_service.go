@@ -214,11 +214,11 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 
 			finalUnitPrice := retailPrice
 			note := ""
-			priceTierID = nil
 
 			if discountPerUnit > 0 {
 				finalUnitPrice = retailPrice - discountPerUnit
 				note = promoNotes
+				priceTierID = nil
 			} else if hasTier {
 				finalUnitPrice = tierPrice
 				note = tierNotes
