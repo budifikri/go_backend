@@ -114,6 +114,10 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 	}
 	// Normalize promotion type to uppercase enum
 	pType = normalizePromoType(pType)
+	// Default to PERCENTAGE if empty
+	if pType == "" {
+		pType = "PERCENTAGE"
+	}
 
 	scope, _ := body["scope_type"].(string)
 	if scope == "" {
@@ -121,6 +125,10 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 	}
 	// Normalize scope to uppercase enum
 	scope = normalizeScope(scope)
+	// Default to ALL if empty
+	if scope == "" {
+		scope = "ALL"
+	}
 
 	dd, _ := body["discount_value"].(float64)
 	minPurchase, _ := body["min_purchase_amount"].(float64)
