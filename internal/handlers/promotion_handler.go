@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,9 +24,9 @@ func NewPromotionHandler(promotionService *services.PromotionService) *Promotion
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param is_active query bool false "Is active"
-// @Param type query string false "Promotion type"
-// @Param scope query string false "Scope"
-// @Param search query string false "Search"
+// @Param type query string false "Promotion type (PERCENTAGE, FIXED_AMOUNT, BUY_X_GET_Y, FLASH_SALE)"
+// @Param scope query string false "Scope (ALL, BY_CATEGORY, BY_PRODUCT)"
+// @Param search query string false "Search by code or name"
 // @Param limit query int false "Limit" default(50)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {object} response.PaginatedResponse
@@ -77,6 +79,19 @@ func (h *PromotionHandler) GetPromotion(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param body body object true "Promotion payload"
+// @Param body.code string false "Promotion code (auto-generated if not provided)"
+// @Param body.name string true "Promotion name"
+// @Param body.promotion_type string false "PERCENTAGE, FIXED_AMOUNT, BUY_X_GET_Y, FLASH_SALE"
+// @Param body.scope string false "ALL, BY_CATEGORY, BY_PRODUCT"
+// @Param body.discount_value number false "Discount value (percentage or fixed amount)"
+// @Param body.buy_quantity number false "Buy quantity (for BUY_X_GET_Y)"
+// @Param body.get_quantity number false "Free quantity (for BUY_X_GET_Y)"
+// @Param body.start_date string true "Start date (RFC3339)"
+// @Param body.start_time string false "Start time HH:MM (for FLASH_SALE)"
+// @Param body.end_date string true "End date (RFC3339)"
+// @Param body.end_time string false "End time HH:MM (for FLASH_SALE)"
+// @Param body.product_ids array false "Product IDs (if scope=BY_PRODUCT)"
+// @Param body.category_ids array false "Category IDs (if scope=BY_CATEGORY)"
 // @Success 201 {object} response.ApiResponse
 // @Failure 400 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
@@ -91,21 +106,86 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 	code, _ := body["code"].(string)
 	name, _ := body["name"].(string)
 	desc, _ := body["description"].(string)
-	pType, _ := body["promotion_type"].(string)
-	scope, _ := body["scope"].(string)
+
+	// Handle field name variations
+	pType, _ := body["promo_type"].(string)
+	if pType == "" {
+		pType, _ = body["promotion_type"].(string)
+	}
+	// Normalize promotion type to uppercase enum
+	pType = normalizePromoType(pType)
+
+	scope, _ := body["scope_type"].(string)
+	if scope == "" {
+		scope, _ = body["scope"].(string)
+	}
+	// Normalize scope to uppercase enum
+	scope = normalizeScope(scope)
+
 	dd, _ := body["discount_value"].(float64)
 	minPurchase, _ := body["min_purchase_amount"].(float64)
 	maxDiscount, _ := body["max_discount_amount"].(float64)
 	buyQty, _ := body["buy_quantity"].(float64)
 	getQty, _ := body["get_quantity"].(float64)
-	startStr, _ := body["start_date"].(string)
-	startTime, _ := body["start_time"].(string)
-	endStr, _ := body["end_date"].(string)
-	endTime, _ := body["end_time"].(string)
 	usageLimitFloat, _ := body["usage_limit"].(float64)
 
-	start, _ := time.Parse(time.RFC3339, startStr)
-	end, _ := time.Parse(time.RFC3339, endStr)
+	fmt.Printf("[DEBUG] body keys: %v\n", reflect.ValueOf(body).MapKeys())
+
+	// Get start_date properly with existence check
+	startStr := ""
+	if v, ok := body["start_date"]; ok {
+		if s, ok := v.(string); ok {
+			startStr = s
+		}
+	}
+	endStr := ""
+	if v, ok := body["end_date"]; ok {
+		if s, ok := v.(string); ok {
+			endStr = s
+		}
+	}
+	startTime := ""
+	if v, ok := body["start_time"]; ok {
+		if s, ok := v.(string); ok {
+			startTime = s
+		}
+	}
+	endTime := ""
+	if v, ok := body["end_time"]; ok {
+		if s, ok := v.(string); ok {
+			endTime = s
+		}
+	}
+
+	fmt.Printf("[DEBUG] startStr='%s', endStr='%s'\n", startStr, endStr)
+
+	var startPtr, endPtr *time.Time
+	var startTimePtr, endTimePtr *string
+
+	// Simple direct parse for format "2026-04-01"
+	if startStr != "" {
+		// Parse as date only (midnight UTC)
+		t, err := time.Parse("2006-01-02", startStr)
+		if err == nil {
+			startPtr = &t
+			fmt.Printf("[DEBUG] start date parsed: %v\n", t)
+		}
+	}
+	if endStr != "" {
+		t, err := time.Parse("2006-01-02", endStr)
+		if err == nil {
+			endPtr = &t
+			fmt.Printf("[DEBUG] end date parsed: %v\n", t)
+		}
+	}
+
+	// Handle times
+	if startTime != "" {
+		startTimePtr = &startTime
+	}
+	if endTime != "" {
+		endTimePtr = &endTime
+	}
 
 	var buyQtyPtr *int
 	if _, ok := body["buy_quantity"]; ok {
@@ -116,14 +196,6 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 	if _, ok := body["get_quantity"]; ok {
 		n := int(getQty)
 		getQtyPtr = &n
-	}
-	var startTimePtr *string
-	if startTime != "" {
-		startTimePtr = &startTime
-	}
-	var endTimePtr *string
-	if endTime != "" {
-		endTimePtr = &endTime
 	}
 
 	var descPtr *string
@@ -173,9 +245,9 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 		MaxDiscountAmount: maxPtr,
 		BuyQuantity:       buyQtyPtr,
 		GetQuantity:       getQtyPtr,
-		StartDate:         start,
+		StartDate:         startPtr,
 		StartTime:         startTimePtr,
-		EndDate:           end,
+		EndDate:           endPtr,
 		EndTime:           endTimePtr,
 		UsageLimit:        usageLimit,
 		ProductIDs:        getStringSlice("product_ids"),
@@ -197,6 +269,15 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 // @Param Authorization header string true "Bearer token"
 // @Param id path string true "Promotion ID"
 // @Param body body object true "Update payload"
+// @Param body.promotion_type string false "PERCENTAGE, FIXED_AMOUNT, BUY_X_GET_Y, FLASH_SALE"
+// @Param body.scope string false "ALL, BY_CATEGORY, BY_PRODUCT"
+// @Param body.discount_value number false "Discount value"
+// @Param body.buy_quantity number false "Buy quantity (for BUY_X_GET_Y)"
+// @Param body.get_quantity number false "Free quantity (for BUY_X_GET_Y)"
+// @Param body.start_time string false "Start time HH:MM (for FLASH_SALE)"
+// @Param body.end_time string false "End time HH:MM (for FLASH_SALE)"
+// @Param body.product_ids array false "Product IDs"
+// @Param body.category_ids array false "Category IDs"
 // @Success 200 {object} response.ApiResponse
 // @Failure 400 {object} response.ApiResponse
 // @Failure 401 {object} response.ApiResponse
@@ -321,4 +402,30 @@ func parseStringSlice(v interface{}) []string {
 		}
 	}
 	return out
+}
+
+func normalizePromoType(t string) string {
+	switch t {
+	case "percentage":
+		return "PERCENTAGE"
+	case "fixed_amount":
+		return "FIXED_AMOUNT"
+	case "buy_x_get_y":
+		return "BUY_X_GET_Y"
+	case "flash_sale":
+		return "FLASH_SALE"
+	}
+	return t
+}
+
+func normalizeScope(s string) string {
+	switch s {
+	case "all":
+		return "ALL"
+	case "by_category":
+		return "BY_CATEGORY"
+	case "by_product":
+		return "BY_PRODUCT"
+	}
+	return s
 }

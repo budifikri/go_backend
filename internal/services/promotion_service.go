@@ -114,9 +114,9 @@ type CreatePromotionInput struct {
 	MaxDiscountAmount *float64
 	BuyQuantity       *int
 	GetQuantity       *int
-	StartDate         time.Time
+	StartDate         *time.Time
 	StartTime         *string
-	EndDate           time.Time
+	EndDate           *time.Time
 	EndTime           *string
 	UsageLimit        *int
 	ProductIDs        []string
@@ -126,7 +126,9 @@ type CreatePromotionInput struct {
 
 func (s *PromotionService) CreatePromotion(input CreatePromotionInput) response.ApiResponse {
 	var created models.Promotion
+	fmt.Printf("[DEBUG] CreatePromotion: Code=%s, Name=%s\n", input.Code, input.Name)
 	err := s.db.Transaction(func(tx *gorm.DB) error {
+		now := time.Now()
 		promo := models.Promotion{
 			ID:            uuid.New(),
 			Code:          input.Code,
@@ -135,11 +137,19 @@ func (s *PromotionService) CreatePromotion(input CreatePromotionInput) response.
 			PromotionType: input.PromotionType,
 			Scope:         input.Scope,
 			DiscountValue: input.DiscountValue,
-			StartDate:     input.StartDate,
-			EndDate:       input.EndDate,
+			StartDate:     now,
+			EndDate:       now.AddDate(0, 1, 0),
+			StartTime:     "",
+			EndTime:       "",
 			IsActive:      true,
 			UsageCount:    0,
-			CreatedAt:     time.Now(),
+			CreatedAt:     now,
+		}
+		if input.StartDate != nil && !input.StartDate.IsZero() {
+			promo.StartDate = *input.StartDate
+		}
+		if input.EndDate != nil && !input.EndDate.IsZero() {
+			promo.EndDate = *input.EndDate
 		}
 		if input.Description != nil {
 			promo.Description = *input.Description
@@ -150,16 +160,16 @@ func (s *PromotionService) CreatePromotion(input CreatePromotionInput) response.
 		if input.MaxDiscountAmount != nil {
 			promo.MaxDiscountAmount = input.MaxDiscountAmount
 		}
-		if input.BuyQuantity != nil {
+		if input.BuyQuantity != nil && *input.BuyQuantity > 0 {
 			promo.BuyQuantity = *input.BuyQuantity
 		}
-		if input.GetQuantity != nil {
+		if input.GetQuantity != nil && *input.GetQuantity > 0 {
 			promo.GetQuantity = *input.GetQuantity
 		}
-		if input.StartTime != nil {
+		if input.StartTime != nil && *input.StartTime != "" {
 			promo.StartTime = *input.StartTime
 		}
-		if input.EndTime != nil {
+		if input.EndTime != nil && *input.EndTime != "" {
 			promo.EndTime = *input.EndTime
 		}
 		promo.UsageLimit = input.UsageLimit
