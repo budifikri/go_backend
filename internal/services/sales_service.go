@@ -158,6 +158,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			var priceTierID *uuid.UUID
 
 			var tier models.PriceTier
+			hasTier := false
 			_ = tx.
 				Where("product_id = ? AND is_active = true AND min_quantity <= ? AND (max_quantity IS NULL OR max_quantity >= ?)", pid, item.Quantity, item.Quantity).
 				Order("min_quantity DESC").
@@ -168,51 +169,42 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				tierNotes = fmt.Sprintf("Grosir %d", tier.MinQuantity)
 				tid := tier.ID
 				priceTierID = &tid
+				hasTier = true
 			}
 
 			var discountPerUnit float64
 			promoNotes := ""
 			var promotionID *uuid.UUID
 			if item.PromotionCode != "" {
+				fmt.Printf("[PROMO] Looking for promo: %s\n", item.PromotionCode)
 				var promo promotionRow
 				pErr := tx.Raw(
-					"SELECT id, code, name, promotion_type, discount_value, buy_quantity, get_quantity, start_date, start_time, end_date, end_time, is_active FROM promotions WHERE code = ? LIMIT 1",
+					"SELECT id, code, name, promotion_type, discount_value, buy_quantity, get_quantity FROM promotions WHERE LOWER(code) = LOWER(?) AND is_active = true LIMIT 1",
 					item.PromotionCode,
 				).Scan(&promo).Error
 				if pErr == nil && promo.ID != uuid.Nil {
-					if promo.IsActive {
-						isValidTime := promo.EndDate.IsZero() || !promo.EndDate.Before(time.Now())
-						if !promo.StartDate.IsZero() && promo.StartDate.After(time.Now()) {
-							isValidTime = false
-						}
-						if promo.StartTime != "" && promo.EndTime != "" {
-							now := time.Now()
-							currentTime := now.Format("15:04")
-							if currentTime < promo.StartTime || currentTime > promo.EndTime {
-								isValidTime = false
+					fmt.Printf("[PROMO] Found: %s - %s, discount: %v\n", promo.Code, promo.Name, promo.DiscountValue)
+					switch promo.PromotionType {
+					case "PERCENTAGE":
+						discountPerUnit = retailPrice * (promo.DiscountValue / 100.0)
+					case "FIXED_AMOUNT":
+						discountPerUnit = promo.DiscountValue
+					case "BUY_X_GET_Y":
+						if item.Quantity >= promo.BuyQuantity {
+							freeItems := (item.Quantity / promo.BuyQuantity) * promo.GetQuantity
+							if freeItems > 0 {
+								discountPerUnit = retailPrice
 							}
 						}
-						if isValidTime {
-							switch promo.PromotionType {
-							case "PERCENTAGE":
-								discountPerUnit = retailPrice * (promo.DiscountValue / 100.0)
-							case "FIXED_AMOUNT":
-								discountPerUnit = promo.DiscountValue
-							case "BUY_X_GET_Y":
-								if item.Quantity >= promo.BuyQuantity {
-									freeItems := (item.Quantity / promo.BuyQuantity) * promo.GetQuantity
-									if freeItems > 0 {
-										discountPerUnit = retailPrice
-									}
-								}
-							case "FLASH_SALE":
-								discountPerUnit = tierPrice * (promo.DiscountValue / 100.0)
-							}
-							pid := promo.ID
-							promotionID = &pid
-							promoNotes = fmt.Sprintf("%s - %s", promo.Code, promo.Name)
-						}
+					case "FLASH_SALE":
+						discountPerUnit = retailPrice * (promo.DiscountValue / 100.0)
+					default:
+						discountPerUnit = retailPrice * (promo.DiscountValue / 100.0)
 					}
+					fmt.Printf("[PROMO] Discount: %v\n", discountPerUnit)
+					pid := promo.ID
+					promotionID = &pid
+					promoNotes = fmt.Sprintf("%s - %s", promo.Code, promo.Name)
 				}
 			}
 
@@ -222,11 +214,12 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 
 			finalUnitPrice := retailPrice
 			note := ""
+			priceTierID = nil
 
 			if discountPerUnit > 0 {
 				finalUnitPrice = retailPrice - discountPerUnit
 				note = promoNotes
-			} else if tierPrice < retailPrice && promotionID == nil {
+			} else if hasTier {
 				finalUnitPrice = tierPrice
 				note = tierNotes
 			}
