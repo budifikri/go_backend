@@ -115,9 +115,9 @@ type CreatePromotionInput struct {
 	BuyQuantity       *int
 	GetQuantity       *int
 	StartDate         *time.Time
-	StartTime         *string
+	StartTime         *time.Time
 	EndDate           *time.Time
-	EndTime           *string
+	EndTime           *time.Time
 	UsageLimit        *int
 	ProductIDs        []string
 	CategoryIDs       []string
@@ -139,8 +139,8 @@ func (s *PromotionService) CreatePromotion(input CreatePromotionInput) response.
 			DiscountValue: input.DiscountValue,
 			StartDate:     now,
 			EndDate:       now.AddDate(0, 1, 0),
-			StartTime:     "00:00:00",
-			EndTime:       "00:00:00",
+			StartTime:     nil,
+			EndTime:       nil,
 			IsActive:      true,
 			UsageCount:    0,
 			CreatedAt:     now,
@@ -166,11 +166,11 @@ func (s *PromotionService) CreatePromotion(input CreatePromotionInput) response.
 		if input.GetQuantity != nil && *input.GetQuantity > 0 {
 			promo.GetQuantity = *input.GetQuantity
 		}
-		if input.StartTime != nil && *input.StartTime != "" {
-			promo.StartTime = *input.StartTime
+		if input.StartTime != nil {
+			promo.StartTime = input.StartTime
 		}
-		if input.EndTime != nil && *input.EndTime != "" {
-			promo.EndTime = *input.EndTime
+		if input.EndTime != nil {
+			promo.EndTime = input.EndTime
 		}
 		promo.UsageLimit = input.UsageLimit
 
@@ -248,9 +248,9 @@ type UpdatePromotionInput struct {
 	BuyQuantity       *int
 	GetQuantity       *int
 	StartDate         *time.Time
-	StartTime         *string
+	StartTime         *time.Time
 	EndDate           *time.Time
-	EndTime           *string
+	EndTime           *time.Time
 	IsActive          *bool
 	UsageLimit        *int
 	ProductIDs        *[]string

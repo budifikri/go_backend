@@ -168,7 +168,7 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 	fmt.Printf("[DEBUG] startStr='%s', endStr='%s'\n", startStr, endStr)
 
 	var startPtr, endPtr *time.Time
-	var startTimePtr, endTimePtr *string
+	var startTimePtr, endTimePtr *time.Time
 
 	// Simple direct parse for format "2026-04-01"
 	if startStr != "" {
@@ -198,12 +198,24 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 		fmt.Printf("[DEBUG] end date defaulted to one month from now: %v\n", *endPtr)
 	}
 
-	// Handle times
+	// Handle times - parse from "HH:MM" or "HH:MM:SS" format
 	if startTime != "" {
-		startTimePtr = &startTime
+		if t, err := time.Parse("15:04", startTime); err == nil {
+			startTimePtr = &t
+			fmt.Printf("[DEBUG] start time parsed: %v\n", t)
+		} else if t, err := time.Parse("15:04:05", startTime); err == nil {
+			startTimePtr = &t
+			fmt.Printf("[DEBUG] start time parsed (seconds): %v\n", t)
+		}
 	}
 	if endTime != "" {
-		endTimePtr = &endTime
+		if t, err := time.Parse("15:04", endTime); err == nil {
+			endTimePtr = &t
+			fmt.Printf("[DEBUG] end time parsed: %v\n", t)
+		} else if t, err := time.Parse("15:04:05", endTime); err == nil {
+			endTimePtr = &t
+			fmt.Printf("[DEBUG] end time parsed (seconds): %v\n", t)
+		}
 	}
 
 	var buyQtyPtr *int
@@ -350,20 +362,28 @@ func (h *PromotionHandler) UpdatePromotion(c *fiber.Ctx) error {
 		input.UsageLimit = &n
 	}
 	if v, ok := body["start_date"].(string); ok {
-		if t, err := time.Parse(time.RFC3339, v); err == nil {
+		if t, err := time.Parse("2006-01-02", v); err == nil {
 			input.StartDate = &t
 		}
 	}
 	if v, ok := body["start_time"].(string); ok {
-		input.StartTime = &v
+		if t, err := time.Parse("15:04", v); err == nil {
+			input.StartTime = &t
+		} else if t, err := time.Parse("15:04:05", v); err == nil {
+			input.StartTime = &t
+		}
 	}
 	if v, ok := body["end_date"].(string); ok {
-		if t, err := time.Parse(time.RFC3339, v); err == nil {
+		if t, err := time.Parse("2006-01-02", v); err == nil {
 			input.EndDate = &t
 		}
 	}
 	if v, ok := body["end_time"].(string); ok {
-		input.EndTime = &v
+		if t, err := time.Parse("15:04", v); err == nil {
+			input.EndTime = &t
+		} else if t, err := time.Parse("15:04:05", v); err == nil {
+			input.EndTime = &t
+		}
 	}
 	// association lists
 	if v, ok := body["product_ids"]; ok {
