@@ -58,10 +58,13 @@ type ProcessedSaleItem struct {
 	LineTotal      float64    `json:"line_total"`
 	PromotionID    *uuid.UUID `json:"promotion_id,omitempty"`
 	PriceTierID    *uuid.UUID `json:"price_tier_id,omitempty"`
+	Notes          string     `json:"notes,omitempty"`
 }
 
 type promotionRow struct {
 	ID            uuid.UUID `gorm:"column:id"`
+	Code          string    `gorm:"column:code"`
+	Name          string    `gorm:"column:name"`
 	PromotionType string    `gorm:"column:promotion_type"`
 	DiscountValue float64   `gorm:"column:discount_value"`
 	BuyQuantity   int       `gorm:"column:buy_quantity"`
@@ -149,8 +152,11 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				return fmt.Errorf("Insufficient stock for product %s", product.Name)
 			}
 
-			unitPrice := product.RetailPrice
+			retailPrice := product.RetailPrice
+			tierPrice := retailPrice
+			tierNotes := ""
 			var priceTierID *uuid.UUID
+
 			var tier models.PriceTier
 			_ = tx.
 				Where("product_id = ? AND is_active = true AND min_quantity <= ? AND (max_quantity IS NULL OR max_quantity >= ?)", pid, item.Quantity, item.Quantity).
@@ -158,17 +164,19 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				Limit(1).
 				Find(&tier).Error
 			if tier.ID != uuid.Nil {
-				unitPrice = tier.UnitPrice
+				tierPrice = tier.UnitPrice
+				tierNotes = fmt.Sprintf("Grosir %d", tier.MinQuantity)
 				tid := tier.ID
 				priceTierID = &tid
 			}
 
-			discountPerUnit := 0.0
+			var discountPerUnit float64
+			promoNotes := ""
 			var promotionID *uuid.UUID
 			if item.PromotionCode != "" {
 				var promo promotionRow
 				pErr := tx.Raw(
-					"SELECT id, promotion_type, discount_value, buy_quantity, get_quantity, start_date, start_time, end_date, end_time, is_active FROM promotions WHERE code = ? LIMIT 1",
+					"SELECT id, code, name, promotion_type, discount_value, buy_quantity, get_quantity, start_date, start_time, end_date, end_time, is_active FROM promotions WHERE code = ? LIMIT 1",
 					item.PromotionCode,
 				).Scan(&promo).Error
 				if pErr == nil && promo.ID != uuid.Nil {
@@ -187,21 +195,22 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 						if isValidTime {
 							switch promo.PromotionType {
 							case "PERCENTAGE":
-								discountPerUnit = unitPrice * (promo.DiscountValue / 100.0)
+								discountPerUnit = retailPrice * (promo.DiscountValue / 100.0)
 							case "FIXED_AMOUNT":
 								discountPerUnit = promo.DiscountValue
 							case "BUY_X_GET_Y":
 								if item.Quantity >= promo.BuyQuantity {
 									freeItems := (item.Quantity / promo.BuyQuantity) * promo.GetQuantity
 									if freeItems > 0 {
-										discountPerUnit = unitPrice
+										discountPerUnit = retailPrice
 									}
 								}
 							case "FLASH_SALE":
-								discountPerUnit = unitPrice * (promo.DiscountValue / 100.0)
+								discountPerUnit = tierPrice * (promo.DiscountValue / 100.0)
 							}
 							pid := promo.ID
 							promotionID = &pid
+							promoNotes = fmt.Sprintf("%s - %s", promo.Code, promo.Name)
 						}
 					}
 				}
@@ -210,29 +219,41 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			if discountPerUnit < 0 {
 				discountPerUnit = 0
 			}
-			netUnit := unitPrice - discountPerUnit
-			if netUnit < 0 {
-				netUnit = 0
+
+			finalUnitPrice := retailPrice
+			note := ""
+
+			if discountPerUnit > 0 {
+				finalUnitPrice = retailPrice - discountPerUnit
+				note = promoNotes
+			} else if tierPrice < retailPrice {
+				finalUnitPrice = tierPrice
+				note = tierNotes
 			}
 
-			lineNet := netUnit * float64(item.Quantity)
+			if finalUnitPrice < 0 {
+				finalUnitPrice = 0
+			}
+
+			lineNet := finalUnitPrice * float64(item.Quantity)
 			lineTax := lineNet * (product.TaxRate / 100.0)
 			lineTotal := lineNet + lineTax
 
 			subtotal += lineNet
-			discountTotal += discountPerUnit * float64(item.Quantity)
+			discountTotal += (retailPrice - finalUnitPrice) * float64(item.Quantity)
 			taxTotal += lineTax
 
 			processed = append(processed, ProcessedSaleItem{
 				ProductID:      pid,
 				Quantity:       item.Quantity,
-				UnitPrice:      unitPrice,
-				OriginalPrice:  unitPrice,
-				DiscountAmount: discountPerUnit,
+				UnitPrice:      finalUnitPrice,
+				OriginalPrice:  retailPrice,
+				DiscountAmount: retailPrice - finalUnitPrice,
 				TaxRate:        product.TaxRate,
 				LineTotal:      lineTotal,
 				PromotionID:    promotionID,
 				PriceTierID:    priceTierID,
+				Notes:          note,
 			})
 		}
 
@@ -296,6 +317,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				TaxRate:        item.TaxRate,
 				PriceTierID:    item.PriceTierID,
 				PromotionID:    item.PromotionID,
+				Notes:          item.Notes,
 			}
 			if err := tx.Create(&si).Error; err != nil {
 				return err
