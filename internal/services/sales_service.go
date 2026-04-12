@@ -226,7 +226,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			if discountPerUnit > 0 {
 				finalUnitPrice = retailPrice - discountPerUnit
 				note = promoNotes
-			} else if tierPrice < retailPrice {
+			} else if tierPrice < retailPrice && promotionID == nil {
 				finalUnitPrice = tierPrice
 				note = tierNotes
 			}
