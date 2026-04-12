@@ -178,6 +178,11 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 			startPtr = &t
 			fmt.Printf("[DEBUG] start date parsed: %v\n", t)
 		}
+	} else {
+		// Default to now if not provided
+		now := time.Now()
+		startPtr = &now
+		fmt.Printf("[DEBUG] start date defaulted to now: %v\n", now)
 	}
 	if endStr != "" {
 		t, err := time.Parse("2006-01-02", endStr)
@@ -185,6 +190,12 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 			endPtr = &t
 			fmt.Printf("[DEBUG] end date parsed: %v\n", t)
 		}
+	} else {
+		// Default to one month from now if not provided
+		now := time.Now()
+		endDate := now.AddDate(0, 1, 0)
+		endPtr = &endDate
+		fmt.Printf("[DEBUG] end date defaulted to one month from now: %v\n", *endPtr)
 	}
 
 	// Handle times
