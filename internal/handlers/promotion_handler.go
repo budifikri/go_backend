@@ -96,12 +96,35 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 	dd, _ := body["discount_value"].(float64)
 	minPurchase, _ := body["min_purchase_amount"].(float64)
 	maxDiscount, _ := body["max_discount_amount"].(float64)
+	buyQty, _ := body["buy_quantity"].(float64)
+	getQty, _ := body["get_quantity"].(float64)
 	startStr, _ := body["start_date"].(string)
+	startTime, _ := body["start_time"].(string)
 	endStr, _ := body["end_date"].(string)
+	endTime, _ := body["end_time"].(string)
 	usageLimitFloat, _ := body["usage_limit"].(float64)
 
 	start, _ := time.Parse(time.RFC3339, startStr)
 	end, _ := time.Parse(time.RFC3339, endStr)
+
+	var buyQtyPtr *int
+	if _, ok := body["buy_quantity"]; ok {
+		n := int(buyQty)
+		buyQtyPtr = &n
+	}
+	var getQtyPtr *int
+	if _, ok := body["get_quantity"]; ok {
+		n := int(getQty)
+		getQtyPtr = &n
+	}
+	var startTimePtr *string
+	if startTime != "" {
+		startTimePtr = &startTime
+	}
+	var endTimePtr *string
+	if endTime != "" {
+		endTimePtr = &endTime
+	}
 
 	var descPtr *string
 	if desc != "" {
@@ -148,8 +171,12 @@ func (h *PromotionHandler) CreatePromotion(c *fiber.Ctx) error {
 		DiscountValue:     dd,
 		MinPurchaseAmount: minPtr,
 		MaxDiscountAmount: maxPtr,
+		BuyQuantity:       buyQtyPtr,
+		GetQuantity:       getQtyPtr,
 		StartDate:         start,
+		StartTime:         startTimePtr,
 		EndDate:           end,
+		EndTime:           endTimePtr,
 		UsageLimit:        usageLimit,
 		ProductIDs:        getStringSlice("product_ids"),
 		CategoryIDs:       getStringSlice("category_ids"),
@@ -192,6 +219,12 @@ func (h *PromotionHandler) UpdatePromotion(c *fiber.Ctx) error {
 	if v, ok := body["description"].(string); ok {
 		input.Description = &v
 	}
+	if v, ok := body["promotion_type"].(string); ok {
+		input.PromotionType = &v
+	}
+	if v, ok := body["scope"].(string); ok {
+		input.Scope = &v
+	}
 	if v, ok := body["discount_value"].(float64); ok {
 		input.DiscountValue = &v
 	}
@@ -200,6 +233,14 @@ func (h *PromotionHandler) UpdatePromotion(c *fiber.Ctx) error {
 	}
 	if v, ok := body["max_discount_amount"].(float64); ok {
 		input.MaxDiscountAmount = &v
+	}
+	if v, ok := body["buy_quantity"].(float64); ok {
+		n := int(v)
+		input.BuyQuantity = &n
+	}
+	if v, ok := body["get_quantity"].(float64); ok {
+		n := int(v)
+		input.GetQuantity = &n
 	}
 	if v, ok := body["is_active"].(bool); ok {
 		input.IsActive = &v
@@ -213,10 +254,16 @@ func (h *PromotionHandler) UpdatePromotion(c *fiber.Ctx) error {
 			input.StartDate = &t
 		}
 	}
+	if v, ok := body["start_time"].(string); ok {
+		input.StartTime = &v
+	}
 	if v, ok := body["end_date"].(string); ok {
 		if t, err := time.Parse(time.RFC3339, v); err == nil {
 			input.EndDate = &t
 		}
+	}
+	if v, ok := body["end_time"].(string); ok {
+		input.EndTime = &v
 	}
 	// association lists
 	if v, ok := body["product_ids"]; ok {

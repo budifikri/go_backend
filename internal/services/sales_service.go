@@ -64,7 +64,12 @@ type promotionRow struct {
 	ID            uuid.UUID `gorm:"column:id"`
 	PromotionType string    `gorm:"column:promotion_type"`
 	DiscountValue float64   `gorm:"column:discount_value"`
+	BuyQuantity   int       `gorm:"column:buy_quantity"`
+	GetQuantity   int       `gorm:"column:get_quantity"`
+	StartDate     time.Time `gorm:"column:start_date"`
+	StartTime     string    `gorm:"column:start_time"`
 	EndDate       time.Time `gorm:"column:end_date"`
+	EndTime       string    `gorm:"column:end_time"`
 	IsActive      bool      `gorm:"column:is_active"`
 }
 
@@ -163,19 +168,41 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			if item.PromotionCode != "" {
 				var promo promotionRow
 				pErr := tx.Raw(
-					"SELECT id, promotion_type, discount_value, end_date, is_active FROM promotions WHERE code = ? LIMIT 1",
+					"SELECT id, promotion_type, discount_value, buy_quantity, get_quantity, start_date, start_time, end_date, end_time, is_active FROM promotions WHERE code = ? LIMIT 1",
 					item.PromotionCode,
 				).Scan(&promo).Error
 				if pErr == nil && promo.ID != uuid.Nil {
-					if promo.IsActive && (promo.EndDate.IsZero() || !promo.EndDate.Before(time.Now())) {
-						switch promo.PromotionType {
-						case "PERCENTAGE":
-							discountPerUnit = unitPrice * (promo.DiscountValue / 100.0)
-						case "FIXED_AMOUNT":
-							discountPerUnit = promo.DiscountValue
+					if promo.IsActive {
+						isValidTime := promo.EndDate.IsZero() || !promo.EndDate.Before(time.Now())
+						if !promo.StartDate.IsZero() && promo.StartDate.After(time.Now()) {
+							isValidTime = false
 						}
-						pid := promo.ID
-						promotionID = &pid
+						if promo.StartTime != "" && promo.EndTime != "" {
+							now := time.Now()
+							currentTime := now.Format("15:04")
+							if currentTime < promo.StartTime || currentTime > promo.EndTime {
+								isValidTime = false
+							}
+						}
+						if isValidTime {
+							switch promo.PromotionType {
+							case "PERCENTAGE":
+								discountPerUnit = unitPrice * (promo.DiscountValue / 100.0)
+							case "FIXED_AMOUNT":
+								discountPerUnit = promo.DiscountValue
+							case "BUY_X_GET_Y":
+								if item.Quantity >= promo.BuyQuantity {
+									freeItems := (item.Quantity / promo.BuyQuantity) * promo.GetQuantity
+									if freeItems > 0 {
+										discountPerUnit = unitPrice
+									}
+								}
+							case "FLASH_SALE":
+								discountPerUnit = unitPrice * (promo.DiscountValue / 100.0)
+							}
+							pid := promo.ID
+							promotionID = &pid
+						}
 					}
 				}
 			}

@@ -86,8 +86,12 @@ func (s *PromotionService) GetPromotionByID(id string) response.ApiResponse {
 	data["discount_value"] = promo.DiscountValue
 	data["min_purchase_amount"] = promo.MinPurchaseAmount
 	data["max_discount_amount"] = promo.MaxDiscountAmount
+	data["buy_quantity"] = promo.BuyQuantity
+	data["get_quantity"] = promo.GetQuantity
 	data["start_date"] = promo.StartDate
+	data["start_time"] = promo.StartTime
 	data["end_date"] = promo.EndDate
+	data["end_time"] = promo.EndTime
 	data["is_active"] = promo.IsActive
 	data["usage_limit"] = promo.UsageLimit
 	data["usage_count"] = promo.UsageCount
@@ -108,8 +112,12 @@ type CreatePromotionInput struct {
 	DiscountValue     float64
 	MinPurchaseAmount *float64
 	MaxDiscountAmount *float64
+	BuyQuantity       *int
+	GetQuantity       *int
 	StartDate         time.Time
+	StartTime         *string
 	EndDate           time.Time
+	EndTime           *string
 	UsageLimit        *int
 	ProductIDs        []string
 	CategoryIDs       []string
@@ -141,6 +149,18 @@ func (s *PromotionService) CreatePromotion(input CreatePromotionInput) response.
 		}
 		if input.MaxDiscountAmount != nil {
 			promo.MaxDiscountAmount = input.MaxDiscountAmount
+		}
+		if input.BuyQuantity != nil {
+			promo.BuyQuantity = *input.BuyQuantity
+		}
+		if input.GetQuantity != nil {
+			promo.GetQuantity = *input.GetQuantity
+		}
+		if input.StartTime != nil {
+			promo.StartTime = *input.StartTime
+		}
+		if input.EndTime != nil {
+			promo.EndTime = *input.EndTime
 		}
 		promo.UsageLimit = input.UsageLimit
 
@@ -194,8 +214,12 @@ func (s *PromotionService) CreatePromotion(input CreatePromotionInput) response.
 		"discount_value":      created.DiscountValue,
 		"min_purchase_amount": created.MinPurchaseAmount,
 		"max_discount_amount": created.MaxDiscountAmount,
+		"buy_quantity":        created.BuyQuantity,
+		"get_quantity":        created.GetQuantity,
 		"start_date":          created.StartDate,
+		"start_time":          created.StartTime,
 		"end_date":            created.EndDate,
+		"end_time":            created.EndTime,
 		"is_active":           created.IsActive,
 		"usage_limit":         created.UsageLimit,
 		"usage_count":         created.UsageCount,
@@ -206,11 +230,17 @@ type UpdatePromotionInput struct {
 	Code              *string
 	Name              *string
 	Description       *string
+	PromotionType     *string
+	Scope             *string
 	DiscountValue     *float64
 	MinPurchaseAmount *float64
 	MaxDiscountAmount *float64
+	BuyQuantity       *int
+	GetQuantity       *int
 	StartDate         *time.Time
+	StartTime         *string
 	EndDate           *time.Time
+	EndTime           *string
 	IsActive          *bool
 	UsageLimit        *int
 	ProductIDs        *[]string
@@ -247,11 +277,29 @@ func (s *PromotionService) UpdatePromotion(id string, input UpdatePromotionInput
 		if input.MaxDiscountAmount != nil {
 			updates["max_discount_amount"] = input.MaxDiscountAmount
 		}
+		if input.PromotionType != nil {
+			updates["promotion_type"] = *input.PromotionType
+		}
+		if input.Scope != nil {
+			updates["scope"] = *input.Scope
+		}
+		if input.BuyQuantity != nil {
+			updates["buy_quantity"] = *input.BuyQuantity
+		}
+		if input.GetQuantity != nil {
+			updates["get_quantity"] = *input.GetQuantity
+		}
 		if input.StartDate != nil {
 			updates["start_date"] = *input.StartDate
 		}
+		if input.StartTime != nil {
+			updates["start_time"] = *input.StartTime
+		}
 		if input.EndDate != nil {
 			updates["end_date"] = *input.EndDate
+		}
+		if input.EndTime != nil {
+			updates["end_time"] = *input.EndTime
 		}
 		if input.IsActive != nil {
 			updates["is_active"] = *input.IsActive

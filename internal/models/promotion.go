@@ -18,8 +18,12 @@ type Promotion struct {
 	DiscountValue     float64   `gorm:"column:discount_value;type:decimal(15,2);notNull" json:"discount_value"`
 	MinPurchaseAmount float64   `gorm:"column:min_purchase_amount;type:decimal(15,2);default:0" json:"min_purchase_amount"`
 	MaxDiscountAmount *float64  `gorm:"column:max_discount_amount;type:decimal(15,2)" json:"max_discount_amount,omitempty"`
+	BuyQuantity       int       `gorm:"column:buy_quantity;default:1" json:"buy_quantity"`
+	GetQuantity       int       `gorm:"column:get_quantity;default:1" json:"get_quantity"`
 	StartDate         time.Time `gorm:"column:start_date;notNull" json:"start_date"`
+	StartTime         string    `gorm:"column:start_time;type:time" json:"start_time,omitempty"`
 	EndDate           time.Time `gorm:"column:end_date;notNull" json:"end_date"`
+	EndTime           string    `gorm:"column:end_time;type:time" json:"end_time,omitempty"`
 	IsActive          bool      `gorm:"column:is_active;default:true;notNull" json:"is_active"`
 	UsageLimit        *int      `gorm:"column:usage_limit" json:"usage_limit,omitempty"`
 	UsageCount        int       `gorm:"column:usage_count;notNull;default:0" json:"usage_count"`
@@ -87,3 +91,19 @@ func (pc *PromotionCustomer) BeforeCreate(tx *gorm.DB) error {
 func (PromotionCustomer) TableName() string {
 	return "promotion_customers"
 }
+
+const (
+	PromotionTypePercentage = "PERCENTAGE"
+	PromotionTypeFixed      = "FIXED_AMOUNT"
+	PromotionTypeBuyXGetY   = "BUY_X_GET_Y"
+	PromotionTypeFlashSale  = "FLASH_SALE"
+)
+
+const (
+	ScopeAll        = "ALL"
+	ScopeProduct    = "PRODUCT"
+	ScopeCategory   = "CATEGORY"
+	ScopeCustomer   = "CUSTOMER"
+	ScopeByCategory = "BY_CATEGORY"
+	ScopeByProduct  = "BY_PRODUCT"
+)
