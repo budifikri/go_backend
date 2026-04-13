@@ -15,12 +15,13 @@ import (
 )
 
 type SalesService struct {
-	db        *gorm.DB
-	salesRepo *repository.SalesRepository
+	db             *gorm.DB
+	salesRepo      *repository.SalesRepository
+	cashDrawerRepo *repository.CashDrawerRepository
 }
 
-func NewSalesService(db *gorm.DB, salesRepo *repository.SalesRepository) *SalesService {
-	return &SalesService{db: db, salesRepo: salesRepo}
+func NewSalesService(db *gorm.DB, salesRepo *repository.SalesRepository, cashDrawerRepo *repository.CashDrawerRepository) *SalesService {
+	return &SalesService{db: db, salesRepo: salesRepo, cashDrawerRepo: cashDrawerRepo}
 }
 
 type CreateSaleItemInput struct {
@@ -329,6 +330,63 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			}
 			if err := tx.Create(&sp).Error; err != nil {
 				return err
+			}
+
+			// Jika pembayaran CASH, catat ke cash drawer
+			if p.Method == "CASH" {
+				// Cek atau buat cash drawer aktif
+				var drawer models.CashDrawer
+				wid := warehouseID
+				cid := companyID
+				usrID := cashierUUID
+
+				result := tx.Raw(`
+					SELECT * FROM cash_drawers 
+					WHERE warehouse_id = ? AND company_id = ? AND status = 'OPEN' 
+					ORDER BY opened_at DESC LIMIT 1
+				`, wid, cid).Scan(&drawer)
+
+				if result.Error != nil || drawer.ID == uuid.Nil {
+					// Buat cash drawer baru jika tidak ada yang aktif
+					drawer = models.CashDrawer{
+						ID:              uuid.New(),
+						WarehouseID:     wid,
+						CashierID:       usrID,
+						CompanyID:       cid,
+						Status:          models.DrawerStatusOpen,
+						OpeningBalance:  p.Amount,
+						ExpectedBalance: p.Amount,
+						OpenedAt:        time.Now(),
+						CreatedAt:       time.Now(),
+					}
+					if err := tx.Create(&drawer).Error; err != nil {
+						return err
+					}
+				}
+
+				// Update expected balance
+				newBalance := drawer.ExpectedBalance + p.Amount
+				if err := tx.Model(&models.CashDrawer{}).Where("id = ?", drawer.ID).
+					Updates(map[string]interface{}{"expected_balance": newBalance, "updated_at": time.Now()}).Error; err != nil {
+					return err
+				}
+
+				// Catat transaksi cash-in
+				saleID := createdSale.ID
+				txn := models.CashDrawerTransaction{
+					ID:           uuid.New(),
+					CashDrawerID: drawer.ID,
+					Type:         models.TransactionTypeSaleIn,
+					Amount:       p.Amount,
+					BalanceAfter: newBalance,
+					SaleID:       &saleID,
+					Reason:       fmt.Sprintf("Penjualan #%s", createdSale.SaleNumber),
+					CreatedAt:    time.Now(),
+					CreatedBy:    usrID,
+				}
+				if err := tx.Create(&txn).Error; err != nil {
+					return err
+				}
 			}
 		}
 

@@ -120,7 +120,7 @@ func main() {
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
 	warehouseService := services.NewWarehouseService(warehouseRepo)
 	inventoryService := services.NewInventoryService(inventoryRepo, productRepo, warehouseRepo, purchaseRepo)
-	salesService := services.NewSalesService(db, salesRepo)
+	salesService := services.NewSalesService(db, salesRepo, cashDrawerRepo)
 	returnsService := services.NewReturnsService(db, returnsRepo)
 	exchangesService := services.NewExchangesService(db, exchangesRepo)
 	customerService := services.NewCustomerService(customerRepo)
