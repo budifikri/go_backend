@@ -337,17 +337,18 @@ func (s *CashDrawerService) GetDrawerTransactions(drawerID string, txType *strin
 }
 
 type drawerSummary struct {
-	OpeningBalance   float64  `json:"opening_balance"`
-	ClosingBalance   *float64 `json:"closing_balance"`
-	ExpectedBalance  float64  `json:"expected_balance"`
-	Variance         float64  `json:"variance"`
-	CashInTotal      float64  `json:"cash_in_total"`
-	CashOutTotal     float64  `json:"cash_out_total"`
-	SalesTotal       float64  `json:"sales_total"`
-	RefundsTotal     float64  `json:"refunds_total"`
-	TransactionCount int64    `json:"transaction_count"`
-	SalesCount       int64    `json:"sales_count"`
-	DurationMinutes  int      `json:"duration_minutes"`
+	OpeningBalance   float64                        `json:"opening_balance"`
+	ClosingBalance   *float64                       `json:"closing_balance"`
+	ExpectedBalance  float64                        `json:"expected_balance"`
+	Variance         float64                        `json:"variance"`
+	CashInTotal      float64                        `json:"cash_in_total"`
+	CashOutTotal     float64                        `json:"cash_out_total"`
+	SalesTotal       float64                        `json:"sales_total"`
+	RefundsTotal     float64                        `json:"refunds_total"`
+	TransactionCount int64                          `json:"transaction_count"`
+	SalesCount       int64                          `json:"sales_count"`
+	DurationMinutes  int64                          `json:"duration_minutes"`
+	Transactions     []models.CashDrawerTransaction `json:"transactions"`
 }
 
 type txSumRow struct {
@@ -407,6 +408,9 @@ func (s *CashDrawerService) GetDrawerSummary(id string, companyID string) respon
 		variance = *drawer.Variance
 	}
 
+	var transactions []models.CashDrawerTransaction
+	s.db.Where("cash_drawer_id = ?", drawerUUID).Order("created_at DESC").Limit(100).Find(&transactions)
+
 	data := drawerSummary{
 		OpeningBalance:   drawer.OpeningBalance,
 		ClosingBalance:   drawer.ClosingBalance,
@@ -418,7 +422,8 @@ func (s *CashDrawerService) GetDrawerSummary(id string, companyID string) respon
 		RefundsTotal:     returnOut,
 		TransactionCount: txCount,
 		SalesCount:       salesAgg.Count,
-		DurationMinutes:  durationMinutes,
+		DurationMinutes:  int64(durationMinutes),
+		Transactions:     transactions,
 	}
 	return response.NewSuccessResponse(data, "")
 }

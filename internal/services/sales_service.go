@@ -376,7 +376,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				txn := models.CashDrawerTransaction{
 					ID:           uuid.New(),
 					CashDrawerID: drawer.ID,
-					Type:         models.TransactionTypeSaleIn,
+					Type:         models.TransactionTypeCashIn,
 					Amount:       p.Amount,
 					BalanceAfter: newBalance,
 					SaleID:       &saleID,
