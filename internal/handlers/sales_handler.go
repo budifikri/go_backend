@@ -16,6 +16,20 @@ func NewSalesHandler(salesService *services.SalesService) *SalesHandler {
 	return &SalesHandler{salesService: salesService}
 }
 
+func buildSalesFilters(c *fiber.Ctx) map[string]string {
+	filters := map[string]string{}
+	filters["warehouse_id"] = c.Query("warehouse_id")
+	filters["customer_id"] = c.Query("customer_id")
+	filters["cashier_id"] = c.Query("cashier_id")
+	filters["cash_drawer_id"] = c.Query("cash_drawer_id")
+	filters["status"] = c.Query("status")
+	filters["date_from"] = c.Query("date_from")
+	filters["date_to"] = c.Query("date_to")
+	filters["sale_number"] = c.Query("sale_number")
+	filters["search"] = c.Query("search")
+	return filters
+}
+
 // CreateSale godoc
 // @Summary Create sale
 // @Tags Sales
@@ -116,17 +130,7 @@ func (h *SalesHandler) GetSale(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/sales [get]
 func (h *SalesHandler) GetSales(c *fiber.Ctx) error {
-	filters := map[string]string{}
-
-	filters["warehouse_id"] = c.Query("warehouse_id")
-	filters["customer_id"] = c.Query("customer_id")
-	filters["cashier_id"] = c.Query("cashier_id")
-	filters["cash_drawer_id"] = c.Query("cash_drawer_id")
-	filters["status"] = c.Query("status")
-	filters["date_from"] = c.Query("date_from")
-	filters["date_to"] = c.Query("date_to")
-	filters["sale_number"] = c.Query("sale_number")
-	filters["search"] = c.Query("search")
+	filters := buildSalesFilters(c)
 
 	limit := c.QueryInt("limit", 50)
 	if limit <= 0 {
@@ -138,5 +142,29 @@ func (h *SalesHandler) GetSales(c *fiber.Ctx) error {
 	}
 
 	result := h.salesService.GetSales(filters, limit, offset)
+	return c.JSON(result)
+}
+
+// GetSalesSummary godoc
+// @Summary Get sales summary
+// @Tags Sales
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param warehouse_id query string false "Warehouse ID"
+// @Param customer_id query string false "Customer ID"
+// @Param cashier_id query string false "Cashier ID"
+// @Param cash_drawer_id query string false "Cash Drawer ID"
+// @Param status query string false "Sale status"
+// @Param date_from query string false "From date (YYYY-MM-DD)"
+// @Param date_to query string false "To date (YYYY-MM-DD)"
+// @Param sale_number query string false "Sale number search"
+// @Param search query string false "Search"
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/sales/summary [get]
+func (h *SalesHandler) GetSalesSummary(c *fiber.Ctx) error {
+	filters := buildSalesFilters(c)
+	result := h.salesService.GetSalesSummary(filters)
 	return c.JSON(result)
 }

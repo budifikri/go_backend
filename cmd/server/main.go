@@ -273,6 +273,7 @@ func main() {
 	sales := protected.Group("/sales")
 	sales.Post("/", salesHandler.CreateSale)
 	sales.Get("/", salesHandler.GetSales)
+	sales.Get("/summary", salesHandler.GetSalesSummary)
 	sales.Get("/:id", salesHandler.GetSale)
 
 	// Returns routes

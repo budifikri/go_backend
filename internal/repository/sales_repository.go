@@ -25,16 +25,17 @@ type SalesRepository struct {
 	db *gorm.DB
 }
 
+type SalesSummary struct {
+	TotalRows      int64   `json:"total_rows" gorm:"column:total_rows"`
+	TotalPenjualan float64 `json:"total_penjualan" gorm:"column:total_penjualan"`
+}
+
 func NewSalesRepository(db *gorm.DB) *SalesRepository {
 	return &SalesRepository{db: db}
 }
 
-func (r *SalesRepository) FindSales(filters map[string]string, limit, offset int) ([]SaleWithNames, int64, error) {
-	var rows []SaleWithNames
-	var total int64
-
+func (r *SalesRepository) buildSalesFilterQuery(filters map[string]string) *gorm.DB {
 	query := r.db.Table("sales s").
-		Select("s.*, w.name as warehouse_name, u.username as cashier_name, c.name as customer_name, c.loyalty_points as customer_loyalty_points").
 		Joins("LEFT JOIN warehouses w ON w.id = s.warehouse_id").
 		Joins("LEFT JOIN users u ON u.id = s.cashier_id").
 		Joins("LEFT JOIN customers c ON c.id = s.customer_id")
@@ -72,6 +73,17 @@ func (r *SalesRepository) FindSales(filters map[string]string, limit, offset int
 		}
 	}
 
+	return query
+}
+
+func (r *SalesRepository) FindSales(filters map[string]string, limit, offset int) ([]SaleWithNames, int64, error) {
+	var rows []SaleWithNames
+	var total int64
+
+	query := r.buildSalesFilterQuery(filters).
+		Select("s.*, w.name as warehouse_name, u.username as cashier_name, c.name as customer_name, c.loyalty_points as customer_loyalty_points").
+		Session(&gorm.Session{})
+
 	countQuery := query.Session(&gorm.Session{})
 	if err := countQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -82,6 +94,20 @@ func (r *SalesRepository) FindSales(filters map[string]string, limit, offset int
 	}
 
 	return rows, total, nil
+}
+
+func (r *SalesRepository) GetSalesSummary(filters map[string]string) (SalesSummary, error) {
+	var summary SalesSummary
+
+	err := r.buildSalesFilterQuery(filters).
+		Select("COUNT(*) as total_rows, COALESCE(SUM(s.total_amount), 0) as total_penjualan").
+		Scan(&summary).Error
+
+	if err != nil {
+		return SalesSummary{}, err
+	}
+
+	return summary, nil
 }
 
 func (r *SalesRepository) GetSaleByID(id uuid.UUID) (*SaleWithNames, error) {

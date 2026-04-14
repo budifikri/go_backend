@@ -466,6 +466,18 @@ func (s *SalesService) GetSales(filters map[string]string, limit, offset int) re
 	return response.NewPaginatedResponse(rows, total, limit, offset)
 }
 
+func (s *SalesService) GetSalesSummary(filters map[string]string) response.ApiResponse {
+	summary, err := s.salesRepo.GetSalesSummary(filters)
+	if err != nil {
+		return response.NewErrorResponse("Failed to get sales summary")
+	}
+
+	return response.NewSuccessResponse(map[string]interface{}{
+		"total_rows":      summary.TotalRows,
+		"total_penjualan": summary.TotalPenjualan,
+	}, "")
+}
+
 func (s *SalesService) GetSaleByID(id string) response.ApiResponse {
 	saleID, err := uuid.Parse(id)
 	if err != nil {
