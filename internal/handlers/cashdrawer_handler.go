@@ -320,6 +320,12 @@ func (h *CashDrawerHandler) ListCashDrawers(c *fiber.Ctx) error {
 	if v := c.Query("search"); v != "" {
 		filters["search"] = v
 	}
+	if v := c.Query("date_from"); v != "" {
+		filters["from_date"] = v
+	}
+	if v := c.Query("date_to"); v != "" {
+		filters["to_date"] = v
+	}
 	limit := c.QueryInt("limit", 50)
 	if limit <= 0 {
 		limit = 50
