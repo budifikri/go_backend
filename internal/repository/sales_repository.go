@@ -19,6 +19,7 @@ type SaleWithNames struct {
 type SaleItemWithProduct struct {
 	models.SaleItem
 	ProductName string `json:"product_name" gorm:"column:product_name"`
+	UnitName    string `json:"unit_name" gorm:"column:unit_name"`
 }
 
 type SalesRepository struct {
@@ -134,8 +135,9 @@ func (r *SalesRepository) GetSaleByID(id uuid.UUID) (*SaleWithNames, error) {
 func (r *SalesRepository) GetSaleItems(saleID uuid.UUID) ([]SaleItemWithProduct, error) {
 	var items []SaleItemWithProduct
 	err := r.db.Table("sale_items si").
-		Select("si.*, p.name as product_name").
+		Select("si.*, p.name as product_name, u.name as unit_name").
 		Joins("LEFT JOIN products p ON p.id = si.product_id").
+		Joins("LEFT JOIN units_of_measure u ON u.id = p.unit_id").
 		Where("si.sale_id = ?", saleID).
 		Scan(&items).Error
 	if err != nil {
