@@ -301,13 +301,17 @@ func (h *BackupHandler) ValidateRestore(c *fiber.Ctx) error {
 func (h *BackupHandler) RestoreBackup(c *fiber.Ctx) error {
 	user := GetUserFromContext(c)
 	if user == nil {
+		fmt.Println("[DEBUG] RestoreBackup: User is nil!")
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
 			"error":   "Unauthorized",
 		})
 	}
 
+	fmt.Printf("[DEBUG] RestoreBackup: User authenticated - companyID: %s, role: %s\n", user.CompanyID, user.Role)
+
 	if user.Role != "admin" && user.Role != "superadmin" {
+		fmt.Println("[DEBUG] RestoreBackup: User is not admin!")
 		return c.Status(http.StatusForbidden).JSON(fiber.Map{
 			"success": false,
 			"error":   "Only admin can restore backup",
@@ -316,13 +320,17 @@ func (h *BackupHandler) RestoreBackup(c *fiber.Ctx) error {
 
 	var req models.RestoreRequest
 	if err := c.BodyParser(&req); err != nil {
+		fmt.Printf("[DEBUG] RestoreBackup: BodyParser error - %v\n", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error":   "Invalid request body",
 		})
 	}
 
+	fmt.Printf("[DEBUG] RestoreBackup: Request - filename: %s, confirm: %v\n", req.Filename, req.Confirm)
+
 	if req.Filename == "" {
+		fmt.Println("[DEBUG] RestoreBackup: Filename is empty!")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error":   "Filename required",
@@ -330,20 +338,24 @@ func (h *BackupHandler) RestoreBackup(c *fiber.Ctx) error {
 	}
 
 	if !req.Confirm {
+		fmt.Println("[DEBUG] RestoreBackup: Confirm is false!")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error":   "Confirmation required",
 		})
 	}
 
+	fmt.Println("[DEBUG] RestoreBackup: Calling backupService.RestoreBackup...")
 	result, err := h.backupService.RestoreBackup(user.CompanyID, "", req.Filename, req.Confirm)
 	if err != nil {
+		fmt.Printf("[DEBUG] RestoreBackup: Service returned error - %v\n", err)
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   err.Error(),
 		})
 	}
 
+	fmt.Printf("[DEBUG] RestoreBackup: Success - result: %+v\n", result)
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data":    result,
@@ -354,11 +366,14 @@ func (h *BackupHandler) RestoreBackup(c *fiber.Ctx) error {
 func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
 	user := GetUserFromContext(c)
 	if user == nil {
+		fmt.Println("[DEBUG] RestoreProgress: User is nil!")
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
 			"error":   "Unauthorized",
 		})
 	}
+
+	fmt.Printf("[DEBUG] RestoreProgress: Connected for companyID: %s\n", user.CompanyID)
 
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
@@ -373,8 +388,10 @@ func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
 			select {
 			case progress, ok := <-ch:
 				if !ok {
+					fmt.Println("[DEBUG] RestoreProgress: Channel closed")
 					return
 				}
+				fmt.Printf("[DEBUG] RestoreProgress: Sending progress - Stage: %s, Progress: %.2f, Message: %s\n", progress.Stage, progress.Progress, progress.Message)
 				if strings.HasPrefix(progress.Message, "[") {
 					fmt.Fprintf(w, "event: complete\n")
 					fmt.Fprintf(w, "data: %s\n\n", progress.Message)
@@ -383,9 +400,11 @@ func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
 					fmt.Fprintf(w, "data: %s\n\n", data)
 				}
 				if err := w.Flush(); err != nil {
+					fmt.Printf("[DEBUG] RestoreProgress: Flush error - %v\n", err)
 					return
 				}
 			case <-c.Context().Done():
+				fmt.Println("[DEBUG] RestoreProgress: Context done")
 				return
 			}
 		}

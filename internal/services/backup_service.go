@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -448,7 +449,10 @@ func (s *BackupService) getCompanyCode(companyID uuid.UUID) string {
 }
 
 func (s *BackupService) RestoreBackup(companyID uuid.UUID, companyCode, filename string, confirm bool) (*models.RestoreResult, error) {
+	log.Printf("[DEBUG] RestoreBackup called - companyID: %s, filename: %s, confirm: %v", companyID, filename, confirm)
+
 	if !confirm {
+		log.Printf("[DEBUG] RestoreBackup: confirm is false, returning error")
 		return nil, fmt.Errorf("confirmation required")
 	}
 
@@ -460,33 +464,43 @@ func (s *BackupService) RestoreBackup(companyID uuid.UUID, companyCode, filename
 	}
 
 	startTime := time.Now()
+	log.Printf("[DEBUG] RestoreBackup: Starting restore process")
 
 	s.emitProgress(companyID, "preparing", 5, "Mempersiapkan restore...", "")
 
+	log.Printf("[DEBUG] RestoreBackup: Creating safety backup...")
 	safetyFilename, err := s.CreateBackup(companyID, companyCode, "system-safety", false)
 	if err != nil {
+		log.Printf("[DEBUG] RestoreBackup: Safety backup failed - %v", err)
 		s.emitComplete(companyID, "error", 0, fmt.Sprintf("failed to create safety backup: %v", err))
 		return nil, fmt.Errorf("failed to create safety backup: %w", err)
 	}
+	log.Printf("[DEBUG] RestoreBackup: Safety backup created - %s", safetyFilename.Filename)
 
 	s.emitProgress(companyID, "backup", 15, "Safety backup dibuat: "+safetyFilename.Filename, "")
 
 	filePath, err := s.GetBackupFilePath(companyID, filename)
 	if err != nil {
+		log.Printf("[DEBUG] RestoreBackup: GetBackupFilePath failed - %v", err)
 		s.emitComplete(companyID, "error", 0, err.Error())
 		return nil, err
 	}
+	log.Printf("[DEBUG] RestoreBackup: File path - %s", filePath)
 
 	s.emitProgress(companyID, "clearing", 25, "Menghapus data lama...", "")
+	log.Printf("[DEBUG] RestoreBackup: Starting importBackupWithProgress...")
 	tablesCleared, rowsRestored, err := s.importBackupWithProgress(filePath, companyID)
 	if err != nil {
+		log.Printf("[DEBUG] RestoreBackup: importBackupWithProgress failed - %v", err)
 		s.emitComplete(companyID, "error", 0, fmt.Sprintf("restore failed: %v", err))
 		return nil, fmt.Errorf("restore failed: %w", err)
 	}
+	log.Printf("[DEBUG] RestoreBackup: Import completed - tablesCleared: %d, rowsRestored: %d", tablesCleared, rowsRestored)
 
 	duration := time.Since(startTime)
 
 	s.emitComplete(companyID, "success", rowsRestored, "")
+	log.Printf("[DEBUG] RestoreBackup: emitComplete called, returning success")
 
 	result := &models.RestoreResult{
 		Status:        "success",
@@ -578,16 +592,23 @@ func (s *BackupService) importBackup(filePath string, companyID uuid.UUID) (int,
 }
 
 func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid.UUID) (int, int64, error) {
+	log.Printf("[DEBUG] importBackupWithProgress: Starting - filePath: %s, companyID: %s", filePath, companyID)
+
 	file, err := os.Open(filePath)
 	if err != nil {
+		log.Printf("[DEBUG] importBackupWithProgress: Failed to open file - %v", err)
 		return 0, 0, err
 	}
 	defer file.Close()
 
+	log.Printf("[DEBUG] importBackupWithProgress: File opened successfully")
+
 	tx := s.db.Begin()
 	if tx.Error != nil {
+		log.Printf("[DEBUG] importBackupWithProgress: Failed to begin transaction - %v", tx.Error)
 		return 0, 0, tx.Error
 	}
+	log.Printf("[DEBUG] importBackupWithProgress: Transaction started")
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -646,11 +667,14 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 		if inCopyBlock {
 			if line == "\\." {
 				if currentTable != "" && len(values) > 0 {
+					log.Printf("[DEBUG] importBackupWithProgress: Importing table %s with %d rows", currentTable, len(values))
 					cleared, rows, err := s.importTableData(tx, currentTable, columns, values, companyID)
 					if err != nil {
+						log.Printf("[DEBUG] importBackupWithProgress: importTableData failed - %v", err)
 						tx.Rollback()
 						return tableCount, rowCount, err
 					}
+					log.Printf("[DEBUG] importBackupWithProgress: Table %s imported - cleared: %v, rows: %d", currentTable, cleared, rows)
 					if cleared {
 						tableCount++
 					}
@@ -668,13 +692,17 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 	}
 
 	if err := scanner.Err(); err != nil {
+		log.Printf("[DEBUG] importBackupWithProgress: Scanner error - %v", err)
 		tx.Rollback()
 		return tableCount, rowCount, err
 	}
 
+	log.Printf("[DEBUG] importBackupWithProgress: Committing transaction...")
 	if err := tx.Commit().Error; err != nil {
+		log.Printf("[DEBUG] importBackupWithProgress: Commit failed - %v", err)
 		return tableCount, rowCount, err
 	}
+	log.Printf("[DEBUG] importBackupWithProgress: Transaction committed successfully")
 
 	return tableCount, rowCount, nil
 }
