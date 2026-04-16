@@ -129,10 +129,15 @@ func (s *BackupService) emitComplete(companyID uuid.UUID, status string, rowsRes
 			"error":         errorMsg,
 		}
 		data, _ := json.Marshal(p)
+		log.Printf("[DEBUG emitComplete] Sending complete event - status: %s, rowsRestored: %d, data: %s", status, rowsRestored, string(data))
 		select {
 		case ch <- RestoreProgress{CompanyID: companyID.String(), Stage: "complete", Message: string(data)}:
+			log.Printf("[DEBUG emitComplete] Message sent successfully")
 		default:
+			log.Printf("[DEBUG emitComplete] WARNING: Channel buffer full, message dropped!")
 		}
+	} else {
+		log.Printf("[DEBUG emitComplete] WARNING: No channel found for companyID: %s", companyID)
 	}
 }
 
