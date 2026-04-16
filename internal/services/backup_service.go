@@ -596,6 +596,50 @@ func (s *BackupService) importBackup(filePath string, companyID uuid.UUID) (int,
 	return tableCount, rowCount, nil
 }
 
+type copyBlock struct {
+	TableName string
+	Columns   []string
+	Values    [][]string
+}
+
+var tableDependencyOrder = []string{
+	"users",
+	"warehouses",
+	"categories",
+	"units_of_measure",
+	"products",
+	"customers",
+	"suppliers",
+	"promotions",
+	"price_tiers",
+	"promotion_products",
+	"promotion_categories",
+	"promotion_customers",
+	"sales",
+	"sale_items",
+	"sale_payments",
+	"sales_returns",
+	"sales_return_items",
+	"purchase_orders",
+	"purchase_order_items",
+	"purchase_returns",
+	"purchase_return_items",
+	"invoices_incoming",
+	"invoices_outgoing",
+	"invoice_items",
+	"invoice_payments",
+	"cash_drawers",
+	"cash_drawer_transactions",
+	"stock_opnames",
+	"stock_opname_items",
+	"stock_transfers",
+	"stock_transfer_items",
+	"stock_movements",
+	"inventory",
+	"item_exchanges",
+	"exchange_items",
+}
+
 func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid.UUID) (int, int64, error) {
 	log.Printf("[DEBUG] importBackupWithProgress: STARTING - filePath: %s, companyID: %s", filePath, companyID)
 
@@ -606,8 +650,6 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 	}
 	defer file.Close()
 
-	log.Printf("[DEBUG] importBackupWithProgress: File opened successfully, counting tables...")
-
 	tx := s.db.Begin()
 	if tx.Error != nil {
 		log.Printf("[DEBUG] importBackupWithProgress: Failed to begin transaction - %v", tx.Error)
@@ -615,78 +657,46 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 	}
 	log.Printf("[DEBUG] importBackupWithProgress: Transaction started")
 
+	if err := s.clearCompanyDataForRestore(tx, companyID); err != nil {
+		log.Printf("[DEBUG] importBackupWithProgress: Failed clearing company data - %v", err)
+		tx.Rollback()
+		return 0, 0, err
+	}
+	log.Printf("[DEBUG] importBackupWithProgress: Existing company data cleared")
+
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
 		}
 	}()
 
+	copyBlocks := make(map[string]*copyBlock)
 	scanner := bufio.NewScanner(file)
-	var currentTable string
-	var columns []string
-	var rowCount int64
-	var tableCount int
+	var currentBlock *copyBlock
 	var inCopyBlock bool
-	var values [][]string
-	var totalTables int
-	var processedTables int
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if _, _, ok := parseCopyHeader(line); ok {
-			totalTables++
-		}
-	}
-	file.Close()
-
-	file, err = os.Open(filePath)
-	if err != nil {
-		log.Printf("[DEBUG] importBackupWithProgress: Failed to open file (second time) - %v", err)
-		return 0, 0, err
-	}
-	defer file.Close()
-
-	log.Printf("[DEBUG] importBackupWithProgress: File opened for import, totalTables found: %d", totalTables)
-
-	scanner = bufio.NewScanner(file)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		if tableName, parsedCols, ok := parseCopyHeader(line); ok {
-			currentTable = tableName
-			columns = parsedCols
+			currentBlock = &copyBlock{
+				TableName: tableName,
+				Columns:   parsedCols,
+				Values:    [][]string{},
+			}
+			copyBlocks[tableName] = currentBlock
 			inCopyBlock = true
-			values = [][]string{}
-			processedTables++
-			progress := 25.0 + (float64(processedTables)/float64(totalTables+1))*70.0
-			s.emitProgress(companyID, "clearing", progress, "Menghapus: "+currentTable, currentTable)
 			continue
 		}
 
 		if inCopyBlock {
-			if strings.TrimSpace(strings.TrimRight(line, "\r")) == "\\." {
-				if currentTable != "" && len(values) > 0 {
-					log.Printf("[DEBUG] importBackupWithProgress: Importing table %s with %d rows", currentTable, len(values))
-					cleared, rows, err := s.importTableData(tx, currentTable, columns, values, companyID)
-					if err != nil {
-						log.Printf("[DEBUG] importBackupWithProgress: importTableData failed - %v", err)
-						tx.Rollback()
-						return tableCount, rowCount, err
-					}
-					log.Printf("[DEBUG] importBackupWithProgress: Table %s imported - cleared: %v, rows: %d", currentTable, cleared, rows)
-					if cleared {
-						tableCount++
-					}
-					rowCount += rows
-				}
-				currentTable = ""
-				columns = nil
-				values = nil
+			trimmedLine := strings.TrimSpace(strings.TrimRight(line, "\r"))
+			if trimmedLine == "\\." {
 				inCopyBlock = false
-			} else if strings.TrimSpace(line) != "" {
+				currentBlock = nil
+			} else if trimmedLine != "" && currentBlock != nil {
 				rowValues := parseCSVLine(line)
-				values = append(values, rowValues)
+				currentBlock.Values = append(currentBlock.Values, rowValues)
 			}
 		}
 	}
@@ -694,7 +704,38 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 	if err := scanner.Err(); err != nil {
 		log.Printf("[DEBUG] importBackupWithProgress: Scanner error - %v", err)
 		tx.Rollback()
-		return tableCount, rowCount, err
+		return 0, 0, err
+	}
+
+	totalTables := len(copyBlocks)
+	log.Printf("[DEBUG] importBackupWithProgress: Found %d tables in backup", totalTables)
+
+	var rowCount int64
+	var tableCount int
+	processedTables := 0
+
+	for _, tableName := range tableDependencyOrder {
+		block, exists := copyBlocks[tableName]
+		if !exists || len(block.Values) == 0 {
+			continue
+		}
+
+		processedTables++
+		progress := 25.0 + (float64(processedTables)/float64(totalTables+1))*70.0
+		s.emitProgress(companyID, "clearing", progress, "Mengimport: "+tableName, tableName)
+
+		log.Printf("[DEBUG] importBackupWithProgress: Importing table %s with %d rows", tableName, len(block.Values))
+		_, rows, err := s.importTableData(tx, tableName, block.Columns, block.Values, companyID)
+		if err != nil {
+			log.Printf("[DEBUG] importBackupWithProgress: importTableData failed for %s - %v", tableName, err)
+			tx.Rollback()
+			return tableCount, rowCount, err
+		}
+		log.Printf("[DEBUG] importBackupWithProgress: Table %s imported - rows: %d", tableName, rows)
+		if rows > 0 {
+			tableCount++
+		}
+		rowCount += rows
 	}
 
 	log.Printf("[DEBUG] importBackupWithProgress: Committing transaction...")
@@ -702,7 +743,7 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 		log.Printf("[DEBUG] importBackupWithProgress: Commit failed - %v", err)
 		return tableCount, rowCount, err
 	}
-	log.Printf("[DEBUG] importBackupWithProgress: Transaction committed successfully")
+	log.Printf("[DEBUG] importBackupWithProgress: Transaction committed successfully, tables: %d, rows: %d", tableCount, rowCount)
 
 	return tableCount, rowCount, nil
 }
@@ -750,25 +791,6 @@ func parseCopyHeader(line string) (string, []string, bool) {
 }
 
 func (s *BackupService) importTableData(tx *gorm.DB, tableName string, columns []string, values [][]string, companyID uuid.UUID) (bool, int64, error) {
-	hasCompanyID := false
-	for _, col := range columns {
-		if col == "company_id" {
-			hasCompanyID = true
-			break
-		}
-	}
-
-	if !hasCompanyID && !containsString(sharedTables, tableName) {
-		return false, 0, nil
-	}
-
-	if containsString(companyTables, tableName) || containsString(sharedTables, tableName) {
-		deleteQuery := fmt.Sprintf("DELETE FROM %s WHERE company_id = ?", tableName)
-		if err := tx.Exec(deleteQuery, companyID).Error; err != nil {
-			return false, 0, err
-		}
-	}
-
 	if len(values) == 0 {
 		return false, 0, nil
 	}
@@ -820,6 +842,17 @@ func (s *BackupService) importTableData(tx *gorm.DB, tableName string, columns [
 	}
 
 	return true, int64(len(values)), nil
+}
+
+func (s *BackupService) clearCompanyDataForRestore(tx *gorm.DB, companyID uuid.UUID) error {
+	tables := s.getTablesByScope("all")
+	for _, table := range tables {
+		result := s.scopedTableQuery(tx, table, companyID).Delete(nil)
+		if result.Error != nil {
+			return fmt.Errorf("error clearing table %s: %w", table, result.Error)
+		}
+	}
+	return nil
 }
 
 func containsString(slice []string, str string) bool {
