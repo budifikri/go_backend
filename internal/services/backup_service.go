@@ -552,20 +552,16 @@ func (s *BackupService) importBackup(filePath string, companyID uuid.UUID) (int,
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if strings.HasPrefix(line, "COPY ") {
-			parts := strings.Fields(line)
-			if len(parts) >= 4 && parts[3] == "FROM" {
-				currentTable = strings.TrimSuffix(parts[1], "(")
-				colsPart := strings.TrimSuffix(strings.TrimPrefix(line, "COPY "+currentTable+" ("), ") FROM stdin;")
-				columns = strings.Split(colsPart, ", ")
-				inCopyBlock = true
-				values = [][]string{}
-				continue
-			}
+		if tableName, parsedCols, ok := parseCopyHeader(line); ok {
+			currentTable = tableName
+			columns = parsedCols
+			inCopyBlock = true
+			values = [][]string{}
+			continue
 		}
 
 		if inCopyBlock {
-			if line == "\\." {
+			if strings.TrimSpace(strings.TrimRight(line, "\r")) == "\\." {
 				if currentTable != "" && len(values) > 0 {
 					cleared, rows, err := s.importTableData(tx, currentTable, columns, values, companyID)
 					if err != nil {
@@ -581,7 +577,7 @@ func (s *BackupService) importBackup(filePath string, companyID uuid.UUID) (int,
 				columns = nil
 				values = nil
 				inCopyBlock = false
-			} else if line != "" {
+			} else if strings.TrimSpace(line) != "" {
 				rowValues := parseCSVLine(line)
 				values = append(values, rowValues)
 			}
@@ -637,12 +633,8 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 
 	for scanner.Scan() {
 		line := scanner.Text()
-
-		if strings.HasPrefix(line, "COPY ") {
-			parts := strings.Fields(line)
-			if len(parts) >= 4 && parts[3] == "FROM" {
-				totalTables++
-			}
+		if _, _, ok := parseCopyHeader(line); ok {
+			totalTables++
 		}
 	}
 	file.Close()
@@ -661,23 +653,19 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if strings.HasPrefix(line, "COPY ") {
-			parts := strings.Fields(line)
-			if len(parts) >= 4 && parts[3] == "FROM" {
-				currentTable = strings.TrimSuffix(parts[1], "(")
-				colsPart := strings.TrimSuffix(strings.TrimPrefix(line, "COPY "+currentTable+" ("), ") FROM stdin;")
-				columns = strings.Split(colsPart, ", ")
-				inCopyBlock = true
-				values = [][]string{}
-				processedTables++
-				progress := 25.0 + (float64(processedTables)/float64(totalTables+1))*70.0
-				s.emitProgress(companyID, "clearing", progress, "Menghapus: "+currentTable, currentTable)
-				continue
-			}
+		if tableName, parsedCols, ok := parseCopyHeader(line); ok {
+			currentTable = tableName
+			columns = parsedCols
+			inCopyBlock = true
+			values = [][]string{}
+			processedTables++
+			progress := 25.0 + (float64(processedTables)/float64(totalTables+1))*70.0
+			s.emitProgress(companyID, "clearing", progress, "Menghapus: "+currentTable, currentTable)
+			continue
 		}
 
 		if inCopyBlock {
-			if line == "\\." {
+			if strings.TrimSpace(strings.TrimRight(line, "\r")) == "\\." {
 				if currentTable != "" && len(values) > 0 {
 					log.Printf("[DEBUG] importBackupWithProgress: Importing table %s with %d rows", currentTable, len(values))
 					cleared, rows, err := s.importTableData(tx, currentTable, columns, values, companyID)
@@ -696,7 +684,7 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 				columns = nil
 				values = nil
 				inCopyBlock = false
-			} else if line != "" {
+			} else if strings.TrimSpace(line) != "" {
 				rowValues := parseCSVLine(line)
 				values = append(values, rowValues)
 			}
@@ -725,6 +713,40 @@ func parseCSVLine(line string) []string {
 	r.LazyQuotes = true
 	record, _ := r.Read()
 	return record
+}
+
+func parseCopyHeader(line string) (string, []string, bool) {
+	clean := strings.TrimSpace(strings.TrimRight(line, "\r"))
+	if !strings.HasPrefix(clean, "COPY ") || !strings.HasSuffix(clean, " FROM stdin;") {
+		return "", nil, false
+	}
+
+	openIdx := strings.Index(clean, " (")
+	closeIdx := strings.LastIndex(clean, ") FROM stdin;")
+	if openIdx == -1 || closeIdx == -1 || closeIdx <= openIdx+2 {
+		return "", nil, false
+	}
+
+	tableName := strings.TrimSpace(clean[len("COPY "):openIdx])
+	colsRaw := clean[openIdx+2 : closeIdx]
+	if tableName == "" || strings.TrimSpace(colsRaw) == "" {
+		return "", nil, false
+	}
+
+	rawCols := strings.Split(colsRaw, ",")
+	columns := make([]string, 0, len(rawCols))
+	for _, col := range rawCols {
+		trimmed := strings.TrimSpace(col)
+		if trimmed != "" {
+			columns = append(columns, trimmed)
+		}
+	}
+
+	if len(columns) == 0 {
+		return "", nil, false
+	}
+
+	return tableName, columns, true
 }
 
 func (s *BackupService) importTableData(tx *gorm.DB, tableName string, columns []string, values [][]string, companyID uuid.UUID) (bool, int64, error) {
