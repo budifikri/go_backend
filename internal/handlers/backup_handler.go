@@ -378,12 +378,13 @@ func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
 	c.Set("Connection", "keep-alive")
-	c.Set("Transfer-Encoding", "chunked")
+	c.Set("X-Accel-Buffering", "no")
+	c.Status(200)
 
 	ch, done := h.backupService.SubscribeProgress(user.CompanyID)
-	defer done()
 
 	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+		fmt.Println("[DEBUG] RestoreProgress: Stream writer started")
 		for {
 			select {
 			case progress, ok := <-ch:
@@ -391,7 +392,7 @@ func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
 					fmt.Println("[DEBUG] RestoreProgress: Channel closed")
 					return
 				}
-				fmt.Printf("[DEBUG] RestoreProgress: Sending progress - Stage: %s, Progress: %.2f, Message: %s\n", progress.Stage, progress.Progress, progress.Message)
+				fmt.Printf("[DEBUG] RestoreProgress: Sending - Stage: %s, Progress: %.2f\n", progress.Stage, progress.Progress)
 				if strings.HasPrefix(progress.Message, "[") {
 					fmt.Fprintf(w, "event: complete\n")
 					fmt.Fprintf(w, "data: %s\n\n", progress.Message)
@@ -399,16 +400,17 @@ func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
 					data, _ := json.Marshal(progress)
 					fmt.Fprintf(w, "data: %s\n\n", data)
 				}
-				if err := w.Flush(); err != nil {
-					fmt.Printf("[DEBUG] RestoreProgress: Flush error - %v\n", err)
-					return
-				}
+				w.Flush()
 			case <-c.Context().Done():
 				fmt.Println("[DEBUG] RestoreProgress: Context done")
+				done()
 				return
 			}
 		}
 	})
+
+	<-c.Context().Done()
+	done()
 	return nil
 }
 

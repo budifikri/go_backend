@@ -592,7 +592,7 @@ func (s *BackupService) importBackup(filePath string, companyID uuid.UUID) (int,
 }
 
 func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid.UUID) (int, int64, error) {
-	log.Printf("[DEBUG] importBackupWithProgress: Starting - filePath: %s, companyID: %s", filePath, companyID)
+	log.Printf("[DEBUG] importBackupWithProgress: STARTING - filePath: %s, companyID: %s", filePath, companyID)
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -601,7 +601,7 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 	}
 	defer file.Close()
 
-	log.Printf("[DEBUG] importBackupWithProgress: File opened successfully")
+	log.Printf("[DEBUG] importBackupWithProgress: File opened successfully, counting tables...")
 
 	tx := s.db.Begin()
 	if tx.Error != nil {
@@ -640,9 +640,12 @@ func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid
 
 	file, err = os.Open(filePath)
 	if err != nil {
+		log.Printf("[DEBUG] importBackupWithProgress: Failed to open file (second time) - %v", err)
 		return 0, 0, err
 	}
 	defer file.Close()
+
+	log.Printf("[DEBUG] importBackupWithProgress: File opened for import, totalTables found: %d", totalTables)
 
 	scanner = bufio.NewScanner(file)
 

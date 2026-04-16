@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,6 +30,7 @@ func (m *AuthMiddleware) Handler() fiber.Handler {
 		var token string
 
 		authHeader := c.Get("Authorization")
+		fmt.Printf("[DEBUG Auth] Path: %s, AuthHeader: %s\n", c.Path(), authHeader)
 		if authHeader != "" {
 			parts := strings.Split(authHeader, " ")
 			if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
@@ -38,9 +40,11 @@ func (m *AuthMiddleware) Handler() fiber.Handler {
 
 		if token == "" {
 			token = c.Query("token")
+			fmt.Printf("[DEBUG Auth] Using token from query: %s\n", token[:20]+"...")
 		}
 
 		if token == "" {
+			fmt.Println("[DEBUG Auth] No token found!")
 			return c.Status(fiber.StatusUnauthorized).JSON(response.ApiResponse{
 				Success: false,
 				Error:   "Authorization token required",
@@ -49,12 +53,14 @@ func (m *AuthMiddleware) Handler() fiber.Handler {
 
 		payload, err := m.jwtUtil.VerifyToken(token)
 		if err != nil {
+			fmt.Printf("[DEBUG Auth] Token verification failed: %v\n", err)
 			return c.Status(fiber.StatusUnauthorized).JSON(response.ApiResponse{
 				Success: false,
 				Error:   "Invalid or expired token",
 			})
 		}
 
+		fmt.Printf("[DEBUG Auth] Token verified for user: %s\n", payload.Username)
 		// Store user info in context
 		c.Locals(ContextKeyUser, payload)
 
