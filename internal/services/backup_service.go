@@ -3,7 +3,6 @@ package services
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"encoding/csv"
 	"fmt"
 	"os"
@@ -70,8 +69,6 @@ var companyTables = []string{
 	"customers",
 	"suppliers",
 	"sales",
-	"sales_returns",
-	"item_exchanges",
 	"purchase_orders",
 	"purchase_returns",
 	"invoices_incoming",
@@ -83,20 +80,16 @@ var companyTables = []string{
 var childTables = []string{
 	"sale_items",
 	"sale_payments",
-	"sales_return_items",
-	"exchange_items",
 	"purchase_order_items",
 	"purchase_return_items",
 	"invoice_items",
 	"invoice_payments",
 	"cash_drawer_transactions",
 	"stock_opname_items",
-}
-
-var sharedTables = []string{
-	"products",
-	"categories",
-	"units_of_measure",
+	"sales_returns",
+	"sales_return_items",
+	"item_exchanges",
+	"exchange_items",
 	"promotions",
 	"promotion_products",
 	"promotion_categories",
@@ -104,8 +97,22 @@ var sharedTables = []string{
 	"price_tiers",
 }
 
+var sharedTables = []string{
+	"products",
+	"categories",
+	"units_of_measure",
+}
+
 func (s *BackupService) CreateBackup(companyID uuid.UUID, companyCode, userID string, isAuto bool) (*models.BackupLog, error) {
 	startTime := time.Now()
+
+	if strings.TrimSpace(companyCode) == "" {
+		companyCode = s.getCompanyCode(companyID)
+	}
+	if strings.TrimSpace(companyCode) == "" {
+		companyCode = companyID.String()[:8]
+	}
+	companyCode = strings.ToLower(strings.TrimSpace(companyCode))
 
 	companyDir := filepath.Join(s.backupDir, strings.ToLower(companyCode))
 	os.MkdirAll(companyDir, 0755)
@@ -351,12 +358,25 @@ func (s *BackupService) ValidateRestore(companyID uuid.UUID, filename string) (*
 
 func (s *BackupService) getCompanyName(companyID uuid.UUID) string {
 	var company struct {
-		Name string
+		Name string `gorm:"column:nama"`
 	}
-	if err := s.db.Table("companies").Where("id = ?", companyID).Select("name").Scan(&company).Error; err != nil {
+	if err := s.db.Table("companies").Where("id = ?", companyID).Select("nama").Scan(&company).Error; err != nil {
+		return "Unknown"
+	}
+	if strings.TrimSpace(company.Name) == "" {
 		return "Unknown"
 	}
 	return company.Name
+}
+
+func (s *BackupService) getCompanyCode(companyID uuid.UUID) string {
+	var company struct {
+		Code string `gorm:"column:code"`
+	}
+	if err := s.db.Table("companies").Where("id = ?", companyID).Select("code").Scan(&company).Error; err != nil {
+		return ""
+	}
+	return strings.TrimSpace(company.Code)
 }
 
 func (s *BackupService) RestoreBackup(companyID uuid.UUID, companyCode, filename string, confirm bool) (*models.RestoreResult, error) {
@@ -364,6 +384,9 @@ func (s *BackupService) RestoreBackup(companyID uuid.UUID, companyCode, filename
 		return nil, fmt.Errorf("confirmation required")
 	}
 
+	if companyCode == "" {
+		companyCode = s.getCompanyCode(companyID)
+	}
 	if companyCode == "" {
 		companyCode = companyID.String()[:8]
 	}
@@ -618,16 +641,27 @@ func (s *BackupService) GetSchedule(companyID uuid.UUID) (*models.ScheduleRespon
 }
 
 func (s *BackupService) UpdateSchedule(companyID uuid.UUID, req *models.UpdateScheduleRequest) error {
+	if req.RetentionDays <= 0 {
+		req.RetentionDays = 7
+	}
+
+	cronSpec := strings.TrimSpace(req.Schedule)
+	if req.Day != "" && req.Hour != "" {
+		frequency := req.Frequency
+		if frequency == "" {
+			frequency = "daily"
+		}
+		cronSpec = buildCronExpression(frequency, req.Day, req.Hour)
+	}
+	if cronSpec == "" {
+		cronSpec = "0 2 * * *"
+	}
+
 	schedule := &models.BackupSchedule{
 		CompanyID:     companyID,
 		Enabled:       req.Enabled,
+		Schedule:      cronSpec,
 		RetentionDays: req.RetentionDays,
-	}
-
-	if req.Day != "" && req.Hour != "" {
-		schedule.Schedule = buildCronExpression(req.Frequency, req.Day, req.Hour)
-	} else {
-		schedule.Schedule = req.Schedule
 	}
 
 	err := s.repo.UpsertSchedule(schedule)
@@ -655,10 +689,15 @@ func (s *BackupService) StartSchedule(companyID uuid.UUID) {
 	}
 
 	job := cron.FuncJob(func() {
-		ctx := context.Background()
-		fmt.Printf("Running scheduled backup for company: %s\n", companyID)
-		fmt.Printf("Note: Scheduled backup requires company context\n")
-		_ = ctx
+		companyCode := s.getCompanyCode(companyID)
+		if _, err := s.CreateBackup(companyID, companyCode, "system-scheduler", true); err != nil {
+			fmt.Printf("Scheduled backup failed for company %s: %v\n", companyID, err)
+			return
+		}
+		if err := s.repo.UpdateLastBackup(companyID); err != nil {
+			fmt.Printf("Failed to update last_backup_at for company %s: %v\n", companyID, err)
+		}
+		fmt.Printf("Scheduled backup completed for company: %s\n", companyID)
 	})
 
 	entryID, err := s.cron.AddFunc(schedule.Schedule, job)
