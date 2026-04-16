@@ -103,43 +103,6 @@ var sharedTables = []string{
 	"units_of_measure",
 }
 
-var masterTables = []string{
-	"users",
-	"warehouses",
-	"customers",
-	"suppliers",
-	"products",
-	"categories",
-	"units_of_measure",
-	"promotions",
-	"promotion_products",
-	"promotion_categories",
-	"promotion_customers",
-	"price_tiers",
-}
-
-var transactionTables = []string{
-	"sales",
-	"sale_items",
-	"sale_payments",
-	"purchase_orders",
-	"purchase_order_items",
-	"purchase_returns",
-	"purchase_return_items",
-	"invoices_incoming",
-	"invoices_outgoing",
-	"invoice_items",
-	"invoice_payments",
-	"cash_drawers",
-	"cash_drawer_transactions",
-	"stock_opnames",
-	"stock_opname_items",
-	"item_exchanges",
-	"exchange_items",
-	"sales_returns",
-	"sales_return_items",
-}
-
 func (s *BackupService) CreateBackup(companyID uuid.UUID, companyCode, userID string, isAuto bool) (*models.BackupLog, error) {
 	startTime := time.Now()
 
@@ -859,37 +822,111 @@ func ParseCronToHuman(cronStr string) string {
 func (s *BackupService) getTablesByScope(scope string) []string {
 	switch scope {
 	case "master":
-		return masterTables
+		return []string{
+			"promotion_products",
+			"promotion_categories",
+			"promotion_customers",
+			"price_tiers",
+			"promotions",
+			"products",
+			"categories",
+			"units_of_measure",
+			"customers",
+			"suppliers",
+			"users",
+			"warehouses",
+		}
 	case "transaction":
-		return transactionTables
+		return []string{
+			"exchange_items",
+			"sales_return_items",
+			"sale_items",
+			"sale_payments",
+			"purchase_return_items",
+			"purchase_order_items",
+			"invoice_items",
+			"invoice_payments",
+			"cash_drawer_transactions",
+			"stock_opname_items",
+			"item_exchanges",
+			"sales_returns",
+			"purchase_returns",
+			"sales",
+			"purchase_orders",
+			"invoices_incoming",
+			"invoices_outgoing",
+			"cash_drawers",
+			"stock_opnames",
+		}
 	case "all":
-		allTables := make([]string, 0, len(masterTables)+len(transactionTables))
-		allTables = append(allTables, masterTables...)
-		allTables = append(allTables, transactionTables...)
+		allTables := s.getTablesByScope("transaction")
+		allTables = append(allTables, s.getTablesByScope("master")...)
 		return allTables
 	default:
-		return masterTables
+		return s.getTablesByScope("master")
 	}
 }
 
-func (s *BackupService) hasCompanyID(tableName string) bool {
-	tablesWithCompanyID := map[string]bool{
-		"users":             true,
-		"warehouses":        true,
-		"customers":         true,
-		"suppliers":         true,
-		"sales":             true,
-		"sale_payments":     true,
-		"purchase_orders":   true,
-		"purchase_returns":  true,
-		"invoices_incoming": true,
-		"invoices_outgoing": true,
-		"cash_drawers":      true,
-		"stock_opnames":     true,
-		"products":          true,
-		"categories":        true,
+func (s *BackupService) scopedTableQuery(tx *gorm.DB, tableName string, companyID uuid.UUID) *gorm.DB {
+	companySales := tx.Table("sales").Select("id").Where("company_id = ?", companyID)
+	companyWarehouses := tx.Table("warehouses").Select("id").Where("company_id = ?", companyID)
+	companyCustomers := tx.Table("customers").Select("id").Where("company_id = ?", companyID)
+	companyProducts := tx.Table("products").Select("id").Where("company_id = ?", companyID)
+	companyCategories := tx.Table("categories").Select("id").Where("company_id = ?", companyID)
+	companyPurchaseOrders := tx.Table("purchase_orders").Select("id").Where("company_id = ?", companyID)
+	companyPurchaseReturns := tx.Table("purchase_returns").Select("id").Where("company_id = ?", companyID)
+	companyCashDrawers := tx.Table("cash_drawers").Select("id").Where("company_id = ?", companyID)
+	companyStockOpnames := tx.Table("stock_opnames").Select("id").Where("company_id = ?", companyID)
+	companyIncomingInvoices := tx.Table("invoices_incoming").Select("id").Where("company_id = ?", companyID)
+	companyOutgoingInvoices := tx.Table("invoices_outgoing").Select("id").Where("company_id = ?", companyID)
+	companySalesReturns := tx.Table("sales_returns").Select("id").Where("sale_id IN (?)", companySales)
+	companyExchanges := tx.Table("item_exchanges").Select("id").Where("sale_id IN (?)", companySales).Or("warehouse_id IN (?)", companyWarehouses).Or("customer_id IN (?)", companyCustomers)
+
+	switch tableName {
+	case "users", "warehouses", "customers", "suppliers", "sales", "purchase_orders", "purchase_returns", "invoices_incoming", "invoices_outgoing", "cash_drawers", "stock_opnames":
+		return tx.Table(tableName).Where("company_id = ?", companyID)
+	case "products", "categories", "units_of_measure":
+		return tx.Table(tableName).Where("company_id = ?", companyID)
+	case "sale_items":
+		return tx.Table(tableName).Where("sale_id IN (?)", companySales)
+	case "sale_payments":
+		return tx.Table(tableName).Where("sale_id IN (?)", companySales)
+	case "sales_returns":
+		return tx.Table(tableName).Where("sale_id IN (?)", companySales)
+	case "sales_return_items":
+		return tx.Table(tableName).Where("return_id IN (?)", companySalesReturns)
+	case "item_exchanges":
+		return tx.Table(tableName).Where("sale_id IN (?)", companySales).Or("warehouse_id IN (?)", companyWarehouses).Or("customer_id IN (?)", companyCustomers)
+	case "exchange_items":
+		return tx.Table(tableName).Where("exchange_id IN (?)", companyExchanges)
+	case "purchase_order_items":
+		return tx.Table(tableName).Where("po_id IN (?)", companyPurchaseOrders)
+	case "purchase_return_items":
+		return tx.Table(tableName).Where("return_id IN (?)", companyPurchaseReturns)
+	case "invoice_items":
+		return tx.Table(tableName).Where("(invoice_type = 'INCOMING' AND invoice_id IN (?)) OR (invoice_type = 'OUTGOING' AND invoice_id IN (?))", companyIncomingInvoices, companyOutgoingInvoices)
+	case "invoice_payments":
+		return tx.Table(tableName).Where("(invoice_type = 'INCOMING' AND invoice_id IN (?)) OR (invoice_type = 'OUTGOING' AND invoice_id IN (?))", companyIncomingInvoices, companyOutgoingInvoices)
+	case "cash_drawer_transactions":
+		return tx.Table(tableName).Where("cash_drawer_id IN (?)", companyCashDrawers)
+	case "stock_opname_items":
+		return tx.Table(tableName).Where("opname_id IN (?)", companyStockOpnames)
+	case "price_tiers":
+		return tx.Table(tableName).Where("product_id IN (?)", companyProducts)
+	case "promotion_products":
+		return tx.Table(tableName).Where("product_id IN (?)", companyProducts)
+	case "promotion_categories":
+		return tx.Table(tableName).Where("category_id IN (?)", companyCategories)
+	case "promotion_customers":
+		return tx.Table(tableName).Where("customer_id IN (?)", companyCustomers)
+	case "promotions":
+		promotionByProducts := tx.Table("promotion_products").Select("promotion_id").Where("product_id IN (?)", companyProducts)
+		promotionByCategories := tx.Table("promotion_categories").Select("promotion_id").Where("category_id IN (?)", companyCategories)
+		promotionByCustomers := tx.Table("promotion_customers").Select("promotion_id").Where("customer_id IN (?)", companyCustomers)
+		return tx.Table(tableName).Where("id IN (?)", promotionByProducts).Or("id IN (?)", promotionByCategories).Or("id IN (?)", promotionByCustomers)
+	default:
+		return tx.Table(tableName).Where("1 = 0")
 	}
-	return tablesWithCompanyID[tableName]
 }
 
 func (s *BackupService) GetTableCounts(companyID uuid.UUID, scope string) (*models.ScopeCountResponse, error) {
@@ -899,15 +936,11 @@ func (s *BackupService) GetTableCounts(companyID uuid.UUID, scope string) (*mode
 
 	for _, table := range tables {
 		var count int64
-		if s.hasCompanyID(table) {
-			if err := s.db.Table(table).Where("company_id = ?", companyID).Count(&count).Error; err != nil {
-				continue
-			}
-		} else {
-			if err := s.db.Table(table).Count(&count).Error; err != nil {
-				continue
-			}
+		query := s.scopedTableQuery(s.db, table, companyID)
+		if err := query.Count(&count).Error; err != nil {
+			continue
 		}
+
 		counts = append(counts, models.TableCount{
 			TableName: table,
 			RowCount:  count,
@@ -929,24 +962,26 @@ func (s *BackupService) DeleteData(companyID uuid.UUID, scope string) (*models.D
 	var tablesCleared []string
 	var totalRecords int64
 
-	for _, table := range tables {
-		var result *gorm.DB
-		if s.hasCompanyID(table) {
-			result = s.db.Table(table).Where("company_id = ?", companyID).Delete(nil)
-		} else {
-			result = s.db.Table(table).Delete(nil)
-		}
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		for _, table := range tables {
+			query := s.scopedTableQuery(tx, table, companyID)
+			result := query.Delete(nil)
 
-		if result.Error != nil {
-			return nil, fmt.Errorf("error deleting table %s: %w", table, result.Error)
-		}
+			if result.Error != nil {
+				return fmt.Errorf("error deleting table %s: %w", table, result.Error)
+			}
 
-		rowsAffected := result.RowsAffected
-		if rowsAffected > 0 {
-			deletedRecords[table] = rowsAffected
-			tablesCleared = append(tablesCleared, table)
-			totalRecords += rowsAffected
+			rowsAffected := result.RowsAffected
+			if rowsAffected > 0 {
+				deletedRecords[table] = rowsAffected
+				tablesCleared = append(tablesCleared, table)
+				totalRecords += rowsAffected
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &models.DeleteDataResponse{
