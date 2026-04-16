@@ -73,16 +73,18 @@ func (s *BackupService) ensureBackupDir() {
 }
 
 func (s *BackupService) SubscribeProgress(companyID uuid.UUID) (<-chan RestoreProgress, func()) {
+	log.Printf("[DEBUG SubscribeProgress] Creating channel for companyID: %s", companyID)
 	s.progressMu.Lock()
 	ch := make(chan RestoreProgress, 100)
 	s.progressChans[companyID] = ch
 	s.progressMu.Unlock()
+	log.Printf("[DEBUG SubscribeProgress] Channel created and registered for companyID: %s", companyID)
 
 	done := func() {
 		s.progressMu.Lock()
 		delete(s.progressChans, companyID)
-		close(ch)
 		s.progressMu.Unlock()
+		log.Printf("[DEBUG SubscribeProgress] Channel unregistered for companyID: %s", companyID)
 	}
 	return ch, done
 }
@@ -91,6 +93,9 @@ func (s *BackupService) emitProgress(companyID uuid.UUID, stage string, progress
 	s.progressMu.RLock()
 	ch, ok := s.progressChans[companyID]
 	s.progressMu.RUnlock()
+
+	log.Printf("[DEBUG emitProgress] companyID: %s, stage: %s, progress: %.2f, message: %s, channelExists: %v",
+		companyID, stage, progress, message, ok)
 
 	if ok {
 		p := RestoreProgress{
@@ -102,8 +107,12 @@ func (s *BackupService) emitProgress(companyID uuid.UUID, stage string, progress
 		}
 		select {
 		case ch <- p:
+			log.Printf("[DEBUG emitProgress] Message sent successfully")
 		default:
+			log.Printf("[DEBUG emitProgress] WARNING: Channel buffer full, message dropped!")
 		}
+	} else {
+		log.Printf("[DEBUG emitProgress] WARNING: No channel found for companyID: %s", companyID)
 	}
 }
 

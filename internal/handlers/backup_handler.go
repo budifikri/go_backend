@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -384,7 +383,14 @@ func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
 	ch, done := h.backupService.SubscribeProgress(user.CompanyID)
 
 	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+		defer done()
+		ticker := time.NewTicker(15 * time.Second)
+		defer ticker.Stop()
+
 		fmt.Println("[DEBUG] RestoreProgress: Stream writer started")
+		fmt.Fprint(w, ": connected\n\n")
+		_ = w.Flush()
+
 		for {
 			select {
 			case progress, ok := <-ch:
@@ -393,24 +399,26 @@ func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
 					return
 				}
 				fmt.Printf("[DEBUG] RestoreProgress: Sending - Stage: %s, Progress: %.2f\n", progress.Stage, progress.Progress)
-				if strings.HasPrefix(progress.Message, "[") {
+				if progress.Stage == "complete" {
 					fmt.Fprintf(w, "event: complete\n")
 					fmt.Fprintf(w, "data: %s\n\n", progress.Message)
 				} else {
 					data, _ := json.Marshal(progress)
 					fmt.Fprintf(w, "data: %s\n\n", data)
 				}
-				w.Flush()
-			case <-c.Context().Done():
-				fmt.Println("[DEBUG] RestoreProgress: Context done")
-				done()
-				return
+				if err := w.Flush(); err != nil {
+					fmt.Printf("[DEBUG] RestoreProgress: Flush error - %v\n", err)
+					return
+				}
+			case <-ticker.C:
+				fmt.Fprint(w, ": ping\n\n")
+				if err := w.Flush(); err != nil {
+					fmt.Printf("[DEBUG] RestoreProgress: Ping flush error - %v\n", err)
+					return
+				}
 			}
 		}
 	})
-
-	<-c.Context().Done()
-	done()
 	return nil
 }
 

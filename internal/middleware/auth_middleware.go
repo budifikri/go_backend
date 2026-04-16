@@ -40,7 +40,13 @@ func (m *AuthMiddleware) Handler() fiber.Handler {
 
 		if token == "" {
 			token = c.Query("token")
-			fmt.Printf("[DEBUG Auth] Using token from query: %s\n", token[:20]+"...")
+			if token != "" {
+				preview := token
+				if len(preview) > 20 {
+					preview = preview[:20] + "..."
+				}
+				fmt.Printf("[DEBUG Auth] Using token from query: %s\n", preview)
+			}
 		}
 
 		if token == "" {
