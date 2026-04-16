@@ -848,6 +848,7 @@ func (s *BackupService) getTablesByScope(scope string) []string {
 			"invoice_payments",
 			"cash_drawer_transactions",
 			"stock_opname_items",
+			"stock_transfer_items",
 			"item_exchanges",
 			"sales_returns",
 			"purchase_returns",
@@ -857,6 +858,9 @@ func (s *BackupService) getTablesByScope(scope string) []string {
 			"invoices_outgoing",
 			"cash_drawers",
 			"stock_opnames",
+			"stock_transfers",
+			"stock_movements",
+			"inventory",
 		}
 	case "all":
 		allTables := s.getTablesByScope("transaction")
@@ -881,6 +885,7 @@ func (s *BackupService) scopedTableQuery(tx *gorm.DB, tableName string, companyI
 	companyOutgoingInvoices := tx.Table("invoices_outgoing").Select("id").Where("company_id = ?", companyID)
 	companySalesReturns := tx.Table("sales_returns").Select("id").Where("sale_id IN (?)", companySales)
 	companyExchanges := tx.Table("item_exchanges").Select("id").Where("sale_id IN (?)", companySales).Or("warehouse_id IN (?)", companyWarehouses).Or("customer_id IN (?)", companyCustomers)
+	companyStockTransfers := tx.Table("stock_transfers").Select("id").Where("from_warehouse_id IN (?)", companyWarehouses).Or("to_warehouse_id IN (?)", companyWarehouses)
 
 	switch tableName {
 	case "users", "warehouses", "customers", "suppliers", "sales", "purchase_orders", "purchase_returns", "invoices_incoming", "invoices_outgoing", "cash_drawers", "stock_opnames":
@@ -911,6 +916,14 @@ func (s *BackupService) scopedTableQuery(tx *gorm.DB, tableName string, companyI
 		return tx.Table(tableName).Where("cash_drawer_id IN (?)", companyCashDrawers)
 	case "stock_opname_items":
 		return tx.Table(tableName).Where("opname_id IN (?)", companyStockOpnames)
+	case "stock_transfer_items":
+		return tx.Table(tableName).Where("transfer_id IN (?)", companyStockTransfers)
+	case "stock_transfers":
+		return tx.Table(tableName).Where("from_warehouse_id IN (?)", companyWarehouses).Or("to_warehouse_id IN (?)", companyWarehouses)
+	case "stock_movements":
+		return tx.Table(tableName).Where("warehouse_id IN (?)", companyWarehouses)
+	case "inventory":
+		return tx.Table(tableName).Where("warehouse_id IN (?)", companyWarehouses)
 	case "price_tiers":
 		return tx.Table(tableName).Where("product_id IN (?)", companyProducts)
 	case "promotion_products":
