@@ -1,0 +1,374 @@
+package handlers
+
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/pos-retail/go_backend/internal/models"
+	"github.com/pos-retail/go_backend/internal/services"
+	"github.com/pos-retail/go_backend/internal/utils"
+)
+
+type BackupHandler struct {
+	backupService *services.BackupService
+}
+
+func NewBackupHandler(backupService *services.BackupService) *BackupHandler {
+	return &BackupHandler{
+		backupService: backupService,
+	}
+}
+
+type UserPayload struct {
+	UserID    string
+	CompanyID uuid.UUID
+	Role      string
+}
+
+func GetUserFromContext(c *fiber.Ctx) *UserPayload {
+	user, ok := c.Locals("user").(*utils.JWTPayload)
+	if !ok {
+		return nil
+	}
+
+	companyID, err := uuid.Parse(user.CompanyID)
+	if err != nil {
+		return nil
+	}
+
+	return &UserPayload{
+		UserID:    user.UserID,
+		CompanyID: companyID,
+		Role:      user.Role,
+	}
+}
+
+func (h *BackupHandler) CreateBackup(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	if user.Role != "admin" && user.Role != "superadmin" {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"success": false,
+			"error":   "Only admin can create backup",
+		})
+	}
+
+	var req models.CreateBackupRequest
+	if err := c.BodyParser(&req); err != nil {
+		req.IsAuto = false
+	}
+
+	backup, err := h.backupService.CreateBackup(user.CompanyID, "", user.UserID, req.IsAuto)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data": fiber.Map{
+			"id":                  backup.ID,
+			"filename":            backup.Filename,
+			"file_size":           backup.FileSize,
+			"file_size_formatted": formatFileSize(backup.FileSize),
+			"status":              backup.Status,
+			"table_count":         backup.TableCount,
+			"row_count":           backup.RowCount,
+			"created_at":          backup.CreatedAt,
+			"is_auto":             backup.IsAuto,
+		},
+	})
+}
+
+func (h *BackupHandler) ListBackups(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	backups, err := h.backupService.ListBackups(user.CompanyID)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	var response []fiber.Map
+	for _, backup := range backups {
+		response = append(response, fiber.Map{
+			"id":                  backup.ID,
+			"company_id":          backup.CompanyID,
+			"filename":            backup.Filename,
+			"file_path":           backup.FilePath,
+			"file_size":           backup.FileSize,
+			"file_size_formatted": formatFileSize(backup.FileSize),
+			"status":              backup.Status,
+			"created_by":          backup.CreatedBy,
+			"created_at":          backup.CreatedAt,
+			"is_auto":             backup.IsAuto,
+			"table_count":         backup.TableCount,
+			"row_count":           backup.RowCount,
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    response,
+	})
+}
+
+func (h *BackupHandler) DownloadBackup(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	filename := c.Params("filename")
+	if filename == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Filename required",
+		})
+	}
+
+	filePath, err := h.backupService.GetBackupFilePath(user.CompanyID, filename)
+	if err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   "Backup file not found",
+		})
+	}
+
+	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	return c.SendFile(filePath)
+}
+
+func (h *BackupHandler) DeleteBackup(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	if user.Role != "admin" && user.Role != "superadmin" {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"success": false,
+			"error":   "Only admin can delete backup",
+		})
+	}
+
+	filename := c.Params("filename")
+	if filename == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Filename required",
+		})
+	}
+
+	err := h.backupService.DeleteBackup(user.CompanyID, filename)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"message": "Backup deleted successfully",
+	})
+}
+
+func (h *BackupHandler) GetSchedule(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	schedule, err := h.backupService.GetSchedule(user.CompanyID)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    schedule,
+	})
+}
+
+func (h *BackupHandler) UpdateSchedule(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	if user.Role != "admin" && user.Role != "superadmin" {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"success": false,
+			"error":   "Only admin can update schedule",
+		})
+	}
+
+	var req models.UpdateScheduleRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Invalid request body",
+		})
+	}
+
+	err := h.backupService.UpdateSchedule(user.CompanyID, &req)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	schedule, _ := h.backupService.GetSchedule(user.CompanyID)
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    schedule,
+		"message": "Schedule updated successfully",
+	})
+}
+
+func (h *BackupHandler) ValidateRestore(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	filename := c.Query("filename")
+	if filename == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Filename required",
+		})
+	}
+
+	validation, err := h.backupService.ValidateRestore(user.CompanyID, filename)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    validation,
+	})
+}
+
+func (h *BackupHandler) RestoreBackup(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	if user.Role != "admin" && user.Role != "superadmin" {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"success": false,
+			"error":   "Only admin can restore backup",
+		})
+	}
+
+	var req models.RestoreRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Invalid request body",
+		})
+	}
+
+	if req.Filename == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Filename required",
+		})
+	}
+
+	if !req.Confirm {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Confirmation required",
+		})
+	}
+
+	result, err := h.backupService.RestoreBackup(user.CompanyID, "", req.Filename, req.Confirm)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    result,
+		"message": "Restore completed successfully",
+	})
+}
+
+func formatFileSize(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+func formatDateTime(t time.Time) string {
+	return t.Format("02 Jan 2006, 15:04")
+}
+
+func formatDate(t time.Time) string {
+	return t.Format("02 Jan 2006")
+}
+
+func formatNumber(n int64) string {
+	return strconv.FormatInt(n, 10)
+}

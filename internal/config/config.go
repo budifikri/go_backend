@@ -17,6 +17,12 @@ type Config struct {
 	Log      LogConfig
 	Security SecurityConfig
 	Perf     PerformanceConfig
+	Backup   BackupConfig
+}
+
+type BackupConfig struct {
+	Path       string
+	PgDumpPath string
 }
 
 type ServerConfig struct {
@@ -131,6 +137,10 @@ func Load() (*Config, error) {
 		},
 		Perf: PerformanceConfig{
 			CompressionEnabled: getEnvAsBool("COMPRESSION_ENABLED", true),
+		},
+		Backup: BackupConfig{
+			Path:       getEnv("BACKUP_PATH", "./backups"),
+			PgDumpPath: getEnv("PG_DUMP_PATH", "pg_dump"),
 		},
 	}, nil
 }

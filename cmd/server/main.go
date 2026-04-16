@@ -93,6 +93,8 @@ func main() {
 		&models.InvoicePayment{},
 		&models.CashDrawer{},
 		&models.CashDrawerTransaction{},
+		&models.BackupLog{},
+		&models.BackupSchedule{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -115,6 +117,7 @@ func main() {
 	promotionRepo := repository.NewPromotionRepository(db)
 	financeRepo := repository.NewFinanceRepository(db)
 	cashDrawerRepo := repository.NewCashDrawerRepository(db)
+	backupRepo := repository.NewBackupRepository(db)
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
@@ -133,6 +136,7 @@ func main() {
 	companyService := services.NewCompanyService(db)
 	userService := services.NewUserService(db)
 	testDataService := services.NewTestDataService(db)
+	backupService := services.NewBackupService(db, backupRepo, cfg)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -154,6 +158,7 @@ func main() {
 	healthHandler := handlers.NewHealthHandler(db, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
 	logHandler := handlers.NewLogHandler(crudLogger)
 	testDataHandler := handlers.NewTestDataHandler(testDataService)
+	backupHandler := handlers.NewBackupHandler(backupService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -400,8 +405,26 @@ func main() {
 	removeData.Delete("/transactions", testDataHandler.DeleteTransactionData)
 	removeData.Delete("/table", testDataHandler.DeleteTableData)
 
+	// Backup routes
+	backup := protected.Group("/backup", middleware.RoleMiddleware("admin", "manager"))
+	backup.Post("/", backupHandler.CreateBackup)
+	backup.Get("/list", backupHandler.ListBackups)
+	backup.Get("/download/:filename", backupHandler.DownloadBackup)
+	backup.Delete("/:filename", backupHandler.DeleteBackup)
+	backup.Get("/schedule", backupHandler.GetSchedule)
+	backup.Post("/schedule", backupHandler.UpdateSchedule)
+
+	// Restore routes
+	restore := protected.Group("/restore", middleware.RoleMiddleware("admin"))
+	restore.Post("/validate", backupHandler.ValidateRestore)
+	restore.Post("/", backupHandler.RestoreBackup)
+
 	// Health check
 	app.Get("/health", healthHandler.GetHealth)
+
+	// Start backup scheduler
+	go backupService.StartAllSchedules()
+	defer backupService.Stop()
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Server starting on %s", addr)

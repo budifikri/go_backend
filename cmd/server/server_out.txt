@@ -1,0 +1,3 @@
+
+2026/04/16 09:07:39 [35mD:/Project/pos_retail/go_backend/internal/database/database.go:33
+[0m[31m[error] [0mfailed to initialize database, got error failed to connect to `host=localhost user=postgres database=pos_retail`: server error (FATAL: password authentication failed for user "postgres" (SQLSTATE 28P01))
