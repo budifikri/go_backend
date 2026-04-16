@@ -348,6 +348,101 @@ func (h *BackupHandler) RestoreBackup(c *fiber.Ctx) error {
 	})
 }
 
+func (h *BackupHandler) DeleteData(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	if user.Role != "admin" && user.Role != "superadmin" {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"success": false,
+			"error":   "Only admin can delete data",
+		})
+	}
+
+	var req models.DeleteDataRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Invalid request body",
+		})
+	}
+
+	if req.Scope == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Scope is required (all, master, transaction)",
+		})
+	}
+
+	if req.Scope != "all" && req.Scope != "master" && req.Scope != "transaction" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Invalid scope. Must be: all, master, or transaction",
+		})
+	}
+
+	if !req.Backuped {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Harap buat backup sebelum menghapus data",
+		})
+	}
+
+	result, err := h.backupService.DeleteData(user.CompanyID, req.Scope)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    result,
+		"message": fmt.Sprintf("Berhasil menghapus %d data dari scope %s", result.TotalRecords, req.Scope),
+	})
+}
+
+func (h *BackupHandler) GetTableCounts(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	scope := c.Params("scope")
+	if scope == "" {
+		scope = "all"
+	}
+
+	if scope != "all" && scope != "master" && scope != "transaction" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "Invalid scope. Must be: all, master, or transaction",
+		})
+	}
+
+	result, err := h.backupService.GetTableCounts(user.CompanyID, scope)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    result,
+	})
+}
+
 func formatFileSize(bytes int64) string {
 	const unit = 1024
 	if bytes < unit {

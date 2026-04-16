@@ -103,6 +103,43 @@ var sharedTables = []string{
 	"units_of_measure",
 }
 
+var masterTables = []string{
+	"users",
+	"warehouses",
+	"customers",
+	"suppliers",
+	"products",
+	"categories",
+	"units_of_measure",
+	"promotions",
+	"promotion_products",
+	"promotion_categories",
+	"promotion_customers",
+	"price_tiers",
+}
+
+var transactionTables = []string{
+	"sales",
+	"sale_items",
+	"sale_payments",
+	"purchase_orders",
+	"purchase_order_items",
+	"purchase_returns",
+	"purchase_return_items",
+	"invoices_incoming",
+	"invoices_outgoing",
+	"invoice_items",
+	"invoice_payments",
+	"cash_drawers",
+	"cash_drawer_transactions",
+	"stock_opnames",
+	"stock_opname_items",
+	"item_exchanges",
+	"exchange_items",
+	"sales_returns",
+	"sales_return_items",
+}
+
 func (s *BackupService) CreateBackup(companyID uuid.UUID, companyCode, userID string, isAuto bool) (*models.BackupLog, error) {
 	startTime := time.Now()
 
@@ -817,4 +854,105 @@ func ParseCronToHuman(cronStr string) string {
 	default:
 		return "custom"
 	}
+}
+
+func (s *BackupService) getTablesByScope(scope string) []string {
+	switch scope {
+	case "master":
+		return masterTables
+	case "transaction":
+		return transactionTables
+	case "all":
+		allTables := make([]string, 0, len(masterTables)+len(transactionTables))
+		allTables = append(allTables, masterTables...)
+		allTables = append(allTables, transactionTables...)
+		return allTables
+	default:
+		return masterTables
+	}
+}
+
+func (s *BackupService) hasCompanyID(tableName string) bool {
+	tablesWithCompanyID := map[string]bool{
+		"users":             true,
+		"warehouses":        true,
+		"customers":         true,
+		"suppliers":         true,
+		"sales":             true,
+		"sale_payments":     true,
+		"purchase_orders":   true,
+		"purchase_returns":  true,
+		"invoices_incoming": true,
+		"invoices_outgoing": true,
+		"cash_drawers":      true,
+		"stock_opnames":     true,
+		"products":          true,
+		"categories":        true,
+	}
+	return tablesWithCompanyID[tableName]
+}
+
+func (s *BackupService) GetTableCounts(companyID uuid.UUID, scope string) (*models.ScopeCountResponse, error) {
+	tables := s.getTablesByScope(scope)
+	var counts []models.TableCount
+	var total int64
+
+	for _, table := range tables {
+		var count int64
+		if s.hasCompanyID(table) {
+			if err := s.db.Table(table).Where("company_id = ?", companyID).Count(&count).Error; err != nil {
+				continue
+			}
+		} else {
+			if err := s.db.Table(table).Count(&count).Error; err != nil {
+				continue
+			}
+		}
+		counts = append(counts, models.TableCount{
+			TableName: table,
+			RowCount:  count,
+		})
+		total += count
+	}
+
+	return &models.ScopeCountResponse{
+		Scope:  scope,
+		Tables: counts,
+		Total:  total,
+	}, nil
+}
+
+func (s *BackupService) DeleteData(companyID uuid.UUID, scope string) (*models.DeleteDataResponse, error) {
+	tables := s.getTablesByScope(scope)
+
+	deletedRecords := make(map[string]int64)
+	var tablesCleared []string
+	var totalRecords int64
+
+	for _, table := range tables {
+		var result *gorm.DB
+		if s.hasCompanyID(table) {
+			result = s.db.Table(table).Where("company_id = ?", companyID).Delete(nil)
+		} else {
+			result = s.db.Table(table).Delete(nil)
+		}
+
+		if result.Error != nil {
+			return nil, fmt.Errorf("error deleting table %s: %w", table, result.Error)
+		}
+
+		rowsAffected := result.RowsAffected
+		if rowsAffected > 0 {
+			deletedRecords[table] = rowsAffected
+			tablesCleared = append(tablesCleared, table)
+			totalRecords += rowsAffected
+		}
+	}
+
+	return &models.DeleteDataResponse{
+		Scope:          scope,
+		TablesCleared:  tablesCleared,
+		RecordsDeleted: deletedRecords,
+		TotalRecords:   totalRecords,
+	}, nil
 }

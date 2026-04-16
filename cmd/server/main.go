@@ -413,6 +413,8 @@ func main() {
 	backup.Delete("/:filename", backupHandler.DeleteBackup)
 	backup.Get("/schedule", backupHandler.GetSchedule)
 	backup.Post("/schedule", backupHandler.UpdateSchedule)
+	backup.Post("/delete", backupHandler.DeleteData)
+	backup.Get("/count/:scope", backupHandler.GetTableCounts)
 
 	// Restore routes
 	restore := protected.Group("/restore", middleware.RoleMiddleware("admin"))

@@ -107,3 +107,26 @@ type RestoreValidation struct {
 	IsValid           bool      `json:"is_valid"`
 	ErrorMessage      string    `json:"error_message,omitempty"`
 }
+
+type DeleteDataRequest struct {
+	Scope    string `json:"scope" validate:"required,oneof=all master transaction"`
+	Backuped bool   `json:"backuped"`
+}
+
+type TableCount struct {
+	TableName string `json:"table_name"`
+	RowCount  int64  `json:"row_count"`
+}
+
+type ScopeCountResponse struct {
+	Scope  string       `json:"scope"`
+	Tables []TableCount `json:"tables"`
+	Total  int64        `json:"total"`
+}
+
+type DeleteDataResponse struct {
+	Scope          string           `json:"scope"`
+	TablesCleared  []string         `json:"tables_cleared"`
+	RecordsDeleted map[string]int64 `json:"records_deleted"`
+	TotalRecords   int64            `json:"total_records"`
+}
