@@ -420,6 +420,7 @@ func main() {
 	restore := protected.Group("/restore", middleware.RoleMiddleware("admin"))
 	restore.Post("/validate", backupHandler.ValidateRestore)
 	restore.Post("/", backupHandler.RestoreBackup)
+	restore.Get("/progress", backupHandler.RestoreProgress)
 
 	// Health check
 	app.Get("/health", healthHandler.GetHealth)

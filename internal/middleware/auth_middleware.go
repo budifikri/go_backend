@@ -26,23 +26,27 @@ func NewAuthMiddleware(jwtUtil *utils.JWTUtil) *AuthMiddleware {
 // Handler returns the Fiber middleware handler
 func (m *AuthMiddleware) Handler() fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		var token string
+
 		authHeader := c.Get("Authorization")
-		if authHeader == "" {
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+				token = parts[1]
+			}
+		}
+
+		if token == "" {
+			token = c.Query("token")
+		}
+
+		if token == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(response.ApiResponse{
 				Success: false,
-				Error:   "Authorization header required",
+				Error:   "Authorization token required",
 			})
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			return c.Status(fiber.StatusUnauthorized).JSON(response.ApiResponse{
-				Success: false,
-				Error:   "Invalid authorization header format",
-			})
-		}
-
-		token := parts[1]
 		payload, err := m.jwtUtil.VerifyToken(token)
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(response.ApiResponse{

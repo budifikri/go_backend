@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,14 +21,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type RestoreProgress struct {
+	CompanyID string  `json:"company_id"`
+	Stage     string  `json:"stage"`
+	Progress  float64 `json:"progress"`
+	Message   string  `json:"message"`
+	Table     string  `json:"table,omitempty"`
+}
+
 type BackupService struct {
-	db           *gorm.DB
-	repo         *repository.BackupRepository
-	backupDir    string
-	pgDumpPath   string
-	dbConfig     config.DatabaseConfig
-	cron         *cron.Cron
-	companyCrons map[uuid.UUID]cron.EntryID
+	db            *gorm.DB
+	repo          *repository.BackupRepository
+	backupDir     string
+	pgDumpPath    string
+	dbConfig      config.DatabaseConfig
+	cron          *cron.Cron
+	companyCrons  map[uuid.UUID]cron.EntryID
+	progressMu    sync.RWMutex
+	progressChans map[uuid.UUID]chan RestoreProgress
 }
 
 func NewBackupService(db *gorm.DB, repo *repository.BackupRepository, cfg *config.Config) *BackupService {
@@ -41,13 +53,14 @@ func NewBackupService(db *gorm.DB, repo *repository.BackupRepository, cfg *confi
 	}
 
 	svc := &BackupService{
-		db:           db,
-		repo:         repo,
-		backupDir:    backupDir,
-		pgDumpPath:   pgDumpPath,
-		dbConfig:     cfg.Database,
-		cron:         cron.New(),
-		companyCrons: make(map[uuid.UUID]cron.EntryID),
+		db:            db,
+		repo:          repo,
+		backupDir:     backupDir,
+		pgDumpPath:    pgDumpPath,
+		dbConfig:      cfg.Database,
+		cron:          cron.New(),
+		companyCrons:  make(map[uuid.UUID]cron.EntryID),
+		progressChans: make(map[uuid.UUID]chan RestoreProgress),
 	}
 
 	svc.ensureBackupDir()
@@ -56,6 +69,61 @@ func NewBackupService(db *gorm.DB, repo *repository.BackupRepository, cfg *confi
 
 func (s *BackupService) ensureBackupDir() {
 	os.MkdirAll(s.backupDir, 0755)
+}
+
+func (s *BackupService) SubscribeProgress(companyID uuid.UUID) (<-chan RestoreProgress, func()) {
+	s.progressMu.Lock()
+	ch := make(chan RestoreProgress, 100)
+	s.progressChans[companyID] = ch
+	s.progressMu.Unlock()
+
+	done := func() {
+		s.progressMu.Lock()
+		delete(s.progressChans, companyID)
+		close(ch)
+		s.progressMu.Unlock()
+	}
+	return ch, done
+}
+
+func (s *BackupService) emitProgress(companyID uuid.UUID, stage string, progress float64, message string, table string) {
+	s.progressMu.RLock()
+	ch, ok := s.progressChans[companyID]
+	s.progressMu.RUnlock()
+
+	if ok {
+		p := RestoreProgress{
+			CompanyID: companyID.String(),
+			Stage:     stage,
+			Progress:  progress,
+			Message:   message,
+			Table:     table,
+		}
+		select {
+		case ch <- p:
+		default:
+		}
+	}
+}
+
+func (s *BackupService) emitComplete(companyID uuid.UUID, status string, rowsRestored int64, errorMsg string) {
+	s.progressMu.RLock()
+	ch, ok := s.progressChans[companyID]
+	s.progressMu.RUnlock()
+
+	if ok {
+		p := map[string]interface{}{
+			"type":          "complete",
+			"status":        status,
+			"rows_restored": rowsRestored,
+			"error":         errorMsg,
+		}
+		data, _ := json.Marshal(p)
+		select {
+		case ch <- RestoreProgress{CompanyID: companyID.String(), Stage: "complete", Message: string(data)}:
+		default:
+		}
+	}
 }
 
 type TableInfo struct {
@@ -393,22 +461,32 @@ func (s *BackupService) RestoreBackup(companyID uuid.UUID, companyCode, filename
 
 	startTime := time.Now()
 
+	s.emitProgress(companyID, "preparing", 5, "Mempersiapkan restore...", "")
+
 	safetyFilename, err := s.CreateBackup(companyID, companyCode, "system-safety", false)
 	if err != nil {
+		s.emitComplete(companyID, "error", 0, fmt.Sprintf("failed to create safety backup: %v", err))
 		return nil, fmt.Errorf("failed to create safety backup: %w", err)
 	}
 
+	s.emitProgress(companyID, "backup", 15, "Safety backup dibuat: "+safetyFilename.Filename, "")
+
 	filePath, err := s.GetBackupFilePath(companyID, filename)
 	if err != nil {
+		s.emitComplete(companyID, "error", 0, err.Error())
 		return nil, err
 	}
 
-	tablesCleared, rowsRestored, err := s.importBackup(filePath, companyID)
+	s.emitProgress(companyID, "clearing", 25, "Menghapus data lama...", "")
+	tablesCleared, rowsRestored, err := s.importBackupWithProgress(filePath, companyID)
 	if err != nil {
+		s.emitComplete(companyID, "error", 0, fmt.Sprintf("restore failed: %v", err))
 		return nil, fmt.Errorf("restore failed: %w", err)
 	}
 
 	duration := time.Since(startTime)
+
+	s.emitComplete(companyID, "success", rowsRestored, "")
 
 	result := &models.RestoreResult{
 		Status:        "success",
@@ -459,6 +537,108 @@ func (s *BackupService) importBackup(filePath string, companyID uuid.UUID) (int,
 				columns = strings.Split(colsPart, ", ")
 				inCopyBlock = true
 				values = [][]string{}
+				continue
+			}
+		}
+
+		if inCopyBlock {
+			if line == "\\." {
+				if currentTable != "" && len(values) > 0 {
+					cleared, rows, err := s.importTableData(tx, currentTable, columns, values, companyID)
+					if err != nil {
+						tx.Rollback()
+						return tableCount, rowCount, err
+					}
+					if cleared {
+						tableCount++
+					}
+					rowCount += rows
+				}
+				currentTable = ""
+				columns = nil
+				values = nil
+				inCopyBlock = false
+			} else if line != "" {
+				rowValues := parseCSVLine(line)
+				values = append(values, rowValues)
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		tx.Rollback()
+		return tableCount, rowCount, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return tableCount, rowCount, err
+	}
+
+	return tableCount, rowCount, nil
+}
+
+func (s *BackupService) importBackupWithProgress(filePath string, companyID uuid.UUID) (int, int64, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer file.Close()
+
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return 0, 0, tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	scanner := bufio.NewScanner(file)
+	var currentTable string
+	var columns []string
+	var rowCount int64
+	var tableCount int
+	var inCopyBlock bool
+	var values [][]string
+	var totalTables int
+	var processedTables int
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, "COPY ") {
+			parts := strings.Fields(line)
+			if len(parts) >= 4 && parts[3] == "FROM" {
+				totalTables++
+			}
+		}
+	}
+	file.Close()
+
+	file, err = os.Open(filePath)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer file.Close()
+
+	scanner = bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, "COPY ") {
+			parts := strings.Fields(line)
+			if len(parts) >= 4 && parts[3] == "FROM" {
+				currentTable = strings.TrimSuffix(parts[1], "(")
+				colsPart := strings.TrimSuffix(strings.TrimPrefix(line, "COPY "+currentTable+" ("), ") FROM stdin;")
+				columns = strings.Split(colsPart, ", ")
+				inCopyBlock = true
+				values = [][]string{}
+				processedTables++
+				progress := 25.0 + (float64(processedTables)/float64(totalTables+1))*70.0
+				s.emitProgress(companyID, "clearing", progress, "Menghapus: "+currentTable, currentTable)
 				continue
 			}
 		}

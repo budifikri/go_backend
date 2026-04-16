@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -346,6 +349,48 @@ func (h *BackupHandler) RestoreBackup(c *fiber.Ctx) error {
 		"data":    result,
 		"message": "Restore completed successfully",
 	})
+}
+
+func (h *BackupHandler) RestoreProgress(c *fiber.Ctx) error {
+	user := GetUserFromContext(c)
+	if user == nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+
+	c.Set("Content-Type", "text/event-stream")
+	c.Set("Cache-Control", "no-cache")
+	c.Set("Connection", "keep-alive")
+	c.Set("Transfer-Encoding", "chunked")
+
+	ch, done := h.backupService.SubscribeProgress(user.CompanyID)
+	defer done()
+
+	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+		for {
+			select {
+			case progress, ok := <-ch:
+				if !ok {
+					return
+				}
+				if strings.HasPrefix(progress.Message, "[") {
+					fmt.Fprintf(w, "event: complete\n")
+					fmt.Fprintf(w, "data: %s\n\n", progress.Message)
+				} else {
+					data, _ := json.Marshal(progress)
+					fmt.Fprintf(w, "data: %s\n\n", data)
+				}
+				if err := w.Flush(); err != nil {
+					return
+				}
+			case <-c.Context().Done():
+				return
+			}
+		}
+	})
+	return nil
 }
 
 func (h *BackupHandler) DeleteData(c *fiber.Ctx) error {
