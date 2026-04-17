@@ -95,6 +95,7 @@ func main() {
 		&models.CashDrawerTransaction{},
 		&models.BackupLog{},
 		&models.BackupSchedule{},
+		&models.TelegramConfig{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -118,17 +119,18 @@ func main() {
 	financeRepo := repository.NewFinanceRepository(db)
 	cashDrawerRepo := repository.NewCashDrawerRepository(db)
 	backupRepo := repository.NewBackupRepository(db)
+	telegramRepo := repository.NewTelegramRepository(db)
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
 	warehouseService := services.NewWarehouseService(warehouseRepo)
-	inventoryService := services.NewInventoryService(inventoryRepo, productRepo, warehouseRepo, purchaseRepo)
-	salesService := services.NewSalesService(db, salesRepo, cashDrawerRepo)
+	inventoryService := services.NewInventoryServiceWithTelegram(db, inventoryRepo, productRepo, warehouseRepo, purchaseRepo, telegramRepo)
+	salesService := services.NewSalesServiceWithTelegram(db, salesRepo, cashDrawerRepo, telegramRepo)
 	returnsService := services.NewReturnsService(db, returnsRepo)
 	exchangesService := services.NewExchangesService(db, exchangesRepo)
 	customerService := services.NewCustomerService(customerRepo)
 	supplierService := services.NewSupplierService(supplierRepo)
-	purchaseService := services.NewPurchaseService(db, purchaseRepo, inventoryRepo)
+	purchaseService := services.NewPurchaseServiceWithTelegram(db, purchaseRepo, inventoryRepo, telegramRepo)
 	promotionService := services.NewPromotionService(db, promotionRepo)
 	priceTierService := services.NewPriceTierService(db)
 	financeService := services.NewFinanceService(db, financeRepo)
@@ -137,6 +139,7 @@ func main() {
 	userService := services.NewUserService(db)
 	testDataService := services.NewTestDataService(db)
 	backupService := services.NewBackupService(db, backupRepo, cfg)
+	telegramService := services.NewTelegramService(db, telegramRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -159,6 +162,7 @@ func main() {
 	logHandler := handlers.NewLogHandler(crudLogger)
 	testDataHandler := handlers.NewTestDataHandler(testDataService)
 	backupHandler := handlers.NewBackupHandler(backupService)
+	telegramHandler := handlers.NewTelegramHandler(telegramService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -415,6 +419,12 @@ func main() {
 	backup.Post("/schedule", backupHandler.UpdateSchedule)
 	backup.Post("/delete", backupHandler.DeleteData)
 	backup.Get("/count/:scope", backupHandler.GetTableCounts)
+
+	// Telegram routes
+	telegram := protected.Group("/telegram")
+	telegram.Get("/", telegramHandler.GetConfig)
+	telegram.Post("/", telegramHandler.SaveConfig)
+	telegram.Post("/test", telegramHandler.TestConnection)
 
 	// Restore routes
 	restore := protected.Group("/restore", middleware.RoleMiddleware("admin"))

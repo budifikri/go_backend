@@ -18,10 +18,15 @@ type SalesService struct {
 	db             *gorm.DB
 	salesRepo      *repository.SalesRepository
 	cashDrawerRepo *repository.CashDrawerRepository
+	telegramRepo   *repository.TelegramRepository
 }
 
 func NewSalesService(db *gorm.DB, salesRepo *repository.SalesRepository, cashDrawerRepo *repository.CashDrawerRepository) *SalesService {
 	return &SalesService{db: db, salesRepo: salesRepo, cashDrawerRepo: cashDrawerRepo}
+}
+
+func NewSalesServiceWithTelegram(db *gorm.DB, salesRepo *repository.SalesRepository, cashDrawerRepo *repository.CashDrawerRepository, telegramRepo *repository.TelegramRepository) *SalesService {
+	return &SalesService{db: db, salesRepo: salesRepo, cashDrawerRepo: cashDrawerRepo, telegramRepo: telegramRepo}
 }
 
 type CreateSaleItemInput struct {
@@ -446,6 +451,26 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 		"loyalty_points_redeemed": createdSale.LoyaltyPointsRedeemed,
 		"items":                   processed,
 	}, "Sale created successfully")
+
+	// Send Telegram notification for Penjualan
+	if s.telegramRepo != nil {
+		go s.sendTelegramPenjualanNotification(companyID, &createdSale, processed)
+	}
+
+	return response.NewSuccessResponse(map[string]interface{}{
+		"sale_id":                 createdSale.ID,
+		"sale_number":             createdSale.SaleNumber,
+		"sale_date":               createdSale.SaleDate,
+		"subtotal":                createdSale.Subtotal,
+		"discount_amount":         createdSale.DiscountAmount,
+		"tax_amount":              createdSale.TaxAmount,
+		"total_amount":            createdSale.TotalAmount,
+		"paid_amount":             createdSale.PaidAmount,
+		"change_amount":           createdSale.ChangeAmount,
+		"loyalty_points_earned":   createdSale.LoyaltyPointsEarned,
+		"loyalty_points_redeemed": createdSale.LoyaltyPointsRedeemed,
+		"items":                   processed,
+	}, "Sale created successfully")
 }
 
 func (s *SalesService) GetSales(filters map[string]string, limit, offset int) response.PaginatedResponse {
@@ -524,4 +549,19 @@ func (s *SalesService) GetSaleByID(id string) response.ApiResponse {
 	data["payments"] = payments
 
 	return response.NewSuccessResponse(data, "")
+}
+
+func (s *SalesService) sendTelegramPenjualanNotification(companyID uuid.UUID, sale *models.Sale, items []ProcessedSaleItem) {
+	config, err := s.telegramRepo.GetConfigByCompany(companyID)
+	if err != nil || config == nil || !config.IsActive || !config.NotifyPenjualan || config.TelegramIDPenjualan == "" {
+		return
+	}
+
+	telegramSvc := NewTelegramService(s.db, s.telegramRepo)
+
+	saleModel, _ := s.salesRepo.GetSaleByID(sale.ID)
+	saleItems, _ := s.salesRepo.GetSaleItems(sale.ID)
+
+	message := telegramSvc.FormatPenjualanMessageRow(saleModel, saleItems)
+	_ = telegramSvc.SendNotification(config.TelegramIDPenjualan, config.APIKey, message)
 }

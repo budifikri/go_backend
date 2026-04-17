@@ -18,10 +18,15 @@ type PurchaseService struct {
 	db            *gorm.DB
 	purchaseRepo  *repository.PurchaseRepository
 	inventoryRepo *repository.InventoryRepository
+	telegramRepo  *repository.TelegramRepository
 }
 
 func NewPurchaseService(db *gorm.DB, purchaseRepo *repository.PurchaseRepository, inventoryRepo *repository.InventoryRepository) *PurchaseService {
 	return &PurchaseService{db: db, purchaseRepo: purchaseRepo, inventoryRepo: inventoryRepo}
+}
+
+func NewPurchaseServiceWithTelegram(db *gorm.DB, purchaseRepo *repository.PurchaseRepository, inventoryRepo *repository.InventoryRepository, telegramRepo *repository.TelegramRepository) *PurchaseService {
+	return &PurchaseService{db: db, purchaseRepo: purchaseRepo, inventoryRepo: inventoryRepo, telegramRepo: telegramRepo}
 }
 
 type CreatePurchaseOrderItemInput struct {
@@ -407,6 +412,11 @@ func (s *PurchaseService) ApprovePurchaseOrder(id string) response.ApiResponse {
 	})
 	if err != nil {
 		return response.NewErrorResponse("Failed to approve purchase order")
+	}
+
+	// Send Telegram notification for Pembelian
+	if s.telegramRepo != nil {
+		go s.sendTelegramPembelianNotification(po.CompanyID, poID)
 	}
 
 	return s.GetPurchaseOrderByID(id)
@@ -1296,4 +1306,23 @@ func (s *PurchaseService) DeletePurchaseReturn(id string) response.ApiResponse {
 	}
 
 	return response.NewSuccessResponse(nil, "Purchase return deleted successfully")
+}
+
+func (s *PurchaseService) sendTelegramPembelianNotification(companyID uuid.UUID, poID uuid.UUID) {
+	config, err := s.telegramRepo.GetConfigByCompany(companyID)
+	if err != nil || config == nil || !config.IsActive || !config.NotifyPembelian || config.TelegramIDPembelian == "" {
+		return
+	}
+
+	telegramSvc := NewTelegramService(s.db, s.telegramRepo)
+
+	po, _ := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	if po == nil {
+		return
+	}
+
+	poItems, _ := s.purchaseRepo.GetPurchaseOrderItems(poID)
+
+	message := telegramSvc.FormatPembelianMessageRow(po, poItems)
+	_ = telegramSvc.SendNotification(config.TelegramIDPembelian, config.APIKey, message)
 }

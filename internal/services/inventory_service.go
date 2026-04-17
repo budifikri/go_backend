@@ -9,6 +9,7 @@ import (
 	"github.com/pos-retail/go_backend/internal/models"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
+	"gorm.io/gorm"
 )
 
 var (
@@ -33,23 +34,45 @@ type UpdateStockOpnameRequest struct {
 }
 
 type InventoryService struct {
+	db            *gorm.DB
 	inventoryRepo *repository.InventoryRepository
 	productRepo   *repository.ProductRepository
 	warehouseRepo *repository.WarehouseRepository
 	purchaseRepo  *repository.PurchaseRepository
+	telegramRepo  *repository.TelegramRepository
 }
 
 func NewInventoryService(
+	db *gorm.DB,
 	inventoryRepo *repository.InventoryRepository,
 	productRepo *repository.ProductRepository,
 	warehouseRepo *repository.WarehouseRepository,
 	purchaseRepo *repository.PurchaseRepository,
 ) *InventoryService {
 	return &InventoryService{
+		db:            db,
 		inventoryRepo: inventoryRepo,
 		productRepo:   productRepo,
 		warehouseRepo: warehouseRepo,
 		purchaseRepo:  purchaseRepo,
+	}
+}
+
+func NewInventoryServiceWithTelegram(
+	db *gorm.DB,
+	inventoryRepo *repository.InventoryRepository,
+	productRepo *repository.ProductRepository,
+	warehouseRepo *repository.WarehouseRepository,
+	purchaseRepo *repository.PurchaseRepository,
+	telegramRepo *repository.TelegramRepository,
+) *InventoryService {
+	return &InventoryService{
+		db:            db,
+		inventoryRepo: inventoryRepo,
+		productRepo:   productRepo,
+		warehouseRepo: warehouseRepo,
+		purchaseRepo:  purchaseRepo,
+		telegramRepo:  telegramRepo,
 	}
 }
 
@@ -880,6 +903,11 @@ func (s *InventoryService) UpdateStockOpnameStatus(id, status, userID string) re
 
 	s.inventoryRepo.UpdateStockOpname(opname)
 
+	// Send Telegram notification for Stock Opname
+	if s.telegramRepo != nil && status == "COMPLETED" {
+		go s.sendTelegramStockOpnameNotification(opname.WarehouseID, opnameID)
+	}
+
 	return response.NewSuccessResponse(map[string]interface{}{
 		"id":     opname.ID,
 		"status": opname.Status,
@@ -1030,4 +1058,40 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 
 	updated, _ := s.inventoryRepo.GetStockOpnameByID(opnameID)
 	return response.NewSuccessResponse(updated, "Stock opname updated successfully")
+}
+
+func (s *InventoryService) sendTelegramStockOpnameNotification(warehouseID uuid.UUID, opnameID uuid.UUID) {
+	warehouse, _ := s.warehouseRepo.FindByID(warehouseID)
+	warehouseName := "Unknown"
+	var companyID uuid.UUID
+	if warehouse != nil {
+		warehouseName = warehouse.Name
+		if warehouse.CompanyID != nil {
+			companyID = *warehouse.CompanyID
+		}
+	} else {
+		return
+	}
+
+	opname, _ := s.inventoryRepo.GetStockOpnameByID(opnameID)
+	if opname == nil {
+		return
+	}
+
+	config, err := s.telegramRepo.GetConfigByCompany(companyID)
+	if err != nil || config == nil || !config.IsActive || !config.NotifyStockOpname || config.TelegramIDStockOpname == "" {
+		return
+	}
+
+	telegramSvc := NewTelegramService(s.db, s.telegramRepo)
+
+	discrepancyCount := 0
+	for _, item := range opname.Items {
+		if item.Difference != 0 {
+			discrepancyCount++
+		}
+	}
+
+	message := telegramSvc.FormatStockOpnameMessage(opname, warehouseName, discrepancyCount)
+	_ = telegramSvc.SendNotification(config.TelegramIDStockOpname, config.APIKey, message)
 }
