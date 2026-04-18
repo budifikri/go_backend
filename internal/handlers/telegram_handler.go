@@ -80,6 +80,20 @@ func (h *TelegramHandler) TestConnection(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Telegram ID is required"})
 	}
 
+	if input.Type == "" {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Type is required"})
+	}
+
+	validTypes := map[string]bool{
+		"penjualan":      true,
+		"pembelian":      true,
+		"stock_opname":   true,
+		"closing_drawer": true,
+	}
+	if !validTypes[input.Type] {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Invalid type"})
+	}
+
 	result := h.telegramService.TestConnection(input)
 	if !result.Success {
 		return c.Status(400).JSON(result)

@@ -62,12 +62,66 @@ func (s *TelegramService) TestConnection(input request.TestTelegramRequest) resp
 		return response.NewErrorResponse("API Key tidak dikonfigurasi di server environment")
 	}
 
-	err := s.sendMessage(input.TelegramID, apiKey, "✅ Koneksi berhasil! Bot Telegram terhubung dengan benar.")
+	message := s.formatTestMessage(input.Type)
+	err := s.sendMessage(input.TelegramID, apiKey, message)
 	if err != nil {
 		return response.NewErrorResponse(fmt.Sprintf("Koneksi gagal: %s", err.Error()))
 	}
 
 	return response.NewSuccessResponse(map[string]string{"status": "success", "message": "Koneksi berhasil!"}, "")
+}
+
+func (s *TelegramService) formatTestMessage(notifType string) string {
+	switch notifType {
+	case "penjualan":
+		return "*PREVIEW: PENJUALAN BARU*\n\n" +
+			"🕒 Waktu: 18 Apr 2026, 10:30\n" +
+			"💰 Total: Rp 150.000\n" +
+			"👤 Kasir: Admin\n" +
+			"🏷️ No: SL/2026/0001\n\n" +
+			"📦 *Detail Produk:*\n" +
+			"━━━━━━━━━━━━━━━━━━━━━━━\n" +
+			"• Produk A × 2 = Rp 100.000\n" +
+			"• Produk B × 1 = Rp 50.000\n" +
+			"━━━━━━━━━━━━━━━━━━━━━━━\n" +
+			"📊 Total Item: 2 | Qty: 3"
+	case "pembelian":
+		return "*PREVIEW: PEMBELIAN BARU*\n\n" +
+			"🏢 Supplier: Supplier ABC\n" +
+			"📅 Tanggal: 18 Apr 2026\n" +
+			"💰 Total: Rp 500.000\n" +
+			"📄 No: PO/2026/0001\n\n" +
+			"📦 *Detail Produk:*\n" +
+			"━━━━━━━━━━━━━━━━━━━━━━━\n" +
+			"• Produk A × 10 = Rp 300.000\n" +
+			"• Produk B × 5 = Rp 200.000\n" +
+			"━━━━━━━━━━━━━━━━━━━━━━━\n" +
+			"📊 Total Item: 2 | Qty: 15"
+	case "stock_opname":
+		return "*PREVIEW: STOCK OPNAME SELESAI*\n\n" +
+			"🏢 Warehouse: Gudang Utama\n" +
+			"📅 Tanggal: 18 Apr 2026\n" +
+			"✅ Status: Completed\n\n" +
+			"📊 *Ringkasan:*\n" +
+			"━━━━━━━━━━━━━━━━━━━━━━━\n" +
+			"📋 Total SKU: 100\n" +
+			"✅ Sesuai: 95\n" +
+			"⚠️ Selisih: 5 item"
+	case "closing_drawer":
+		return "*PREVIEW: CLOSING DRAWER*\n\n" +
+			"🕒 Waktu: 18 Apr 2026, 22:00\n" +
+			"👤 Kasir: Admin\n" +
+			"🏷️ No: CD/2026/0001\n\n" +
+			"💰 *Setoran:*\n" +
+			"━━━━━━━━━━━━━━━━━━━━━━━\n" +
+			"💵 Saldo Penutupan: Rp 1.000.000\n" +
+			"📊 Ekspektasi: Rp 980.000\n" +
+			"⚖️ Selisih: Rp 20.000\n" +
+			"━━━━━━━━━━━━━━━━━━━━━━━\n" +
+			"\n✅ Penutupan laci telah dilakukan!"
+	default:
+		return "✅ Koneksi berhasil! Bot Telegram terhubung dengan benar."
+	}
 }
 
 func (s *TelegramService) SendNotification(telegramID, message string) error {

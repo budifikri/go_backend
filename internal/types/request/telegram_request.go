@@ -14,4 +14,5 @@ type CreateTelegramRequest struct {
 
 type TestTelegramRequest struct {
 	TelegramID string `json:"telegram_id" validate:"required"`
+	Type       string `json:"type" validate:"required"`
 }
