@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -129,7 +130,14 @@ func (s *TelegramService) SendNotification(telegramID, message string) error {
 	if apiKey == "" {
 		return fmt.Errorf("API Key tidak dikonfigurasi")
 	}
-	return s.sendMessage(telegramID, apiKey, message)
+	log.Printf("[TELEGRAM] Sending to ID: %s, Message length: %d", telegramID, len(message))
+	err := s.sendMessage(telegramID, apiKey, message)
+	if err != nil {
+		log.Printf("[TELEGRAM] SendMessage error: %v", err)
+		return err
+	}
+	log.Printf("[TELEGRAM] SendMessage success")
+	return nil
 }
 
 func (s *TelegramService) sendMessage(telegramID, apiKey, message string) error {

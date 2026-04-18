@@ -1309,20 +1309,58 @@ func (s *PurchaseService) DeletePurchaseReturn(id string) response.ApiResponse {
 }
 
 func (s *PurchaseService) sendTelegramPembelianNotification(companyID uuid.UUID, poID uuid.UUID) {
+	log.Printf("[TELEGRAM] StartingPembelian notification for PO ID: %s, Company ID: %s", poID, companyID)
+
 	config, err := s.telegramRepo.GetConfigByCompany(companyID)
-	if err != nil || config == nil || !config.IsActive || !config.NotifyPembelian || config.TelegramIDPembelian == "" {
+	if err != nil {
+		log.Printf("[TELEGRAM] ERROR: Failed to get config: %v", err)
 		return
 	}
+	if config == nil {
+		log.Printf("[TELEGRAM] ERROR: Config is nil - no telegram config saved for company")
+		return
+	}
+	if !config.IsActive {
+		log.Printf("[TELEGRAM] ERROR: Config IsActive is false")
+		return
+	}
+	if !config.NotifyPembelian {
+		log.Printf("[TELEGRAM] ERROR: NotifyPembelian is false")
+		return
+	}
+	if config.TelegramIDPembelian == "" {
+		log.Printf("[TELEGRAM] ERROR: TelegramIDPembelian is empty")
+		return
+	}
+
+	log.Printf("[TELEGRAM] Config found - TelegramIDPembelian: %s, NotifyPembelian: %v, IsActive: %v", config.TelegramIDPembelian, config.NotifyPembelian, config.IsActive)
 
 	telegramSvc := NewTelegramService(s.db, s.telegramRepo)
 
-	po, _ := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	po, err := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	if err != nil {
+		log.Printf("[TELEGRAM] ERROR: Failed to get PO: %v", err)
+		return
+	}
 	if po == nil {
+		log.Printf("[TELEGRAM] ERROR: PO is nil")
 		return
 	}
 
-	poItems, _ := s.purchaseRepo.GetPurchaseOrderItems(poID)
+	poItems, err := s.purchaseRepo.GetPurchaseOrderItems(poID)
+	if err != nil {
+		log.Printf("[TELEGRAM] ERROR: Failed to get PO items: %v", err)
+		return
+	}
 
 	message := telegramSvc.FormatPembelianMessageRow(po, poItems)
-	_ = telegramSvc.SendNotification(config.TelegramIDPembelian, message)
+	log.Printf("[TELEGRAM] Sending message: %s", message)
+
+	err = telegramSvc.SendNotification(config.TelegramIDPembelian, message)
+	if err != nil {
+		log.Printf("[TELEGRAM] ERROR: Failed to send notification: %v", err)
+		return
+	}
+
+	log.Printf("[TELEGRAM] SUCCESS: Notification sent for PO: %s", po.PoNumber)
 }
