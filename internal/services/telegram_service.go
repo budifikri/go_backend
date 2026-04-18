@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -15,6 +16,10 @@ import (
 	"github.com/pos-retail/go_backend/internal/types/response"
 	"gorm.io/gorm"
 )
+
+func getApiKey() string {
+	return os.Getenv("API_KEY_TELEGRAM")
+}
 
 type TelegramService struct {
 	db           *gorm.DB
@@ -31,15 +36,16 @@ func (s *TelegramService) GetConfigByCompany(companyID uuid.UUID) (*models.Teleg
 
 func (s *TelegramService) SaveConfig(companyID uuid.UUID, input request.CreateTelegramRequest) response.ApiResponse {
 	config := &models.TelegramConfig{
-		CompanyID:             companyID,
-		APIKey:                input.APIKey,
-		TelegramIDPenjualan:   input.TelegramIDPenjualan,
-		TelegramIDPembelian:   input.TelegramIDPembelian,
-		TelegramIDStockOpname: input.TelegramIDStockOpname,
-		NotifyPenjualan:       input.NotifyPenjualan,
-		NotifyPembelian:       input.NotifyPembelian,
-		NotifyStockOpname:     input.NotifyStockOpname,
-		IsActive:              input.IsActive,
+		CompanyID:               companyID,
+		TelegramIDPenjualan:     input.TelegramIDPenjualan,
+		TelegramIDPembelian:     input.TelegramIDPembelian,
+		TelegramIDStockOpname:   input.TelegramIDStockOpname,
+		TelegramIDClosingDrawer: input.TelegramIDClosingDrawer,
+		NotifyPenjualan:         input.NotifyPenjualan,
+		NotifyPembelian:         input.NotifyPembelian,
+		NotifyStockOpname:       input.NotifyStockOpname,
+		NotifyClosingDrawer:     input.NotifyClosingDrawer,
+		IsActive:                input.IsActive,
 	}
 
 	saved, err := s.telegramRepo.SaveConfig(config)
@@ -51,7 +57,12 @@ func (s *TelegramService) SaveConfig(companyID uuid.UUID, input request.CreateTe
 }
 
 func (s *TelegramService) TestConnection(input request.TestTelegramRequest) response.ApiResponse {
-	err := s.sendMessage(input.TelegramID, input.APIKey, "✅ Koneksi berhasil! Bot Telegram terhubung dengan benar.")
+	apiKey := getApiKey()
+	if apiKey == "" {
+		return response.NewErrorResponse("API Key tidak dikonfigurasi di server environment")
+	}
+
+	err := s.sendMessage(input.TelegramID, apiKey, "✅ Koneksi berhasil! Bot Telegram terhubung dengan benar.")
 	if err != nil {
 		return response.NewErrorResponse(fmt.Sprintf("Koneksi gagal: %s", err.Error()))
 	}
@@ -59,7 +70,11 @@ func (s *TelegramService) TestConnection(input request.TestTelegramRequest) resp
 	return response.NewSuccessResponse(map[string]string{"status": "success", "message": "Koneksi berhasil!"}, "")
 }
 
-func (s *TelegramService) SendNotification(telegramID, apiKey, message string) error {
+func (s *TelegramService) SendNotification(telegramID, message string) error {
+	apiKey := getApiKey()
+	if apiKey == "" {
+		return fmt.Errorf("API Key tidak dikonfigurasi")
+	}
 	return s.sendMessage(telegramID, apiKey, message)
 }
 
@@ -212,4 +227,25 @@ func parseAmount(s string) (float64, error) {
 		return 0, nil
 	}
 	return strconv.ParseFloat(s, 64)
+}
+
+func (s *TelegramService) FormatClosingDrawerMessage(drawer *models.CashDrawer, closingBy string) string {
+	var buffer bytes.Buffer
+
+	buffer.WriteString("*CLOSING DRAWER*\n\n")
+	buffer.WriteString(fmt.Sprintf("🕒 Waktu: %s\n", drawer.ClosedAt.Format("02 Jan 2006, 15:04")))
+	buffer.WriteString(fmt.Sprintf("👤 Kasir: %s\n", closingBy))
+	buffer.WriteString(fmt.Sprintf("🏷️ No: %s\n", drawer.DrawerNumber))
+
+	buffer.WriteString("\n💰 *Setoran:*\n")
+	buffer.WriteString("━━━━━━━━━━━━━━━━━━━━━━━\n")
+	buffer.WriteString(fmt.Sprintf("💵 Saldo Penutupan: Rp %.0f\n", drawer.ClosingBalance))
+	buffer.WriteString(fmt.Sprintf("📊 Ekspektasi: Rp %.0f\n", drawer.ExpectedBalance))
+	if drawer.Variance != nil {
+		buffer.WriteString(fmt.Sprintf("⚖️ Selisih: Rp %.0f\n", *drawer.Variance))
+	}
+	buffer.WriteString("━━━━━━━━━━━━━━━━━━━━━━━\n")
+	buffer.WriteString("\n✅ Penutupan laci telah dilakukan!")
+
+	return buffer.String()
 }

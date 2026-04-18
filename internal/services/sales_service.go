@@ -563,5 +563,5 @@ func (s *SalesService) sendTelegramPenjualanNotification(companyID uuid.UUID, sa
 	saleItems, _ := s.salesRepo.GetSaleItems(sale.ID)
 
 	message := telegramSvc.FormatPenjualanMessageRow(saleModel, saleItems)
-	_ = telegramSvc.SendNotification(config.TelegramIDPenjualan, config.APIKey, message)
+	_ = telegramSvc.SendNotification(config.TelegramIDPenjualan, message)
 }

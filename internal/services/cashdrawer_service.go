@@ -14,14 +14,21 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+type telegramRepoGetter interface {
+	GetConfigByCompany(companyID uuid.UUID) (*models.TelegramConfig, error)
+}
+
 type CashDrawerService struct {
 	db             *gorm.DB
 	repo           *repository.CashDrawerRepository
 	financeService *FinanceService
+	telegramRepo   *repository.TelegramRepository
+	telegramSvc    *TelegramService
 }
 
-func NewCashDrawerService(db *gorm.DB, repo *repository.CashDrawerRepository, financeService *FinanceService) *CashDrawerService {
-	return &CashDrawerService{db: db, repo: repo, financeService: financeService}
+func NewCashDrawerService(db *gorm.DB, repo *repository.CashDrawerRepository, financeService *FinanceService, telegramRepo *repository.TelegramRepository) *CashDrawerService {
+	telegramSvc := NewTelegramService(db, telegramRepo)
+	return &CashDrawerService{db: db, repo: repo, financeService: financeService, telegramRepo: telegramRepo, telegramSvc: telegramSvc}
 }
 
 type OpenCashDrawerInput struct {
@@ -518,6 +525,22 @@ func (s *CashDrawerService) CloseCashDrawer(id string, input CloseCashDrawerInpu
 			result.DepositInvoiceID = &inv.ID
 		}
 	}
+
+	// Send telegram notification for closing drawer
+	go func() {
+		telegramConfig, _ := s.telegramRepo.GetConfigByCompany(companyUUID)
+		if telegramConfig != nil && telegramConfig.NotifyClosingDrawer && telegramConfig.TelegramIDClosingDrawer != "" {
+			closingByName := userUUID.String()
+			if userRow := s.db.Model(&models.User{}).Where("id = ?", userUUID).Select("name").Row(); userRow != nil {
+				var name string
+				if err := userRow.Scan(&name); err == nil {
+					closingByName = name
+				}
+			}
+			message := s.telegramSvc.FormatClosingDrawerMessage(&result, closingByName)
+			_ = s.telegramSvc.SendNotification(telegramConfig.TelegramIDClosingDrawer, message)
+		}
+	}()
 
 	return response.NewSuccessResponse(result, "")
 }

@@ -1093,5 +1093,5 @@ func (s *InventoryService) sendTelegramStockOpnameNotification(warehouseID uuid.
 	}
 
 	message := telegramSvc.FormatStockOpnameMessage(opname, warehouseName, discrepancyCount)
-	_ = telegramSvc.SendNotification(config.TelegramIDStockOpname, config.APIKey, message)
+	_ = telegramSvc.SendNotification(config.TelegramIDStockOpname, message)
 }

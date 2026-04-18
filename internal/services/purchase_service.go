@@ -1324,5 +1324,5 @@ func (s *PurchaseService) sendTelegramPembelianNotification(companyID uuid.UUID,
 	poItems, _ := s.purchaseRepo.GetPurchaseOrderItems(poID)
 
 	message := telegramSvc.FormatPembelianMessageRow(po, poItems)
-	_ = telegramSvc.SendNotification(config.TelegramIDPembelian, config.APIKey, message)
+	_ = telegramSvc.SendNotification(config.TelegramIDPembelian, message)
 }

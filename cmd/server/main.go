@@ -134,7 +134,7 @@ func main() {
 	promotionService := services.NewPromotionService(db, promotionRepo)
 	priceTierService := services.NewPriceTierService(db)
 	financeService := services.NewFinanceService(db, financeRepo)
-	cashDrawerService := services.NewCashDrawerService(db, cashDrawerRepo, financeService)
+	cashDrawerService := services.NewCashDrawerService(db, cashDrawerRepo, financeService, telegramRepo)
 	companyService := services.NewCompanyService(db)
 	userService := services.NewUserService(db)
 	testDataService := services.NewTestDataService(db)

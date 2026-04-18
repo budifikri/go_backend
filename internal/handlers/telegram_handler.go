@@ -63,10 +63,6 @@ func (h *TelegramHandler) SaveConfig(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Invalid request body"})
 	}
 
-	if input.APIKey == "" {
-		return c.Status(400).JSON(fiber.Map{"success": false, "error": "API Key is required"})
-	}
-
 	result := h.telegramService.SaveConfig(user.CompanyID, input)
 	if !result.Success {
 		return c.Status(400).JSON(result)
@@ -80,8 +76,8 @@ func (h *TelegramHandler) TestConnection(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Invalid request body"})
 	}
 
-	if input.TelegramID == "" || input.APIKey == "" {
-		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Telegram ID and API Key are required"})
+	if input.TelegramID == "" {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Telegram ID is required"})
 	}
 
 	result := h.telegramService.TestConnection(input)
