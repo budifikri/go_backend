@@ -414,9 +414,9 @@ func (s *PurchaseService) ApprovePurchaseOrder(id string) response.ApiResponse {
 		return response.NewErrorResponse("Failed to approve purchase order")
 	}
 
-	// Send Telegram notification for Pembelian
+	// Send Telegram notification for Pembelian (PO Approved)
 	if s.telegramRepo != nil {
-		go s.sendTelegramPembelianNotification(po.CompanyID, poID)
+		go s.sendTelegramPembelianNotification(po.CompanyID, poID, "PO")
 	}
 
 	return s.GetPurchaseOrderByID(id)
@@ -576,6 +576,11 @@ func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseO
 
 	if err != nil {
 		return response.NewErrorResponse("Failed to receive purchase order: " + err.Error())
+	}
+
+	// Send Telegram notification for Pembelian (Barang Diterima)
+	if s.telegramRepo != nil {
+		go s.sendTelegramPembelianNotification(po.CompanyID, poID, "RECEIVE")
 	}
 
 	return s.GetPurchaseOrderByID(id)
@@ -1308,8 +1313,8 @@ func (s *PurchaseService) DeletePurchaseReturn(id string) response.ApiResponse {
 	return response.NewSuccessResponse(nil, "Purchase return deleted successfully")
 }
 
-func (s *PurchaseService) sendTelegramPembelianNotification(companyID uuid.UUID, poID uuid.UUID) {
-	log.Printf("[TELEGRAM] StartingPembelian notification for PO ID: %s, Company ID: %s", poID, companyID)
+func (s *PurchaseService) sendTelegramPembelianNotification(companyID uuid.UUID, poID uuid.UUID, notificationType string) {
+	log.Printf("[TELEGRAM] Starting Pembelian notification for PO ID: %s, Company ID: %s, Type: %s", poID, companyID, notificationType)
 
 	config, err := s.telegramRepo.GetConfigByCompany(companyID)
 	if err != nil {
@@ -1353,7 +1358,16 @@ func (s *PurchaseService) sendTelegramPembelianNotification(companyID uuid.UUID,
 		return
 	}
 
-	message := telegramSvc.FormatPembelianMessageRow(po, poItems)
+	var message string
+	if notificationType == "RECEIVE" {
+		totalReceive := 0
+		for _, item := range poItems {
+			totalReceive += item.QtyReceive
+		}
+		message = telegramSvc.FormatPembelianReceiveMessage(po, poItems, totalReceive)
+	} else {
+		message = telegramSvc.FormatPembelianMessageRow(po, poItems)
+	}
 	log.Printf("[TELEGRAM] Sending message: %s", message)
 
 	err = telegramSvc.SendNotification(config.TelegramIDPembelian, message)
@@ -1362,5 +1376,5 @@ func (s *PurchaseService) sendTelegramPembelianNotification(companyID uuid.UUID,
 		return
 	}
 
-	log.Printf("[TELEGRAM] SUCCESS: Notification sent for PO: %s", po.PoNumber)
+	log.Printf("[TELEGRAM] SUCCESS: Notification sent for PO: %s, Type: %s", po.PoNumber, notificationType)
 }

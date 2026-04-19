@@ -266,6 +266,40 @@ func (s *TelegramService) FormatPembelianMessageRow(po *repository.PurchaseOrder
 	return buffer.String()
 }
 
+func (s *TelegramService) FormatPembelianReceiveMessage(po *repository.PurchaseOrderRow, items []repository.PurchaseOrderItemRow, totalReceive int) string {
+	var buffer bytes.Buffer
+
+	supplierName := "Unknown"
+	if po.SupplierName != nil {
+		supplierName = *po.SupplierName
+	}
+
+	buffer.WriteString("*📦 BARANG DITERIMA*\n\n")
+	buffer.WriteString(fmt.Sprintf("🏢 Supplier: %s\n", supplierName))
+	buffer.WriteString(fmt.Sprintf("📅 Tanggal: %s\n", po.CreatedAt))
+	buffer.WriteString(fmt.Sprintf("🏷️ No PO: %s\n", po.PoNumber))
+
+	if len(items) > 0 {
+		buffer.WriteString("\n📦 *Detail Diterima:*\n")
+		buffer.WriteString("━━━━━━━━━━━━━━━━━━━━━━━\n")
+
+		for _, item := range items {
+			if item.QtyReceive > 0 {
+				productName := "Unknown"
+				if item.ProductName != nil {
+					productName = *item.ProductName
+				}
+				buffer.WriteString(fmt.Sprintf("• %s: %d pcs\n", productName, item.QtyReceive))
+			}
+		}
+
+		buffer.WriteString("━━━━━━━━━━━━━━━━━━━━━━━\n")
+		buffer.WriteString(fmt.Sprintf("📊 Total Diterima: %d pcs\n", totalReceive))
+	}
+
+	return buffer.String()
+}
+
 func (s *TelegramService) FormatStockOpnameMessage(opname *models.StockOpname, warehouseName string, discrepancies int) string {
 	var buffer bytes.Buffer
 
