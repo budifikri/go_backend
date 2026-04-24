@@ -126,7 +126,7 @@ func (r *PurchaseRepository) FindPurchaseOrders(companyID *string, filters map[s
 		return nil, 0, err
 	}
 
-	if err := query.Order("po.order_date DESC").Limit(limit).Offset(offset).Scan(&rows).Error; err != nil {
+	if err := query.Order("po.po_number ASC").Limit(limit).Offset(offset).Scan(&rows).Error; err != nil {
 		return nil, 0, err
 	}
 
