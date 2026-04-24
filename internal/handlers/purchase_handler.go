@@ -260,6 +260,31 @@ func (h *PurchaseHandler) CancelPurchaseOrder(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+// VoidPurchaseOrder godoc
+// @Summary Void purchase order
+// @Tags Purchases
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "Purchase Order ID"
+// @Success 200 {object} response.ApiResponse
+// @Failure 400 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Failure 404 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/purchases/{id}/void [post]
+func (h *PurchaseHandler) VoidPurchaseOrder(c *fiber.Ctx) error {
+	result := h.purchaseService.VoidPurchaseOrder(c.Params("id"))
+	if !result.Success {
+		switch result.Error {
+		case "Purchase order not found":
+			return c.Status(fiber.StatusNotFound).JSON(result)
+		default:
+			return c.Status(fiber.StatusBadRequest).JSON(result)
+		}
+	}
+	return c.JSON(result)
+}
+
 // DeletePurchaseOrder godoc
 // @Summary Delete purchase order permanently
 // @Tags Purchases

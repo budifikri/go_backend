@@ -816,6 +816,39 @@ func (s *PurchaseService) CancelPurchaseOrder(id string) response.ApiResponse {
 	return response.NewSuccessResponse(nil, "Purchase order cancelled successfully")
 }
 
+func (s *PurchaseService) VoidPurchaseOrder(id string) response.ApiResponse {
+	poID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	po, err := s.purchaseRepo.GetPurchaseOrderByID(poID)
+	if err != nil || po == nil {
+		return response.NewErrorResponse("Purchase order not found")
+	}
+
+	currentStatus := normalizeStatusPo(po.StatusPo)
+	if currentStatus == "VOID" {
+		return response.NewErrorResponse("Purchase order already voided")
+	}
+	if currentStatus != "APPROVE" {
+		return response.NewErrorResponse("Only APPROVED purchase orders can be voided")
+	}
+	if normalizeStatusReceive(po.StatusReceive) == "RECEIVE" {
+		return response.NewErrorResponse("Purchase order already received and cannot be voided")
+	}
+
+	res := s.db.Table("purchase_orders").Where("id = ?", poID).Updates(map[string]interface{}{
+		"status_po":  "VOID",
+		"updated_at": time.Now(),
+	}).Error
+	if res != nil {
+		return response.NewErrorResponse("Failed to void purchase order")
+	}
+
+	return s.GetPurchaseOrderByID(id)
+}
+
 func (s *PurchaseService) DeletePurchaseOrder(id string) response.ApiResponse {
 	poID, err := uuid.Parse(id)
 	if err != nil {
