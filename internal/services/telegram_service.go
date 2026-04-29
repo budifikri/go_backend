@@ -175,7 +175,7 @@ func (s *TelegramService) sendMessage(telegramID, apiKey, message string) error 
 	return nil
 }
 
-func (s *TelegramService) FormatPenjualanMessageRow(sale *repository.SaleWithNames, items []repository.SaleItemWithProduct) string {
+func (s *TelegramService) FormatPenjualanMessageRow(sale *repository.SaleWithNames, items []repository.SaleItemWithProfit) string {
 	var buffer bytes.Buffer
 
 	buffer.WriteString("*PENJUALAN BARU*\n\n")

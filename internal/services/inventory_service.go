@@ -833,6 +833,7 @@ func (s *InventoryService) GetStockOpnameByID(id string) response.ApiResponse {
 			"product_id":      item.ProductID,
 			"system_quantity": item.SystemQuantity,
 			"actual_quantity": item.ActualQuantity,
+			"cost_price":      item.CostPrice,
 			"difference":      item.Difference,
 			"status":          item.Status,
 			"notes":           item.Notes,
