@@ -314,6 +314,7 @@ func (r *InventoryRepository) UpdateStockOpnameWithItems(opname *models.StockOpn
 	ProductID      uuid.UUID
 	SystemQuantity int
 	ActualQuantity int
+	CostPrice      float64
 	Difference     int
 	Status         string
 	Notes          string
@@ -347,27 +348,22 @@ func (r *InventoryRepository) UpdateStockOpnameWithItems(opname *models.StockOpn
 				updateValues := map[string]interface{}{
 					"system_quantity": item.SystemQuantity,
 					"actual_quantity": item.ActualQuantity,
+					"cost_price":      item.CostPrice,
 					"difference":      item.Difference,
 					"status":          item.Status,
 					"notes":           item.Notes,
-					"cost_price":      r.db.Table("products").Select("cost_price").Where("id = ?", item.ProductID),
 				}
 				if err := tx.Model(&models.StockOpnameItem{}).Where("id = ?", itemID).Updates(updateValues).Error; err != nil {
 					return err
 				}
 			} else {
-				var costPrice float64
-				if err := tx.Model(&models.Product{}).Select("cost_price").Where("id = ?", item.ProductID).Scan(&costPrice).Error; err != nil {
-					return err
-				}
-
 				newItem := models.StockOpnameItem{
 					ID:             uuid.New(),
 					OpnameID:       opname.ID,
 					ProductID:      item.ProductID,
 					SystemQuantity: item.SystemQuantity,
 					ActualQuantity: item.ActualQuantity,
-					CostPrice:      costPrice,
+					CostPrice:      item.CostPrice,
 					Difference:     item.Difference,
 					Status:         item.Status,
 					Notes:          item.Notes,

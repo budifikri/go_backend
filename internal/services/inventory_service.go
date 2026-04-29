@@ -1058,7 +1058,7 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 
 	// simpan total_selisih ke header
 	opname.TotalSelisih = totalSelisih
-	if err := s.inventoryRepo.UpdateStockOpname(&opname); err != nil {
+	if err := s.inventoryRepo.UpdateStockOpname(opname); err != nil {
 		return response.NewErrorResponse("Failed to update stock opname total")
 	}
 
