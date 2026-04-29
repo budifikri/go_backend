@@ -335,7 +335,11 @@ func (s *TelegramService) FormatClosingDrawerMessage(drawer *models.CashDrawer, 
 
 	buffer.WriteString("\n💰 *Setoran:*\n")
 	buffer.WriteString("━━━━━━━━━━━━━━━━━━━━━━━\n")
-	buffer.WriteString(fmt.Sprintf("💵 Saldo Penutupan: Rp %.0f\n", drawer.ClosingBalance))
+	closingBalance := 0.0
+	if drawer.ClosingBalance != nil {
+		closingBalance = *drawer.ClosingBalance
+	}
+	buffer.WriteString(fmt.Sprintf("💵 Saldo Penutupan: Rp %.0f\n", closingBalance))
 	buffer.WriteString(fmt.Sprintf("📊 Ekspektasi: Rp %.0f\n", drawer.ExpectedBalance))
 	if drawer.Variance != nil {
 		buffer.WriteString(fmt.Sprintf("⚖️ Selisih: Rp %.0f\n", *drawer.Variance))
