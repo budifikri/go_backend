@@ -759,6 +759,8 @@ func (s *InventoryService) CreateStockOpname(req struct {
 		return response.NewErrorResponse("Failed to create stock opname")
 	}
 
+	totalSelisih := 0.0
+
 	for _, item := range req.Items {
 		productID, _ := uuid.Parse(item.ProductID)
 
@@ -788,7 +790,15 @@ func (s *InventoryService) CreateStockOpname(req struct {
 			Notes:          item.Notes,
 		}
 		s.inventoryRepo.CreateStockOpnameItem(&opnameItem)
+
+		// akumulasi total_selisih
+		nilaiSelisih := float64(difference) * productCostPrice
+		totalSelisih += nilaiSelisih
 	}
+
+	// simpan total_selisih ke header
+	opname.TotalSelisih = totalSelisih
+	s.inventoryRepo.UpdateStockOpname(&opname)
 
 	return s.GetStockOpnameByID(opname.ID.String())
 }
@@ -856,6 +866,7 @@ func (s *InventoryService) GetStockOpnameByID(id string) response.ApiResponse {
 		"opname_date":   opname.OpnameDate,
 		"status":        opname.Status,
 		"notes":         opname.Notes,
+		"total_selisih": opname.TotalSelisih,
 		"created_at":    opname.CreatedAt,
 		"updated_at":    opname.UpdatedAt,
 		"warehouse":     opname.Warehouse,
@@ -991,16 +1002,31 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 		ProductID      uuid.UUID
 		SystemQuantity int
 		ActualQuantity int
+		CostPrice      float64
 		Difference     int
 		Status         string
 		Notes          string
 	}, 0, len(req.Items))
+
+	totalSelisih := 0.0
+
 	for _, item := range req.Items {
 		pid, err := uuid.Parse(item.ProductID)
 		if err != nil {
 			continue
 		}
 		difference := item.ActualQuantity - item.SystemQuantity
+
+		// ambil cost_price dari product
+		var costPrice float64
+		var product models.Product
+		if err := s.db.First(&product, "id = ?", pid).Error; err == nil {
+			costPrice = product.CostPrice
+		}
+
+		nilaiSelisih := float64(difference) * costPrice
+		totalSelisih += nilaiSelisih
+
 		status := item.Status
 		if status == "" {
 			if isApprovalTransition {
@@ -1014,6 +1040,7 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 			ProductID      uuid.UUID
 			SystemQuantity int
 			ActualQuantity int
+			CostPrice      float64
 			Difference     int
 			Status         string
 			Notes          string
@@ -1022,10 +1049,17 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 			ProductID:      pid,
 			SystemQuantity: item.SystemQuantity,
 			ActualQuantity: item.ActualQuantity,
+			CostPrice:      costPrice,
 			Difference:     difference,
 			Status:         status,
 			Notes:          item.Notes,
 		})
+	}
+
+	// simpan total_selisih ke header
+	opname.TotalSelisih = totalSelisih
+	if err := s.inventoryRepo.UpdateStockOpname(&opname); err != nil {
+		return response.NewErrorResponse("Failed to update stock opname total")
 	}
 
 	if err := s.inventoryRepo.UpdateStockOpnameWithItems(opname, items); err != nil {
