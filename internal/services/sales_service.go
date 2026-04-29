@@ -59,6 +59,7 @@ type ProcessedSaleItem struct {
 	Quantity       int        `json:"quantity"`
 	UnitPrice      float64    `json:"unit_price"`
 	OriginalPrice  float64    `json:"original_price"`
+	CostPrice      float64    `json:"cost_price"`
 	DiscountAmount float64    `json:"discount_amount"`
 	TaxRate        float64    `json:"tax_rate"`
 	LineTotal      float64    `json:"line_total"`
@@ -247,6 +248,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				Quantity:       item.Quantity,
 				UnitPrice:      finalUnitPrice,
 				OriginalPrice:  retailPrice,
+				CostPrice:      product.CostPrice,
 				DiscountAmount: retailPrice - finalUnitPrice,
 				TaxRate:        product.TaxRate,
 				LineTotal:      lineTotal,
@@ -312,6 +314,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				Quantity:       item.Quantity,
 				UnitPrice:      item.UnitPrice,
 				OriginalPrice:  item.OriginalPrice,
+				CostPrice:      item.CostPrice,
 				DiscountAmount: item.DiscountAmount,
 				TaxRate:        item.TaxRate,
 				PriceTierID:    item.PriceTierID,
@@ -520,6 +523,12 @@ func (s *SalesService) GetSaleByID(id string) response.ApiResponse {
 	items, _ := s.salesRepo.GetSaleItems(saleID)
 	payments, _ := s.salesRepo.GetSalePayments(saleID)
 
+	// hitung total profit dari items
+	totalProfit := 0.0
+	for _, item := range items {
+		totalProfit += item.Profit
+	}
+
 	data := map[string]interface{}{}
 	data["id"] = sale.ID
 	data["sale_number"] = sale.SaleNumber
@@ -547,6 +556,7 @@ func (s *SalesService) GetSaleByID(id string) response.ApiResponse {
 	data["customer_loyalty_points"] = sale.CustomerLoyaltyPoints
 	data["items"] = items
 	data["payments"] = payments
+	data["total_profit"] = totalProfit
 
 	return response.NewSuccessResponse(data, "")
 }

@@ -188,9 +188,10 @@ func (StockOpname) TableName() string {
 type StockOpnameItem struct {
 	ID             uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	OpnameID       uuid.UUID `gorm:"type:uuid;notNull;index" json:"opname_id"`
-	ProductID      uuid.UUID `gorm:"type:uuid;notNull" json:"product_id"`
+	ProductID      uuid.UUID `gorm:"type:uuid;notNull;index" json:"product_id"`
 	SystemQuantity int       `gorm:"notNull" json:"system_quantity"`
 	ActualQuantity int       `gorm:"notNull" json:"actual_quantity"`
+	CostPrice      float64   `gorm:"column:cost_price;type:decimal(15,2);notNull;default:0" json:"cost_price"`
 	Difference     int       `gorm:"notNull" json:"difference"`
 	Status         string    `gorm:"type:varchar(20);default:'pending'" json:"status"`
 	Notes          string    `gorm:"type:text" json:"notes,omitempty"`

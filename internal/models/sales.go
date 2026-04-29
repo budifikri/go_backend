@@ -136,6 +136,7 @@ type SaleItem struct {
 	Quantity       int        `gorm:"notNull" json:"quantity"`
 	UnitPrice      float64    `gorm:"column:unit_price;type:decimal(15,2);notNull" json:"unit_price"`
 	OriginalPrice  float64    `gorm:"column:original_price;type:decimal(15,2);notNull" json:"original_price"`
+	CostPrice      float64    `gorm:"column:cost_price;type:decimal(15,2);notNull;default:0" json:"cost_price"`
 	DiscountAmount float64    `gorm:"column:discount_amount;type:decimal(15,2);notNull;default:0" json:"discount_amount"`
 	TaxRate        float64    `gorm:"column:tax_rate;type:decimal(5,2);default:0" json:"tax_rate"`
 	PriceTierID    *uuid.UUID `gorm:"column:price_tier_id;type:uuid" json:"price_tier_id,omitempty"`

@@ -770,12 +770,20 @@ func (s *InventoryService) CreateStockOpname(req struct {
 
 		difference := item.ActualQuantity - systemQty
 
+		// ambil cost_price dari product
+		var productCostPrice float64
+		var product models.Product
+		if err := s.db.First(&product, "id = ?", productID).Error; err == nil {
+			productCostPrice = product.CostPrice
+		}
+
 		opnameItem := models.StockOpnameItem{
 			ID:             uuid.New(),
 			OpnameID:       opname.ID,
 			ProductID:      productID,
 			SystemQuantity: systemQty,
 			ActualQuantity: item.ActualQuantity,
+			CostPrice:      productCostPrice,
 			Difference:     difference,
 			Notes:          item.Notes,
 		}

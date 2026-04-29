@@ -22,6 +22,13 @@ type SaleItemWithProduct struct {
 	UnitName    string `json:"unit_name" gorm:"column:unit_name"`
 }
 
+type SaleItemWithProfit struct {
+	models.SaleItem
+	ProductName string  `json:"product_name" gorm:"column:product_name"`
+	UnitName    string  `json:"unit_name" gorm:"column:unit_name"`
+	Profit      float64 `json:"profit,omitempty"`
+}
+
 type SalesRepository struct {
 	db *gorm.DB
 }
@@ -132,10 +139,10 @@ func (r *SalesRepository) GetSaleByID(id uuid.UUID) (*SaleWithNames, error) {
 	return &row, nil
 }
 
-func (r *SalesRepository) GetSaleItems(saleID uuid.UUID) ([]SaleItemWithProduct, error) {
-	var items []SaleItemWithProduct
+func (r *SalesRepository) GetSaleItems(saleID uuid.UUID) ([]SaleItemWithProfit, error) {
+	var items []SaleItemWithProfit
 	err := r.db.Table("sale_items si").
-		Select("si.*, p.name as product_name, u.name as unit_name").
+		Select("si.*, p.name as product_name, u.name as unit_name, (COALESCE(si.unit_price,0) - COALESCE(si.cost_price,0)) * si.quantity - COALESCE(si.discount_amount,0) as profit").
 		Joins("LEFT JOIN products p ON p.id = si.product_id").
 		Joins("LEFT JOIN units_of_measure u ON u.id = p.unit_id").
 		Where("si.sale_id = ?", saleID).
