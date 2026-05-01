@@ -158,7 +158,7 @@ func (r *ProductRepository) FindOpenedProductIDs(productIDs []uuid.UUID) (map[uu
 
 func (r *ProductRepository) GetHppTrace(productID uuid.UUID) ([]ProductHppTraceRow, error) {
 	const query = `
-WITH base_events AS (
+WITH RECURSIVE base_events AS (
 	SELECT
 		soi.product_id,
 		COALESCE(so.opname_date, so.created_at) AS event_date,
