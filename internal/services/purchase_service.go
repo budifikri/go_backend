@@ -12,6 +12,7 @@ import (
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type PurchaseService struct {
@@ -499,9 +500,35 @@ func (s *PurchaseService) ReceivePurchaseOrder(id string, input ReceivePurchaseO
 					if reqItem.QtyReceive > oldReceive && normalizeStatusReceive(input.StatusReceive) == "RECEIVE" {
 						qtyToAdd := reqItem.QtyReceive - oldReceive
 						if qtyToAdd > 0 {
+							receiveUnitPrice, err := strconv.ParseFloat(items[i].UnitPrice, 64)
+							if err != nil {
+								return fmt.Errorf("invalid purchase unit price")
+							}
+
+							var product models.Product
+							if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&product, "id = ?", items[i].ProductID).Error; err != nil {
+								return err
+							}
+
+							var currentGlobalStock int
+							if err := tx.Table("inventory").
+								Select("COALESCE(SUM(quantity), 0)").
+								Where("product_id = ?", items[i].ProductID).
+								Scan(&currentGlobalStock).Error; err != nil {
+								return err
+							}
+
+							newCostPrice := receiveUnitPrice
+							if currentGlobalStock > 0 {
+								newCostPrice = ((float64(currentGlobalStock) * product.CostPrice) + (float64(qtyToAdd) * receiveUnitPrice)) / float64(currentGlobalStock+qtyToAdd)
+							}
+							if err := tx.Model(&models.Product{}).Where("id = ?", items[i].ProductID).Update("cost_price", newCostPrice).Error; err != nil {
+								return err
+							}
+
 							// Check if inventory exists, create if not
 							var existingInv models.Inventory
-							err := tx.First(&existingInv, "product_id = ? AND warehouse_id = ?", items[i].ProductID, po.WarehouseID).Error
+							err = tx.First(&existingInv, "product_id = ? AND warehouse_id = ?", items[i].ProductID, po.WarehouseID).Error
 							if err == gorm.ErrRecordNotFound {
 								// Create new inventory record
 								newInv := models.Inventory{

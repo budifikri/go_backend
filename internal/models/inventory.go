@@ -163,6 +163,7 @@ type StockOpname struct {
 	CompanyID    uuid.UUID         `gorm:"type:uuid;notNull" json:"company_id"`
 	OpnameDate   time.Time         `gorm:"notNull" json:"opname_date"`
 	Status       StockOpnameStatus `gorm:"type:varchar(20);notNull;default:'draft'" json:"status"`
+	IsOpening    bool              `gorm:"column:is_opening;notNull;default:false" json:"is_opening"`
 	Notes        string            `gorm:"type:text" json:"notes,omitempty"`
 	TotalSelisih float64           `gorm:"column:total_selisih;type:decimal(15,2);notNull;default:0" json:"total_selisih"`
 	CreatedAt    time.Time         `gorm:"autoCreateTime" json:"created_at"`

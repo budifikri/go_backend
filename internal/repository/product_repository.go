@@ -113,3 +113,30 @@ func (r *ProductRepository) CreatePriceTier(tier *models.PriceTier) error {
 func (r *ProductRepository) DeletePriceTier(id uuid.UUID) error {
 	return r.db.Delete(&models.PriceTier{}, "id = ?", id).Error
 }
+
+func (r *ProductRepository) FindOpenedProductIDs(productIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	opened := make(map[uuid.UUID]bool, len(productIDs))
+	if len(productIDs) == 0 {
+		return opened, nil
+	}
+
+	var rows []struct {
+		ProductID uuid.UUID `gorm:"column:product_id"`
+	}
+	err := r.db.Table("stock_opname_items soi").
+		Select("DISTINCT soi.product_id").
+		Joins("JOIN stock_opnames so ON so.id = soi.opname_id").
+		Where("soi.product_id IN ?", productIDs).
+		Where("so.is_opening = ?", true).
+		Where("LOWER(so.status) = ?", "approved").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, row := range rows {
+		opened[row.ProductID] = true
+	}
+
+	return opened, nil
+}

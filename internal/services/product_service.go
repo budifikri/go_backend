@@ -37,44 +37,46 @@ func NewProductService(
 }
 
 type ProductListResponse struct {
-	ID           uuid.UUID  `json:"id"`
-	SKU          string     `json:"sku"`
-	Barcode      string     `json:"barcode"`
-	Name         string     `json:"name"`
-	Description  string     `json:"description"`
-	CategoryID   *uuid.UUID `json:"category_id"`
-	CategoryName string     `json:"category_name,omitempty"`
-	UnitID       uuid.UUID  `json:"unit_id"`
-	UnitName     string     `json:"unit_name,omitempty"`
-	CostPrice    float64    `json:"cost_price"`
-	RetailPrice  float64    `json:"retail_price"`
-	IsActive     bool       `json:"is_active"`
-	TaxRate      float64    `json:"tax_rate"`
-	ReorderPoint int        `json:"reorder_point"`
-	CompanyID    *uuid.UUID `json:"company_id,omitempty"`
-	CreatedAt    string     `json:"created_at"`
-	UpdatedAt    string     `json:"updated_at"`
+	ID              uuid.UUID  `json:"id"`
+	SKU             string     `json:"sku"`
+	Barcode         string     `json:"barcode"`
+	Name            string     `json:"name"`
+	Description     string     `json:"description"`
+	CategoryID      *uuid.UUID `json:"category_id"`
+	CategoryName    string     `json:"category_name,omitempty"`
+	UnitID          uuid.UUID  `json:"unit_id"`
+	UnitName        string     `json:"unit_name,omitempty"`
+	CostPrice       float64    `json:"cost_price"`
+	RetailPrice     float64    `json:"retail_price"`
+	IsActive        bool       `json:"is_active"`
+	TaxRate         float64    `json:"tax_rate"`
+	ReorderPoint    int        `json:"reorder_point"`
+	HasOpeningStock bool       `json:"has_opening_stock"`
+	CompanyID       *uuid.UUID `json:"company_id,omitempty"`
+	CreatedAt       string     `json:"created_at"`
+	UpdatedAt       string     `json:"updated_at"`
 }
 
 type ProductDetailResponse struct {
-	ID           uuid.UUID           `json:"id"`
-	SKU          string              `json:"sku"`
-	Barcode      string              `json:"barcode"`
-	Name         string              `json:"name"`
-	Description  string              `json:"description"`
-	CategoryID   *uuid.UUID          `json:"category_id"`
-	CategoryName string              `json:"category_name,omitempty"`
-	UnitID       uuid.UUID           `json:"unit_id"`
-	UnitName     string              `json:"unit_name,omitempty"`
-	CostPrice    float64             `json:"cost_price"`
-	RetailPrice  float64             `json:"retail_price"`
-	IsActive     bool                `json:"is_active"`
-	TaxRate      float64             `json:"tax_rate"`
-	ReorderPoint int                 `json:"reorder_point"`
-	CompanyID    *uuid.UUID          `json:"company_id,omitempty"`
-	CreatedAt    string              `json:"created_at"`
-	UpdatedAt    string              `json:"updated_at"`
-	PriceTiers   []PriceTierResponse `json:"price_tiers,omitempty"`
+	ID              uuid.UUID           `json:"id"`
+	SKU             string              `json:"sku"`
+	Barcode         string              `json:"barcode"`
+	Name            string              `json:"name"`
+	Description     string              `json:"description"`
+	CategoryID      *uuid.UUID          `json:"category_id"`
+	CategoryName    string              `json:"category_name,omitempty"`
+	UnitID          uuid.UUID           `json:"unit_id"`
+	UnitName        string              `json:"unit_name,omitempty"`
+	CostPrice       float64             `json:"cost_price"`
+	RetailPrice     float64             `json:"retail_price"`
+	IsActive        bool                `json:"is_active"`
+	TaxRate         float64             `json:"tax_rate"`
+	ReorderPoint    int                 `json:"reorder_point"`
+	HasOpeningStock bool                `json:"has_opening_stock"`
+	CompanyID       *uuid.UUID          `json:"company_id,omitempty"`
+	CreatedAt       string              `json:"created_at"`
+	UpdatedAt       string              `json:"updated_at"`
+	PriceTiers      []PriceTierResponse `json:"price_tiers,omitempty"`
 }
 
 type PriceTierResponse struct {
@@ -119,6 +121,11 @@ func (s *ProductService) GetProducts(filters map[string]interface{}, limit, offs
 	}
 
 	data := make([]ProductListResponse, len(products))
+	productIDs := make([]uuid.UUID, 0, len(products))
+	for _, p := range products {
+		productIDs = append(productIDs, p.ID)
+	}
+	openedProductIDs, _ := s.productRepo.FindOpenedProductIDs(productIDs)
 	for i, p := range products {
 		categoryName := ""
 		if p.Category != nil {
@@ -129,23 +136,24 @@ func (s *ProductService) GetProducts(filters map[string]interface{}, limit, offs
 			unitName = p.Unit.Name
 		}
 		data[i] = ProductListResponse{
-			ID:           p.ID,
-			SKU:          p.SKU,
-			Barcode:      p.Barcode,
-			Name:         p.Name,
-			Description:  p.Description,
-			CategoryID:   p.CategoryID,
-			CategoryName: categoryName,
-			UnitID:       p.UnitID,
-			UnitName:     unitName,
-			CostPrice:    p.CostPrice,
-			RetailPrice:  p.RetailPrice,
-			IsActive:     p.IsActive,
-			TaxRate:      p.TaxRate,
-			ReorderPoint: p.ReorderPoint,
-			CompanyID:    p.CompanyID,
-			CreatedAt:    p.CreatedAt.Format("2006-01-02T15:04:05Z"),
-			UpdatedAt:    p.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			ID:              p.ID,
+			SKU:             p.SKU,
+			Barcode:         p.Barcode,
+			Name:            p.Name,
+			Description:     p.Description,
+			CategoryID:      p.CategoryID,
+			CategoryName:    categoryName,
+			UnitID:          p.UnitID,
+			UnitName:        unitName,
+			CostPrice:       p.CostPrice,
+			RetailPrice:     p.RetailPrice,
+			IsActive:        p.IsActive,
+			TaxRate:         p.TaxRate,
+			ReorderPoint:    p.ReorderPoint,
+			HasOpeningStock: openedProductIDs[p.ID],
+			CompanyID:       p.CompanyID,
+			CreatedAt:       p.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:       p.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 		}
 	}
 
@@ -167,6 +175,7 @@ func (s *ProductService) GetProductByID(id string) response.ApiResponse {
 	}
 
 	tiers, _ := s.productRepo.FindPriceTiers(productID)
+	openedProductIDs, _ := s.productRepo.FindOpenedProductIDs([]uuid.UUID{productID})
 
 	tierResponses := make([]PriceTierResponse, len(tiers))
 	for i, t := range tiers {
@@ -192,24 +201,25 @@ func (s *ProductService) GetProductByID(id string) response.ApiResponse {
 	}
 
 	return response.NewSuccessResponse(ProductDetailResponse{
-		ID:           product.ID,
-		SKU:          product.SKU,
-		Barcode:      product.Barcode,
-		Name:         product.Name,
-		Description:  product.Description,
-		CategoryID:   product.CategoryID,
-		CategoryName: categoryName,
-		UnitID:       product.UnitID,
-		UnitName:     unitName,
-		CostPrice:    product.CostPrice,
-		RetailPrice:  product.RetailPrice,
-		IsActive:     product.IsActive,
-		TaxRate:      product.TaxRate,
-		ReorderPoint: product.ReorderPoint,
-		CompanyID:    product.CompanyID,
-		CreatedAt:    product.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:    product.UpdatedAt.Format("2006-01-02T15:04:05Z"),
-		PriceTiers:   tierResponses,
+		ID:              product.ID,
+		SKU:             product.SKU,
+		Barcode:         product.Barcode,
+		Name:            product.Name,
+		Description:     product.Description,
+		CategoryID:      product.CategoryID,
+		CategoryName:    categoryName,
+		UnitID:          product.UnitID,
+		UnitName:        unitName,
+		CostPrice:       product.CostPrice,
+		RetailPrice:     product.RetailPrice,
+		IsActive:        product.IsActive,
+		TaxRate:         product.TaxRate,
+		ReorderPoint:    product.ReorderPoint,
+		HasOpeningStock: openedProductIDs[product.ID],
+		CompanyID:       product.CompanyID,
+		CreatedAt:       product.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:       product.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		PriceTiers:      tierResponses,
 	}, "Product retrieved successfully")
 }
 

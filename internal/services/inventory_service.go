@@ -21,6 +21,7 @@ var (
 type UpdateStockOpnameRequest struct {
 	WarehouseID string
 	OpnameDate  string
+	IsOpening   bool
 	Status      string
 	Notes       string
 	Items       []struct {
@@ -28,9 +29,78 @@ type UpdateStockOpnameRequest struct {
 		ProductID      string
 		SystemQuantity int
 		ActualQuantity int
+		CostPrice      float64
 		Notes          string
 		Status         string
 	}
+}
+
+func normalizeStockOpnameWorkflowStatus(status string) string {
+	return strings.ToLower(strings.TrimSpace(status))
+}
+
+func (s *InventoryService) getProductCostPrice(productID uuid.UUID) (float64, error) {
+	var product models.Product
+	if err := s.db.First(&product, "id = ?", productID).Error; err != nil {
+		return 0, err
+	}
+	return product.CostPrice, nil
+}
+
+func (s *InventoryService) hasApprovedOpeningStock(productID uuid.UUID, excludeOpnameID *uuid.UUID) (bool, error) {
+	query := s.db.Table("stock_opname_items soi").
+		Joins("JOIN stock_opnames so ON so.id = soi.opname_id").
+		Where("soi.product_id = ?", productID).
+		Where("so.is_opening = ?", true).
+		Where("LOWER(so.status) = ?", "approved")
+	if excludeOpnameID != nil {
+		query = query.Where("so.id <> ?", *excludeOpnameID)
+	}
+
+	var count int64
+	if err := query.Count(&count).Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (s *InventoryService) resolveStockOpnameCostPrice(productID uuid.UUID, inputCostPrice float64, isOpening bool) (float64, error) {
+	if isOpening {
+		if inputCostPrice <= 0 {
+			return 0, errors.New("cost price must be greater than 0 for opening stock")
+		}
+		return inputCostPrice, nil
+	}
+
+	return s.getProductCostPrice(productID)
+}
+
+func (s *InventoryService) validateOpeningStockItems(items []struct {
+	ProductID      string
+	SystemQuantity int
+	ActualQuantity int
+	CostPrice      float64
+	Notes          string
+}, excludeOpnameID *uuid.UUID) error {
+	for _, item := range items {
+		productID, err := uuid.Parse(item.ProductID)
+		if err != nil {
+			return errors.New("invalid product ID")
+		}
+		if item.CostPrice <= 0 {
+			return errors.New("cost price opening stock harus lebih besar dari 0")
+		}
+		hasOpening, err := s.hasApprovedOpeningStock(productID, excludeOpnameID)
+		if err != nil {
+			return err
+		}
+		if hasOpening {
+			return errors.New("produk sudah memiliki opening stock global")
+		}
+	}
+
+	return nil
 }
 
 type InventoryService struct {
@@ -716,10 +786,12 @@ func (s *InventoryService) CreateStockOpname(req struct {
 	WarehouseID string
 	CompanyID   string
 	OpnameDate  string
+	IsOpening   bool
 	Items       []struct {
 		ProductID      string
 		SystemQuantity int
 		ActualQuantity int
+		CostPrice      float64
 		Notes          string
 	}
 	Notes string
@@ -745,6 +817,7 @@ func (s *InventoryService) CreateStockOpname(req struct {
 		UserID:       uid,
 		CompanyID:    companyUID,
 		Status:       models.StockOpnameStatusDraft,
+		IsOpening:    req.IsOpening,
 		Notes:        req.Notes,
 	}
 
@@ -752,6 +825,12 @@ func (s *InventoryService) CreateStockOpname(req struct {
 		t, err := time.Parse("2006-01-02", req.OpnameDate)
 		if err == nil {
 			opname.OpnameDate = t
+		}
+	}
+
+	if req.IsOpening {
+		if err := s.validateOpeningStockItems(req.Items, nil); err != nil {
+			return response.NewErrorResponse(err.Error())
 		}
 	}
 
@@ -772,11 +851,9 @@ func (s *InventoryService) CreateStockOpname(req struct {
 
 		difference := item.ActualQuantity - systemQty
 
-		// ambil cost_price dari product
-		var productCostPrice float64
-		var product models.Product
-		if err := s.db.First(&product, "id = ?", productID).Error; err == nil {
-			productCostPrice = product.CostPrice
+		productCostPrice, err := s.resolveStockOpnameCostPrice(productID, item.CostPrice, req.IsOpening)
+		if err != nil {
+			return response.NewErrorResponse(err.Error())
 		}
 
 		opnameItem := models.StockOpnameItem{
@@ -865,6 +942,7 @@ func (s *InventoryService) GetStockOpnameByID(id string) response.ApiResponse {
 		"user_id":       opname.UserID,
 		"opname_date":   opname.OpnameDate,
 		"status":        opname.Status,
+		"is_opening":    opname.IsOpening,
 		"notes":         opname.Notes,
 		"total_selisih": opname.TotalSelisih,
 		"created_at":    opname.CreatedAt,
@@ -891,6 +969,18 @@ func (s *InventoryService) UpdateStockOpnameStatus(id, status, userID string) re
 	currentStatus := opname.Status
 
 	if status == "COMPLETED" && currentStatus == models.StockOpnameStatusDraft {
+		if opname.IsOpening {
+			for _, item := range opname.Items {
+				hasOpening, err := s.hasApprovedOpeningStock(item.ProductID, &opname.ID)
+				if err != nil {
+					return response.NewErrorResponse("Failed to validate opening stock")
+				}
+				if hasOpening {
+					return response.NewErrorResponse("Produk sudah memiliki opening stock global")
+				}
+			}
+		}
+
 		for _, item := range opname.Items {
 			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, opname.WarehouseID)
 
@@ -913,6 +1003,12 @@ func (s *InventoryService) UpdateStockOpnameStatus(id, status, userID string) re
 				Notes:         "Stock opname adjustment",
 			}
 			s.inventoryRepo.CreateStockMovement(&movement)
+
+			if opname.IsOpening {
+				if err := s.db.Model(&models.Product{}).Where("id = ?", item.ProductID).Update("cost_price", item.CostPrice).Error; err != nil {
+					return response.NewErrorResponse("Failed to update opening cost price")
+				}
+			}
 		}
 		opname.Status = models.StockOpnameStatusCompleted
 	} else if status == "APPROVED" && currentStatus == models.StockOpnameStatusCompleted {
@@ -969,7 +1065,8 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 		return response.NewErrorResponse("Cannot update stock opname that is already completed or approved")
 	}
 
-	isApprovalTransition := req.Status == "approved" && currentStatus == models.StockOpnameStatusDraft
+	normalizedStatus := normalizeStockOpnameWorkflowStatus(req.Status)
+	isApprovalTransition := normalizedStatus == "approved" && currentStatus == models.StockOpnameStatusDraft
 
 	if req.WarehouseID != "" {
 		wid, err := uuid.Parse(req.WarehouseID)
@@ -990,11 +1087,40 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 	if req.Notes != "" {
 		opname.Notes = req.Notes
 	}
+	opname.IsOpening = req.IsOpening
 
 	if isApprovalTransition {
 		opname.Status = models.StockOpnameStatusApproved
-	} else if req.Status != "" {
-		opname.Status = models.StockOpnameStatus(req.Status)
+	} else if normalizedStatus != "" {
+		opname.Status = models.StockOpnameStatus(normalizedStatus)
+	}
+
+	if opname.IsOpening {
+		itemsForValidation := make([]struct {
+			ProductID      string
+			SystemQuantity int
+			ActualQuantity int
+			CostPrice      float64
+			Notes          string
+		}, 0, len(req.Items))
+		for _, item := range req.Items {
+			itemsForValidation = append(itemsForValidation, struct {
+				ProductID      string
+				SystemQuantity int
+				ActualQuantity int
+				CostPrice      float64
+				Notes          string
+			}{
+				ProductID:      item.ProductID,
+				SystemQuantity: item.SystemQuantity,
+				ActualQuantity: item.ActualQuantity,
+				CostPrice:      item.CostPrice,
+				Notes:          item.Notes,
+			})
+		}
+		if err := s.validateOpeningStockItems(itemsForValidation, &opnameID); err != nil {
+			return response.NewErrorResponse(err.Error())
+		}
 	}
 
 	items := make([]struct {
@@ -1017,11 +1143,9 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 		}
 		difference := item.ActualQuantity - item.SystemQuantity
 
-		// ambil cost_price dari product
-		var costPrice float64
-		var product models.Product
-		if err := s.db.First(&product, "id = ?", pid).Error; err == nil {
-			costPrice = product.CostPrice
+		costPrice, err := s.resolveStockOpnameCostPrice(pid, item.CostPrice, opname.IsOpening)
+		if err != nil {
+			return response.NewErrorResponse(err.Error())
 		}
 
 		nilaiSelisih := float64(difference) * costPrice
@@ -1070,6 +1194,16 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 		s.inventoryRepo.UpdateStockOpnameItemsStatus(opnameID, "done")
 
 		for _, item := range items {
+			if opname.IsOpening {
+				hasOpening, err := s.hasApprovedOpeningStock(item.ProductID, &opnameID)
+				if err != nil {
+					return response.NewErrorResponse("Failed to validate opening stock")
+				}
+				if hasOpening {
+					return response.NewErrorResponse("Produk sudah memiliki opening stock global")
+				}
+			}
+
 			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, opname.WarehouseID)
 
 			currentQty := 0
@@ -1096,6 +1230,12 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 				Notes:         notes,
 			}
 			s.inventoryRepo.CreateStockMovement(&movement)
+
+			if opname.IsOpening {
+				if err := s.db.Model(&models.Product{}).Where("id = ?", item.ProductID).Update("cost_price", item.CostPrice).Error; err != nil {
+					return response.NewErrorResponse("Failed to update opening cost price")
+				}
+			}
 		}
 	}
 

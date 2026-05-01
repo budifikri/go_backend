@@ -252,6 +252,7 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 		ProductID      string
 		SystemQuantity int
 		ActualQuantity int
+		CostPrice      float64
 		Notes          string
 	}, len(req.Items))
 	for i, item := range req.Items {
@@ -259,17 +260,20 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 			ProductID      string
 			SystemQuantity int
 			ActualQuantity int
+			CostPrice      float64
 			Notes          string
-		}{ProductID: item.ProductID, SystemQuantity: item.SystemQuantity, ActualQuantity: item.ActualQuantity, Notes: item.Notes}
+		}{ProductID: item.ProductID, SystemQuantity: item.SystemQuantity, ActualQuantity: item.ActualQuantity, CostPrice: item.CostPrice, Notes: item.Notes}
 	}
 	result := h.inventoryService.CreateStockOpname(struct {
 		WarehouseID string
 		CompanyID   string
 		OpnameDate  string
+		IsOpening   bool
 		Items       []struct {
 			ProductID      string
 			SystemQuantity int
 			ActualQuantity int
+			CostPrice      float64
 			Notes          string
 		}
 		Notes string
@@ -277,6 +281,7 @@ func (h *InventoryHandler) CreateStockOpname(c *fiber.Ctx) error {
 		WarehouseID: req.WarehouseID,
 		CompanyID:   companyID,
 		OpnameDate:  req.OpnameDate,
+		IsOpening:   req.IsOpening,
 		Items:       items,
 		Notes:       req.Notes,
 	}, userID)
@@ -430,6 +435,7 @@ func (h *InventoryHandler) UpdateStockOpname(c *fiber.Ctx) error {
 	reqService := services.UpdateStockOpnameRequest{
 		WarehouseID: req.WarehouseID,
 		OpnameDate:  req.OpnameDate,
+		IsOpening:   req.IsOpening,
 		Status:      req.Status,
 		Notes:       req.Notes,
 	}
@@ -439,6 +445,7 @@ func (h *InventoryHandler) UpdateStockOpname(c *fiber.Ctx) error {
 			ProductID      string
 			SystemQuantity int
 			ActualQuantity int
+			CostPrice      float64
 			Notes          string
 			Status         string
 		}{
@@ -446,6 +453,7 @@ func (h *InventoryHandler) UpdateStockOpname(c *fiber.Ctx) error {
 			ProductID:      item.ProductID,
 			SystemQuantity: item.SystemQuantity,
 			ActualQuantity: item.ActualQuantity,
+			CostPrice:      item.CostPrice,
 			Notes:          item.Notes,
 			Status:         item.Status,
 		})

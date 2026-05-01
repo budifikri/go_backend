@@ -33,15 +33,17 @@ type ReceiveTransferRequest struct {
 }
 
 type StockOpnameItemRequest struct {
-	ProductID      string `json:"product_id"`
-	SystemQuantity int    `json:"system_quantity"`
-	ActualQuantity int    `json:"actual_quantity"`
-	Notes          string `json:"notes"`
+	ProductID      string  `json:"product_id"`
+	SystemQuantity int     `json:"system_quantity"`
+	ActualQuantity int     `json:"actual_quantity"`
+	CostPrice      float64 `json:"cost_price"`
+	Notes          string  `json:"notes"`
 }
 
 type StockOpnameRequest struct {
 	WarehouseID string                   `json:"warehouse_id"`
 	OpnameDate  string                   `json:"opname_date"`
+	IsOpening   bool                     `json:"is_opening"`
 	Items       []StockOpnameItemRequest `json:"items"`
 	Notes       string                   `json:"notes"`
 }
@@ -51,17 +53,19 @@ type StockOpnameStatusRequest struct {
 }
 
 type StockOpnameUpdateItemRequest struct {
-	ID             string `json:"id"`
-	ProductID      string `json:"product_id"`
-	SystemQuantity int    `json:"system_quantity"`
-	ActualQuantity int    `json:"actual_quantity"`
-	Notes          string `json:"notes"`
-	Status         string `json:"status"`
+	ID             string  `json:"id"`
+	ProductID      string  `json:"product_id"`
+	SystemQuantity int     `json:"system_quantity"`
+	ActualQuantity int     `json:"actual_quantity"`
+	CostPrice      float64 `json:"cost_price"`
+	Notes          string  `json:"notes"`
+	Status         string  `json:"status"`
 }
 
 type StockOpnameUpdateRequest struct {
 	WarehouseID string                         `json:"warehouse_id"`
 	OpnameDate  string                         `json:"opname_date"`
+	IsOpening   bool                           `json:"is_opening"`
 	Status      string                         `json:"status"`
 	Notes       string                         `json:"notes"`
 	Items       []StockOpnameUpdateItemRequest `json:"items"`
