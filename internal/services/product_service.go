@@ -90,6 +90,20 @@ type PriceTierResponse struct {
 	CreatedAt   string    `json:"created_at"`
 }
 
+type ProductHppTraceEventResponse struct {
+	Seq             int     `json:"seq"`
+	EventDate       string  `json:"event_date"`
+	EventType       string  `json:"event_type"`
+	ReferenceID     string  `json:"reference_id"`
+	ReferenceNumber string  `json:"reference_number"`
+	WarehouseID     string  `json:"warehouse_id"`
+	WarehouseName   string  `json:"warehouse_name"`
+	Qty             float64 `json:"qty"`
+	UnitCost        float64 `json:"unit_cost"`
+	Hpp             float64 `json:"hpp"`
+	Notes           string  `json:"notes"`
+}
+
 type CreateProductRequest struct {
 	SKU          string  `json:"sku"`
 	Barcode      string  `json:"barcode"`
@@ -223,6 +237,51 @@ func (s *ProductService) GetProductByID(id string) response.ApiResponse {
 	}, "Product retrieved successfully")
 }
 
+func (s *ProductService) GetProductHppTrace(id string) response.ApiResponse {
+	productID, err := uuid.Parse(id)
+	if err != nil {
+		return response.NewErrorResponse("Invalid product ID")
+	}
+
+	product, err := s.productRepo.FindByID(productID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to get product")
+	}
+	if product == nil {
+		return response.NewErrorResponse(ErrProductNotFound.Error())
+	}
+
+	traceRows, err := s.productRepo.GetHppTrace(productID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to get product HPP trace")
+	}
+
+	events := make([]ProductHppTraceEventResponse, len(traceRows))
+	for i, row := range traceRows {
+		events[i] = ProductHppTraceEventResponse{
+			Seq:             row.Seq,
+			EventDate:       row.EventDate.Format("2006-01-02T15:04:05Z"),
+			EventType:       row.EventType,
+			ReferenceID:     row.ReferenceID.String(),
+			ReferenceNumber: row.ReferenceNumber,
+			WarehouseID:     row.WarehouseID.String(),
+			WarehouseName:   row.WarehouseName,
+			Qty:             row.Qty,
+			UnitCost:        row.UnitCost,
+			Hpp:             row.Hpp,
+			Notes:           row.Notes,
+		}
+	}
+
+	return response.NewSuccessResponse(map[string]interface{}{
+		"product_id":         product.ID,
+		"sku":                product.SKU,
+		"name":               product.Name,
+		"current_cost_price": product.CostPrice,
+		"events":             events,
+	}, "Product HPP trace retrieved successfully")
+}
+
 func (s *ProductService) CreateProduct(req CreateProductRequest, actorUserID, actorCompanyID string) response.ApiResponse {
 	unitID, err := uuid.Parse(req.UnitID)
 	if err != nil {
@@ -348,9 +407,6 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest, acto
 	}
 	if req.Description != "" {
 		product.Description = req.Description
-	}
-	if req.CostPrice > 0 {
-		product.CostPrice = req.CostPrice
 	}
 	if req.RetailPrice > 0 {
 		product.RetailPrice = req.RetailPrice

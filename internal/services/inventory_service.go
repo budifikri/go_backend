@@ -36,7 +36,15 @@ type UpdateStockOpnameRequest struct {
 }
 
 func normalizeStockOpnameWorkflowStatus(status string) string {
-	return strings.ToLower(strings.TrimSpace(status))
+	v := strings.ToLower(strings.TrimSpace(status))
+	switch v {
+	case "approve":
+		return "approved"
+	case "complete", "completed":
+		return "posted"
+	default:
+		return v
+	}
 }
 
 func (s *InventoryService) getProductCostPrice(productID uuid.UUID) (float64, error) {
@@ -52,7 +60,7 @@ func (s *InventoryService) hasApprovedOpeningStock(productID uuid.UUID, excludeO
 		Joins("JOIN stock_opnames so ON so.id = soi.opname_id").
 		Where("soi.product_id = ?", productID).
 		Where("so.is_opening = ?", true).
-		Where("LOWER(so.status) = ?", "approved")
+		Where("LOWER(so.status) IN ?", []string{"approved", "posted", "completed"})
 	if excludeOpnameID != nil {
 		query = query.Where("so.id <> ?", *excludeOpnameID)
 	}
@@ -74,6 +82,77 @@ func (s *InventoryService) resolveStockOpnameCostPrice(productID uuid.UUID, inpu
 	}
 
 	return s.getProductCostPrice(productID)
+}
+
+func (s *InventoryService) postStockOpname(opname *models.StockOpname) response.ApiResponse {
+	if opname.IsOpening {
+		for _, item := range opname.Items {
+			hasOpening, err := s.hasApprovedOpeningStock(item.ProductID, &opname.ID)
+			if err != nil {
+				return response.NewErrorResponse("Failed to validate opening stock")
+			}
+			if hasOpening {
+				return response.NewErrorResponse("Produk sudah memiliki opening stock global")
+			}
+		}
+	}
+
+	for _, item := range opname.Items {
+		inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, opname.WarehouseID)
+
+		currentQty := 0
+		if inventory != nil {
+			currentQty = inventory.Quantity
+		}
+
+		newQty := currentQty + item.Difference
+		if err := s.inventoryRepo.UpdateQuantity(item.ProductID, opname.WarehouseID, newQty); err != nil {
+			return response.NewErrorResponse("Failed to update inventory quantity")
+		}
+
+		notes := item.Notes
+		if notes == "" {
+			notes = "Stock opname adjustment"
+		}
+
+		movement := models.StockMovement{
+			ID:            uuid.New(),
+			ProductID:     item.ProductID,
+			WarehouseID:   opname.WarehouseID,
+			MovementType:  models.MovementTypeOpname,
+			Quantity:      item.Difference,
+			ReferenceType: "STOCK_OPNAME",
+			ReferenceID:   &opname.ID,
+			Notes:         notes,
+		}
+		if err := s.inventoryRepo.CreateStockMovement(&movement); err != nil {
+			return response.NewErrorResponse("Failed to create stock movement")
+		}
+
+		if opname.IsOpening {
+			if err := s.db.Model(&models.Product{}).Where("id = ?", item.ProductID).Update("cost_price", item.CostPrice).Error; err != nil {
+				return response.NewErrorResponse("Failed to update opening cost price")
+			}
+		}
+	}
+
+	if err := s.inventoryRepo.UpdateStockOpnameItemsStatus(opname.ID, "done"); err != nil {
+		return response.NewErrorResponse("Failed to update stock opname item status")
+	}
+
+	opname.Status = models.StockOpnameStatusPosted
+	if err := s.inventoryRepo.UpdateStockOpname(opname); err != nil {
+		return response.NewErrorResponse("Failed to update stock opname status")
+	}
+
+	if s.telegramRepo != nil {
+		go s.sendTelegramStockOpnameNotification(opname.WarehouseID, opname.ID)
+	}
+
+	return response.NewSuccessResponse(map[string]interface{}{
+		"id":     opname.ID,
+		"status": opname.Status,
+	}, "Stock opname posted successfully")
 }
 
 func (s *InventoryService) validateOpeningStockItems(items []struct {
@@ -967,67 +1046,29 @@ func (s *InventoryService) UpdateStockOpnameStatus(id, status, userID string) re
 	}
 
 	currentStatus := opname.Status
+	requestedStatus := normalizeStockOpnameWorkflowStatus(status)
 
-	if status == "COMPLETED" && currentStatus == models.StockOpnameStatusDraft {
-		if opname.IsOpening {
-			for _, item := range opname.Items {
-				hasOpening, err := s.hasApprovedOpeningStock(item.ProductID, &opname.ID)
-				if err != nil {
-					return response.NewErrorResponse("Failed to validate opening stock")
-				}
-				if hasOpening {
-					return response.NewErrorResponse("Produk sudah memiliki opening stock global")
-				}
-			}
+	switch requestedStatus {
+	case "approved":
+		if currentStatus != models.StockOpnameStatusDraft && currentStatus != models.StockOpnameStatusInProgress {
+			return response.NewErrorResponse("Invalid status transition")
 		}
-
-		for _, item := range opname.Items {
-			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, opname.WarehouseID)
-
-			currentQty := 0
-			if inventory != nil {
-				currentQty = inventory.Quantity
-			}
-
-			newQty := currentQty + item.Difference
-			s.inventoryRepo.UpdateQuantity(item.ProductID, opname.WarehouseID, newQty)
-
-			movement := models.StockMovement{
-				ID:            uuid.New(),
-				ProductID:     item.ProductID,
-				WarehouseID:   opname.WarehouseID,
-				MovementType:  models.MovementTypeOpname,
-				Quantity:      item.Difference,
-				ReferenceType: "STOCK_OPNAME",
-				ReferenceID:   &opname.ID,
-				Notes:         "Stock opname adjustment",
-			}
-			s.inventoryRepo.CreateStockMovement(&movement)
-
-			if opname.IsOpening {
-				if err := s.db.Model(&models.Product{}).Where("id = ?", item.ProductID).Update("cost_price", item.CostPrice).Error; err != nil {
-					return response.NewErrorResponse("Failed to update opening cost price")
-				}
-			}
-		}
-		opname.Status = models.StockOpnameStatusCompleted
-	} else if status == "APPROVED" && currentStatus == models.StockOpnameStatusCompleted {
 		opname.Status = models.StockOpnameStatusApproved
-	} else {
+		if err := s.inventoryRepo.UpdateStockOpname(opname); err != nil {
+			return response.NewErrorResponse("Failed to update stock opname status")
+		}
+		return response.NewSuccessResponse(map[string]interface{}{
+			"id":     opname.ID,
+			"status": opname.Status,
+		}, "Stock opname approved successfully")
+	case "posted":
+		if currentStatus != models.StockOpnameStatusDraft && currentStatus != models.StockOpnameStatusInProgress && currentStatus != models.StockOpnameStatusApproved && currentStatus != models.StockOpnameStatusCompleted {
+			return response.NewErrorResponse("Invalid status transition")
+		}
+		return s.postStockOpname(opname)
+	default:
 		return response.NewErrorResponse("Invalid status transition")
 	}
-
-	s.inventoryRepo.UpdateStockOpname(opname)
-
-	// Send Telegram notification for Stock Opname
-	if s.telegramRepo != nil && status == "COMPLETED" {
-		go s.sendTelegramStockOpnameNotification(opname.WarehouseID, opnameID)
-	}
-
-	return response.NewSuccessResponse(map[string]interface{}{
-		"id":     opname.ID,
-		"status": opname.Status,
-	}, "Stock opname status updated successfully")
 }
 
 func (s *InventoryService) DeleteStockOpname(id string) response.ApiResponse {
@@ -1061,12 +1102,13 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 
 	currentStatus := opname.Status
 
-	if currentStatus != models.StockOpnameStatusDraft && currentStatus != models.StockOpnameStatusInProgress {
+	if currentStatus != models.StockOpnameStatusDraft && currentStatus != models.StockOpnameStatusInProgress && currentStatus != models.StockOpnameStatusApproved {
 		return response.NewErrorResponse("Cannot update stock opname that is already completed or approved")
 	}
 
 	normalizedStatus := normalizeStockOpnameWorkflowStatus(req.Status)
-	isApprovalTransition := normalizedStatus == "approved" && currentStatus == models.StockOpnameStatusDraft
+	shouldPost := normalizedStatus == "posted"
+	shouldApprove := normalizedStatus == "approved"
 
 	if req.WarehouseID != "" {
 		wid, err := uuid.Parse(req.WarehouseID)
@@ -1089,9 +1131,7 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 	}
 	opname.IsOpening = req.IsOpening
 
-	if isApprovalTransition {
-		opname.Status = models.StockOpnameStatusApproved
-	} else if normalizedStatus != "" {
+	if normalizedStatus != "" {
 		opname.Status = models.StockOpnameStatus(normalizedStatus)
 	}
 
@@ -1153,7 +1193,7 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 
 		status := item.Status
 		if status == "" {
-			if isApprovalTransition {
+			if shouldPost {
 				status = "done"
 			} else {
 				status = "pending"
@@ -1190,52 +1230,17 @@ func (s *InventoryService) UpdateStockOpname(id string, req UpdateStockOpnameReq
 		return response.NewErrorResponse("Failed to update stock opname")
 	}
 
-	if isApprovalTransition {
-		s.inventoryRepo.UpdateStockOpnameItemsStatus(opnameID, "done")
+	if shouldApprove {
+		opname.Status = models.StockOpnameStatusApproved
+		if err := s.inventoryRepo.UpdateStockOpname(opname); err != nil {
+			return response.NewErrorResponse("Failed to approve stock opname")
+		}
+	}
 
-		for _, item := range items {
-			if opname.IsOpening {
-				hasOpening, err := s.hasApprovedOpeningStock(item.ProductID, &opnameID)
-				if err != nil {
-					return response.NewErrorResponse("Failed to validate opening stock")
-				}
-				if hasOpening {
-					return response.NewErrorResponse("Produk sudah memiliki opening stock global")
-				}
-			}
-
-			inventory, _ := s.inventoryRepo.FindByProductAndWarehouse(item.ProductID, opname.WarehouseID)
-
-			currentQty := 0
-			if inventory != nil {
-				currentQty = inventory.Quantity
-			}
-
-			newQty := currentQty + item.Difference
-			s.inventoryRepo.UpdateQuantity(item.ProductID, opname.WarehouseID, newQty)
-
-			notes := item.Notes
-			if notes == "" {
-				notes = "Stock opname adjustment - approved"
-			}
-
-			movement := models.StockMovement{
-				ID:            uuid.New(),
-				ProductID:     item.ProductID,
-				WarehouseID:   opname.WarehouseID,
-				MovementType:  models.MovementTypeOpname,
-				Quantity:      item.Difference,
-				ReferenceType: "STOCK_OPNAME",
-				ReferenceID:   &opnameID,
-				Notes:         notes,
-			}
-			s.inventoryRepo.CreateStockMovement(&movement)
-
-			if opname.IsOpening {
-				if err := s.db.Model(&models.Product{}).Where("id = ?", item.ProductID).Update("cost_price", item.CostPrice).Error; err != nil {
-					return response.NewErrorResponse("Failed to update opening cost price")
-				}
-			}
+	if shouldPost {
+		postResult := s.postStockOpname(opname)
+		if !postResult.Success {
+			return postResult
 		}
 	}
 

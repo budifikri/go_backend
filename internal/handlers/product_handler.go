@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/google/uuid"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
 	"github.com/pos-retail/go_backend/internal/types/request"
@@ -98,6 +98,15 @@ func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
 	id := c.Params("id")
 	result := h.productService.GetProductByID(id)
 
+	if !result.Success {
+		return c.Status(fiber.StatusNotFound).JSON(result)
+	}
+	return c.JSON(result)
+}
+
+func (h *ProductHandler) GetProductHppTrace(c *fiber.Ctx) error {
+	id := c.Params("id")
+	result := h.productService.GetProductHppTrace(id)
 	if !result.Success {
 		return c.Status(fiber.StatusNotFound).JSON(result)
 	}

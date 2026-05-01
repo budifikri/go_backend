@@ -2,11 +2,26 @@ package repository
 
 import (
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/pos-retail/go_backend/internal/models"
 	"gorm.io/gorm"
 )
+
+type ProductHppTraceRow struct {
+	Seq             int       `json:"seq"`
+	EventDate       time.Time `json:"event_date"`
+	EventType       string    `json:"event_type"`
+	ReferenceID     uuid.UUID `json:"reference_id"`
+	ReferenceNumber string    `json:"reference_number"`
+	WarehouseID     uuid.UUID `json:"warehouse_id"`
+	WarehouseName   string    `json:"warehouse_name"`
+	Qty             float64   `json:"qty"`
+	UnitCost        float64   `json:"unit_cost"`
+	Hpp             float64   `json:"hpp"`
+	Notes           string    `json:"notes"`
+}
 
 type ProductRepository struct {
 	db *gorm.DB
@@ -128,7 +143,7 @@ func (r *ProductRepository) FindOpenedProductIDs(productIDs []uuid.UUID) (map[uu
 		Joins("JOIN stock_opnames so ON so.id = soi.opname_id").
 		Where("soi.product_id IN ?", productIDs).
 		Where("so.is_opening = ?", true).
-		Where("LOWER(so.status) = ?", "approved").
+		Where("LOWER(so.status) IN ?", []string{"approved", "posted", "completed"}).
 		Scan(&rows).Error
 	if err != nil {
 		return nil, err
@@ -139,4 +154,120 @@ func (r *ProductRepository) FindOpenedProductIDs(productIDs []uuid.UUID) (map[uu
 	}
 
 	return opened, nil
+}
+
+func (r *ProductRepository) GetHppTrace(productID uuid.UUID) ([]ProductHppTraceRow, error) {
+	const query = `
+WITH base_events AS (
+	SELECT
+		soi.product_id,
+		COALESCE(so.opname_date, so.created_at) AS event_date,
+		'OPENING_STOCK' AS event_type,
+		so.id AS reference_id,
+		so.opname_number AS reference_number,
+		so.warehouse_id,
+		COALESCE(w.name, '-') AS warehouse_name,
+		soi.actual_quantity::numeric AS qty,
+		soi.cost_price::numeric AS unit_cost,
+		COALESCE(NULLIF(so.notes, ''), 'Opening stock') AS notes,
+		1 AS source_priority
+	FROM stock_opname_items soi
+	JOIN stock_opnames so ON so.id = soi.opname_id
+	LEFT JOIN warehouses w ON w.id = so.warehouse_id
+	WHERE soi.product_id = ?
+	  AND so.is_opening = true
+	  AND LOWER(so.status) IN ('posted', 'completed')
+
+	UNION ALL
+
+	SELECT
+		poi.product_id,
+		COALESCE(po.receive_date, po.updated_at, po.created_at) AS event_date,
+		'PURCHASE_RECEIVE' AS event_type,
+		po.id AS reference_id,
+		po.po_number AS reference_number,
+		po.warehouse_id,
+		COALESCE(w.name, '-') AS warehouse_name,
+		poi.qty_receive::numeric AS qty,
+		poi.unit_price::numeric AS unit_cost,
+		COALESCE(NULLIF(po.note_receive, ''), 'Receive from PO') AS notes,
+		2 AS source_priority
+	FROM purchase_order_items poi
+	JOIN purchase_orders po ON po.id = poi.po_id
+	LEFT JOIN warehouses w ON w.id = po.warehouse_id
+	WHERE poi.product_id = ?
+	  AND COALESCE(poi.qty_receive, 0) > 0
+	  AND LOWER(po.status_receive) = 'receive'
+), ordered_events AS (
+	SELECT
+		*,
+		ROW_NUMBER() OVER (
+			ORDER BY event_date, source_priority, reference_number, reference_id
+		) AS seq
+	FROM base_events
+), running_hpp AS (
+	SELECT
+		seq,
+		event_date,
+		event_type,
+		reference_id,
+		reference_number,
+		warehouse_id,
+		warehouse_name,
+		qty,
+		unit_cost,
+		notes,
+		qty AS running_qty_after,
+		(qty * unit_cost) AS running_value_after,
+		CASE
+			WHEN qty <= 0 THEN unit_cost
+			ELSE unit_cost
+		END AS running_hpp_after
+	FROM ordered_events
+	WHERE seq = 1
+
+	UNION ALL
+
+	SELECT
+		e.seq,
+		e.event_date,
+		e.event_type,
+		e.reference_id,
+		e.reference_number,
+		e.warehouse_id,
+		e.warehouse_name,
+		e.qty,
+		e.unit_cost,
+		e.notes,
+		(r.running_qty_after + e.qty) AS running_qty_after,
+		(r.running_value_after + (e.qty * e.unit_cost)) AS running_value_after,
+		CASE
+			WHEN (r.running_qty_after + e.qty) <= 0 THEN e.unit_cost
+			ELSE (r.running_value_after + (e.qty * e.unit_cost)) / (r.running_qty_after + e.qty)
+		END AS running_hpp_after
+	FROM running_hpp r
+	JOIN ordered_events e ON e.seq = r.seq + 1
+)
+SELECT
+	seq,
+	event_date,
+	event_type,
+	reference_id,
+	reference_number,
+	warehouse_id,
+	warehouse_name,
+	qty,
+	unit_cost,
+	running_hpp_after AS hpp,
+	notes
+FROM running_hpp
+ORDER BY seq;
+`
+
+	var rows []ProductHppTraceRow
+	if err := r.db.Raw(query, productID, productID).Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	return rows, nil
 }

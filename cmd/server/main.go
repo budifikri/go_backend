@@ -228,6 +228,7 @@ func main() {
 	// Product routes
 	products := protected.Group("/products")
 	products.Get("/", productHandler.GetProducts)
+	products.Get("/:id/hpp-trace", productHandler.GetProductHppTrace)
 	products.Get("/:id", productHandler.GetProduct)
 	products.Post("/", productHandler.CreateProduct)
 	products.Put("/:id", productHandler.UpdateProduct)

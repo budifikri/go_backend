@@ -152,6 +152,7 @@ const (
 	StockOpnameStatusInProgress StockOpnameStatus = "in_progress"
 	StockOpnameStatusCompleted  StockOpnameStatus = "completed"
 	StockOpnameStatusApproved   StockOpnameStatus = "approved"
+	StockOpnameStatusPosted     StockOpnameStatus = "posted"
 )
 
 // StockOpname model
