@@ -330,6 +330,9 @@ func (h *InventoryHandler) GetStockOpnames(c *fiber.Ctx) error {
 	if search := c.Query("search"); search != "" {
 		filters["search"] = search
 	}
+	if opnameType := c.Query("opname_type"); opnameType != "" {
+		filters["opname_type"] = opnameType
+	}
 	limit := c.QueryInt("limit", 50)
 	offset := c.QueryInt("offset", 0)
 	result := h.inventoryService.GetStockOpnames(companyID, filters, limit, offset)

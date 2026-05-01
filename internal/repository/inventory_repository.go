@@ -400,6 +400,14 @@ func (r *InventoryRepository) FindStockOpnames(filters map[string]interface{}, l
 		like := "%" + search + "%"
 		query = query.Where("opname_number ILIKE ?", like)
 	}
+	if opnameType, ok := filters["opname_type"].(string); ok && opnameType != "" {
+		switch strings.ToLower(strings.TrimSpace(opnameType)) {
+		case "opening":
+			query = query.Where("is_opening = ?", true)
+		case "regular":
+			query = query.Where("is_opening = ?", false)
+		}
+	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
