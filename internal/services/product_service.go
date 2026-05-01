@@ -253,7 +253,8 @@ func (s *ProductService) GetProductHppTrace(id string) response.ApiResponse {
 
 	traceRows, err := s.productRepo.GetHppTrace(productID)
 	if err != nil {
-		return response.NewErrorResponse("Failed to get product HPP trace")
+		log.Printf("[ERROR] GetProductHppTrace product_id=%s error=%v", productID, err)
+		return response.NewErrorResponse("Failed to get product HPP trace: " + err.Error())
 	}
 
 	events := make([]ProductHppTraceEventResponse, len(traceRows))
