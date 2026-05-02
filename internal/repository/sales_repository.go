@@ -10,10 +10,11 @@ import (
 
 type SaleWithNames struct {
 	models.Sale
-	WarehouseName         string `json:"warehouse_name" gorm:"column:warehouse_name"`
-	CashierName           string `json:"cashier_name" gorm:"column:cashier_name"`
-	CustomerName          string `json:"customer_name" gorm:"column:customer_name"`
-	CustomerLoyaltyPoints int    `json:"customer_loyalty_points" gorm:"column:customer_loyalty_points"`
+	WarehouseName         string  `json:"warehouse_name" gorm:"column:warehouse_name"`
+	CashierName           string  `json:"cashier_name" gorm:"column:cashier_name"`
+	CustomerName          string  `json:"customer_name" gorm:"column:customer_name"`
+	CustomerLoyaltyPoints int     `json:"customer_loyalty_points" gorm:"column:customer_loyalty_points"`
+	TotalProfit           float64 `json:"total_profit" gorm:"column:total_profit"`
 }
 
 type SaleItemWithProduct struct {
@@ -36,6 +37,11 @@ type SalesRepository struct {
 type SalesSummary struct {
 	TotalRows      int64   `json:"total_rows" gorm:"column:total_rows"`
 	TotalPenjualan float64 `json:"total_penjualan" gorm:"column:total_penjualan"`
+	TotalProfit    float64 `json:"total_profit" gorm:"column:total_profit"`
+	DoneRows       int64   `json:"done_rows" gorm:"column:done_rows"`
+	CancelledRows  int64   `json:"cancelled_rows" gorm:"column:cancelled_rows"`
+	RefundedRows   int64   `json:"refunded_rows" gorm:"column:refunded_rows"`
+	PendingRows    int64   `json:"pending_rows" gorm:"column:pending_rows"`
 }
 
 func NewSalesRepository(db *gorm.DB) *SalesRepository {
@@ -84,12 +90,28 @@ func (r *SalesRepository) buildSalesFilterQuery(filters map[string]string) *gorm
 	return query
 }
 
+func (r *SalesRepository) buildSalesProfitSubquery() *gorm.DB {
+	return r.db.Table("sale_items si").
+		Select("si.sale_id, COALESCE(SUM(((COALESCE(si.unit_price, 0) - COALESCE(si.cost_price, 0)) * si.quantity) - COALESCE(si.discount_amount, 0)), 0) as base_profit").
+		Group("si.sale_id")
+}
+
+func salesProfitCaseExpression() string {
+	return `CASE
+		WHEN s.status = 'DONE' THEN COALESCE(sp.base_profit, 0)
+		WHEN s.status = 'REFUNDED' THEN -COALESCE(sp.base_profit, 0)
+		ELSE 0
+	END`
+}
+
 func (r *SalesRepository) FindSales(filters map[string]string, limit, offset int) ([]SaleWithNames, int64, error) {
 	var rows []SaleWithNames
 	var total int64
+	profitSubquery := r.buildSalesProfitSubquery()
 
 	query := r.buildSalesFilterQuery(filters).
-		Select("s.*, w.name as warehouse_name, u.username as cashier_name, c.name as customer_name, c.loyalty_points as customer_loyalty_points").
+		Joins("LEFT JOIN (?) sp ON sp.sale_id = s.id", profitSubquery).
+		Select("s.*, w.name as warehouse_name, u.username as cashier_name, c.name as customer_name, c.loyalty_points as customer_loyalty_points, " + salesProfitCaseExpression() + " as total_profit").
 		Session(&gorm.Session{})
 
 	countQuery := query.Session(&gorm.Session{})
@@ -106,9 +128,11 @@ func (r *SalesRepository) FindSales(filters map[string]string, limit, offset int
 
 func (r *SalesRepository) GetSalesSummary(filters map[string]string) (SalesSummary, error) {
 	var summary SalesSummary
+	profitSubquery := r.buildSalesProfitSubquery()
 
 	err := r.buildSalesFilterQuery(filters).
-		Select("COUNT(*) as total_rows, COALESCE(SUM(s.total_amount), 0) as total_penjualan").
+		Joins("LEFT JOIN (?) sp ON sp.sale_id = s.id", profitSubquery).
+		Select("COUNT(*) as total_rows, COALESCE(SUM(s.total_amount), 0) as total_penjualan, COALESCE(SUM(" + salesProfitCaseExpression() + "), 0) as total_profit, SUM(CASE WHEN s.status = 'DONE' THEN 1 ELSE 0 END) as done_rows, SUM(CASE WHEN s.status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled_rows, SUM(CASE WHEN s.status = 'REFUNDED' THEN 1 ELSE 0 END) as refunded_rows, SUM(CASE WHEN s.status = 'PENDING' THEN 1 ELSE 0 END) as pending_rows").
 		Scan(&summary).Error
 
 	if err != nil {

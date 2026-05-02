@@ -217,12 +217,12 @@ WITH RECURSIVE base_events AS (
 		qty,
 		unit_cost,
 		notes,
-		qty AS running_qty_after,
-		(qty * unit_cost) AS running_value_after,
+		qty::numeric(15,2) AS running_qty_after,
+		(qty * unit_cost)::numeric(15,2) AS running_value_after,
 		CASE
-			WHEN qty <= 0 THEN unit_cost
-			ELSE unit_cost
-		END AS running_hpp_after
+			WHEN qty <= 0 THEN unit_cost::numeric(15,2)
+			ELSE unit_cost::numeric(15,2)
+		END::numeric(15,2) AS running_hpp_after
 	FROM ordered_events
 	WHERE seq = 1
 
@@ -239,12 +239,12 @@ WITH RECURSIVE base_events AS (
 		e.qty,
 		e.unit_cost,
 		e.notes,
-		(r.running_qty_after + e.qty) AS running_qty_after,
-		(r.running_value_after + (e.qty * e.unit_cost)) AS running_value_after,
+		(r.running_qty_after + e.qty)::numeric(15,2) AS running_qty_after,
+		(r.running_value_after + (e.qty * e.unit_cost))::numeric(15,2) AS running_value_after,
 		CASE
-			WHEN (r.running_qty_after + e.qty) <= 0 THEN e.unit_cost
-			ELSE (r.running_value_after + (e.qty * e.unit_cost)) / (r.running_qty_after + e.qty)
-		END AS running_hpp_after
+			WHEN (r.running_qty_after + e.qty) <= 0 THEN e.unit_cost::numeric(15,2)
+			ELSE ((r.running_value_after + (e.qty * e.unit_cost)) / NULLIF((r.running_qty_after + e.qty), 0))::numeric(15,2)
+		END::numeric(15,2) AS running_hpp_after
 	FROM running_hpp r
 	JOIN ordered_events e ON e.seq = r.seq + 1
 )

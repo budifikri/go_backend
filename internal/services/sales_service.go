@@ -503,6 +503,11 @@ func (s *SalesService) GetSalesSummary(filters map[string]string) response.ApiRe
 	return response.NewSuccessResponse(map[string]interface{}{
 		"total_rows":      summary.TotalRows,
 		"total_penjualan": summary.TotalPenjualan,
+		"total_profit":    summary.TotalProfit,
+		"done_rows":       summary.DoneRows,
+		"cancelled_rows":  summary.CancelledRows,
+		"refunded_rows":   summary.RefundedRows,
+		"pending_rows":    summary.PendingRows,
 	}, "")
 }
 
