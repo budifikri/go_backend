@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
@@ -34,6 +35,21 @@ func ValidateBody(factory func() interface{}) fiber.Handler {
 			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
 		}
 		if err := getValidator().Struct(payload); err != nil {
+			if validationErrors, ok := err.(validator.ValidationErrors); ok && len(validationErrors) > 0 {
+				field := validationErrors[0].Field()
+				tag := validationErrors[0].Tag()
+				message := fmt.Sprintf("Field %s tidak valid", field)
+				switch tag {
+				case "required":
+					message = fmt.Sprintf("Field %s wajib diisi", field)
+				case "email":
+					message = fmt.Sprintf("Field %s harus berupa email yang valid", field)
+				case "oneof":
+					message = fmt.Sprintf("Field %s memiliki nilai yang tidak valid", field)
+				}
+				return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse(message))
+			}
+
 			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
 		}
 		c.Locals(ContextKeyValidatedBody, payload)

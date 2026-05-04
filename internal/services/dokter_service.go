@@ -1,6 +1,10 @@
 package services
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 
 	"github.com/pos-retail/go_backend/internal/models"
@@ -13,6 +17,29 @@ type DokterService struct {
 	dokterRepo *repository.DokterRepository
 }
 
+func parseDokterDate(value string) (time.Time, error) {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return time.Time{}, fmt.Errorf("empty date")
+	}
+
+	layouts := []string{
+		"2006-01-02",
+		time.RFC3339,
+		"2006-01-02T15:04:05",
+		"2006-01-02 15:04:05",
+	}
+
+	for _, layout := range layouts {
+		parsed, err := time.Parse(layout, trimmed)
+		if err == nil {
+			return parsed, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("invalid date format")
+}
+
 func NewDokterService(dokterRepo *repository.DokterRepository) *DokterService {
 	return &DokterService{dokterRepo: dokterRepo}
 }
@@ -21,6 +48,11 @@ func (s *DokterService) CreateDokter(input request.CreateDokterRequest, companyI
 	parsedCompanyID, err := uuid.Parse(companyID)
 	if err != nil {
 		return response.NewErrorResponse("Invalid company id")
+	}
+
+	tanggalLahir, err := parseDokterDate(input.TanggalLahir)
+	if err != nil {
+		return response.NewErrorResponse("Format tanggal lahir tidak valid. Gunakan YYYY-MM-DD")
 	}
 
 	active := true
@@ -33,7 +65,7 @@ func (s *DokterService) CreateDokter(input request.CreateDokterRequest, companyI
 		Nama:         input.Nama,
 		JenisKelamin: input.JenisKelamin,
 		TempatLahir:  input.TempatLahir,
-		TanggalLahir: input.TanggalLahir,
+		TanggalLahir: tanggalLahir,
 		Alamat:       input.Alamat,
 		NoTelp:       input.NoTelp,
 		Email:        input.Email,
@@ -92,7 +124,11 @@ func (s *DokterService) UpdateDokter(id string, input request.UpdateDokterReques
 		dokter.TempatLahir = *input.TempatLahir
 	}
 	if input.TanggalLahir != nil {
-		dokter.TanggalLahir = *input.TanggalLahir
+		tanggalLahir, err := parseDokterDate(*input.TanggalLahir)
+		if err != nil {
+			return response.NewErrorResponse("Format tanggal lahir tidak valid. Gunakan YYYY-MM-DD")
+		}
+		dokter.TanggalLahir = tanggalLahir
 	}
 	if input.Alamat != nil {
 		dokter.Alamat = *input.Alamat
