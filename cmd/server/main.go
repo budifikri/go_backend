@@ -99,6 +99,7 @@ func main() {
 		&models.BackupLog{},
 		&models.BackupSchedule{},
 		&models.TelegramConfig{},
+		&models.Dokter{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -126,6 +127,7 @@ func main() {
 	cashDrawerRepo := repository.NewCashDrawerRepository(db)
 	backupRepo := repository.NewBackupRepository(db)
 	telegramRepo := repository.NewTelegramRepository(db)
+	dokterRepo := repository.NewDokterRepository(db)
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
@@ -147,6 +149,7 @@ func main() {
 	testDataService := services.NewTestDataService(db)
 	backupService := services.NewBackupService(db, backupRepo, cfg)
 	telegramService := services.NewTelegramService(db, telegramRepo)
+	dokterService := services.NewDokterService(dokterRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -171,6 +174,7 @@ func main() {
 	testDataHandler := handlers.NewTestDataHandler(testDataService)
 	backupHandler := handlers.NewBackupHandler(backupService)
 	telegramHandler := handlers.NewTelegramHandler(telegramService)
+	dokterHandler := handlers.NewDokterHandler(dokterService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -327,6 +331,14 @@ func main() {
 	suppliers.Get("/:id", supplierHandler.GetSupplier)
 	suppliers.Put("/:id", supplierHandler.UpdateSupplier)
 	suppliers.Delete("/:id", supplierHandler.DeleteSupplier)
+
+	// Dokter routes
+	dokters := protected.Group("/dokters")
+	dokters.Get("/", dokterHandler.GetDokters)
+	dokters.Get("/:id", dokterHandler.GetDokter)
+	dokters.Post("/", dokterHandler.CreateDokter)
+	dokters.Put("/:id", dokterHandler.UpdateDokter)
+	dokters.Delete("/:id", dokterHandler.DeleteDokter)
 
 	// Purchase order routes (TS parity: /api/purchases)
 	purchases := protected.Group("/purchases")
