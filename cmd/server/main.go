@@ -336,8 +336,8 @@ func main() {
 	dokters := protected.Group("/dokters")
 	dokters.Get("/", dokterHandler.GetDokters)
 	dokters.Get("/:id", dokterHandler.GetDokter)
-	dokters.Post("/", dokterHandler.CreateDokter)
-	dokters.Put("/:id", dokterHandler.UpdateDokter)
+	dokters.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateDokterRequest{} }), dokterHandler.CreateDokter)
+	dokters.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateDokterRequest{} }), dokterHandler.UpdateDokter)
 	dokters.Delete("/:id", dokterHandler.DeleteDokter)
 
 	// Purchase order routes (TS parity: /api/purchases)

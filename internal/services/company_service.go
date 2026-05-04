@@ -72,27 +72,22 @@ func (s *CompanyService) companyHasDependentData(tx *gorm.DB, companyID uuid.UUI
 	var dep struct {
 		HasDependentData bool `gorm:"column:has_dependent_data"`
 	}
-	query := `
-		SELECT EXISTS(
-			SELECT 1 FROM warehouses WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM products WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM customers WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM suppliers WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM sales WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM purchase_orders WHERE company_id = ?
-		) AS has_dependent_data
-	`
-	args := []interface{}{companyID}
+	parts := []string{
+		"SELECT 1 FROM warehouses WHERE company_id = ?",
+		"SELECT 1 FROM products WHERE company_id = ?",
+		"SELECT 1 FROM customers WHERE company_id = ?",
+		"SELECT 1 FROM suppliers WHERE company_id = ?",
+		"SELECT 1 FROM sales WHERE company_id = ?",
+		"SELECT 1 FROM purchase_orders WHERE company_id = ?",
+	}
 	if includeUsers {
-		query = strings.Replace(query, "\t\t\tSELECT 1 FROM products WHERE company_id = ?", "\t\t\tSELECT 1 FROM users WHERE company_id = ?\n\t\t\tUNION ALL\n\t\t\tSELECT 1 FROM products WHERE company_id = ?", 1)
+		parts = append(parts[:1], append([]string{"SELECT 1 FROM users WHERE company_id = ?"}, parts[1:]...)...)
+	}
+	query := "SELECT EXISTS(" + strings.Join(parts, " UNION ALL ") + ") AS has_dependent_data"
+	args := make([]interface{}, 0, len(parts))
+	for range parts {
 		args = append(args, companyID)
 	}
-	args = append(args, companyID, companyID, companyID, companyID, companyID, companyID)
 	err := tx.Raw(query, args...).Scan(&dep).Error
 	if err != nil {
 		return false, err

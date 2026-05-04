@@ -440,21 +440,6 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 		return response.NewErrorResponse(err.Error())
 	}
 
-	return response.NewSuccessResponse(map[string]interface{}{
-		"sale_id":                 createdSale.ID,
-		"sale_number":             createdSale.SaleNumber,
-		"sale_date":               createdSale.SaleDate,
-		"subtotal":                createdSale.Subtotal,
-		"discount_amount":         createdSale.DiscountAmount,
-		"tax_amount":              createdSale.TaxAmount,
-		"total_amount":            createdSale.TotalAmount,
-		"paid_amount":             createdSale.PaidAmount,
-		"change_amount":           createdSale.ChangeAmount,
-		"loyalty_points_earned":   createdSale.LoyaltyPointsEarned,
-		"loyalty_points_redeemed": createdSale.LoyaltyPointsRedeemed,
-		"items":                   processed,
-	}, "Sale created successfully")
-
 	// Send Telegram notification for Penjualan
 	if s.telegramRepo != nil {
 		go s.sendTelegramPenjualanNotification(companyID, &createdSale, processed)

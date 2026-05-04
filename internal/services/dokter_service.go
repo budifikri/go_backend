@@ -18,13 +18,18 @@ func NewDokterService(dokterRepo *repository.DokterRepository) *DokterService {
 }
 
 func (s *DokterService) CreateDokter(input request.CreateDokterRequest, companyID string) response.ApiResponse {
+	parsedCompanyID, err := uuid.Parse(companyID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid company id")
+	}
+
 	active := true
 	if input.Active != nil {
 		active = *input.Active
 	}
 
 	dokter := &models.Dokter{
-		CompanyID:    uuid.MustParse(companyID),
+		CompanyID:    parsedCompanyID,
 		Nama:         input.Nama,
 		JenisKelamin: input.JenisKelamin,
 		TempatLahir:  input.TempatLahir,
