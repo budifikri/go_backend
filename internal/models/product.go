@@ -26,6 +26,7 @@ type Unit struct {
 	CompanyID   *uuid.UUID `gorm:"type:uuid" json:"company_id,omitempty"`
 	CreatedAt   time.Time  `gorm:"autoCreateTime" json:"created_at"`
 }
+
 func (u *Unit) BeforeCreate(tx *gorm.DB) error {
 	if u.ID == uuid.Nil {
 		u.ID = uuid.New()
@@ -42,6 +43,7 @@ type Category struct {
 	ID          uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Code        string     `gorm:"type:varchar(20);uniqueIndex;notNull" json:"code"`
 	Name        string     `gorm:"type:varchar(100);notNull" json:"name"`
+	ProductType string     `gorm:"type:varchar(20);notNull;default:'stockable'" json:"product_type"`
 	Description string     `gorm:"type:text" json:"description,omitempty"`
 	ParentID    *uuid.UUID `gorm:"type:uuid" json:"parent_id,omitempty"`
 	CompanyID   *uuid.UUID `gorm:"type:uuid" json:"company_id,omitempty"`
@@ -55,11 +57,37 @@ func (c *Category) BeforeCreate(tx *gorm.DB) error {
 	if c.ID == uuid.Nil {
 		c.ID = uuid.New()
 	}
+	c.ProductType = NormalizeCategoryProductType(c.ProductType)
+	return nil
+}
+
+func (c *Category) BeforeSave(tx *gorm.DB) error {
+	c.ProductType = NormalizeCategoryProductType(c.ProductType)
+	return nil
+}
+
+func (c *Category) AfterFind(tx *gorm.DB) error {
+	c.ProductType = NormalizeCategoryProductType(c.ProductType)
 	return nil
 }
 
 func (Category) TableName() string {
 	return "categories"
+}
+
+const (
+	CategoryProductTypeStockable  = "stockable"
+	CategoryProductTypeService    = "service"
+	CategoryProductTypeConsumable = "consumable"
+)
+
+func NormalizeCategoryProductType(value string) string {
+	switch value {
+	case CategoryProductTypeService, CategoryProductTypeConsumable:
+		return value
+	default:
+		return CategoryProductTypeStockable
+	}
 }
 
 // WarehouseType enum

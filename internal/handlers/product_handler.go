@@ -183,7 +183,19 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
 	}
 
-	log.Printf("[DEBUG] UpdateProduct request: id=%s, UnitID=%s, CategoryID=%s, Name=%s", id, req.UnitID, req.CategoryID, req.Name)
+	requestedUnitID := ""
+	if req.UnitID != nil {
+		requestedUnitID = *req.UnitID
+	}
+	requestedCategoryID := ""
+	if req.CategoryID != nil {
+		requestedCategoryID = *req.CategoryID
+	}
+	requestedName := ""
+	if req.Name != nil {
+		requestedName = *req.Name
+	}
+	log.Printf("[DEBUG] UpdateProduct request: id=%s, UnitID=%s, CategoryID=%s, Name=%s", id, requestedUnitID, requestedCategoryID, requestedName)
 
 	actorUserID := ""
 	actorCompanyID := ""
@@ -192,7 +204,7 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 		actorCompanyID = user.CompanyID
 	}
 
-	result := h.productService.UpdateProduct(id, services.CreateProductRequest{
+	result := h.productService.UpdateProduct(id, services.UpdateProductRequest{
 		SKU:          req.SKU,
 		Barcode:      req.Barcode,
 		Name:         req.Name,
@@ -348,6 +360,7 @@ func (h *ProductHandler) CreateCategory(c *fiber.Ctx) error {
 	result := h.productService.CreateCategory(services.CreateCategoryInput{
 		Code:        req.Code,
 		Name:        req.Name,
+		ProductType: req.ProductType,
 		Description: req.Description,
 		ParentID:    parentID,
 		CompanyID:   &companyID,
@@ -401,6 +414,7 @@ func (h *ProductHandler) UpdateCategory(c *fiber.Ctx) error {
 	result := h.productService.UpdateCategory(c.Params("id"), services.UpdateCategoryInput{
 		Code:        req.Code,
 		Name:        req.Name,
+		ProductType: req.ProductType,
 		Description: req.Description,
 		ParentID:    req.ParentID,
 		IsActive:    req.IsActive,

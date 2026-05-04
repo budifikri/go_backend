@@ -119,6 +119,55 @@ type CreateProductRequest struct {
 	IsActive     *bool   `json:"is_active"`
 }
 
+type UpdateProductRequest struct {
+	SKU          *string  `json:"sku"`
+	Barcode      *string  `json:"barcode"`
+	Name         *string  `json:"name"`
+	Description  *string  `json:"description"`
+	CategoryID   *string  `json:"category_id"`
+	UnitID       *string  `json:"unit_id"`
+	CostPrice    *float64 `json:"cost_price"`
+	RetailPrice  *float64 `json:"retail_price"`
+	TaxRate      *float64 `json:"tax_rate"`
+	ReorderPoint *int     `json:"reorder_point"`
+	IsActive     *bool    `json:"is_active"`
+}
+
+func (s *ProductService) resolveCategory(categoryID string) (*uuid.UUID, *models.Category, error) {
+	if categoryID == "" {
+		return nil, nil, nil
+	}
+
+	parsedID, err := uuid.Parse(categoryID)
+	if err != nil {
+		return nil, nil, ErrCategoryNotFound
+	}
+
+	category, err := s.categoryRepo.FindByID(parsedID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if category == nil {
+		return nil, nil, ErrCategoryNotFound
+	}
+
+	normalizedType := models.NormalizeCategoryProductType(category.ProductType)
+	category.ProductType = normalizedType
+
+	return &parsedID, category, nil
+}
+
+func normalizeProductValuesByCategory(categoryType string, costPrice, retailPrice float64, reorderPoint int) (float64, float64, int) {
+	switch models.NormalizeCategoryProductType(categoryType) {
+	case models.CategoryProductTypeService:
+		return 0, retailPrice, 0
+	case models.CategoryProductTypeConsumable:
+		return costPrice, 0, reorderPoint
+	default:
+		return costPrice, retailPrice, reorderPoint
+	}
+}
+
 func (s *ProductService) GetProducts(filters map[string]interface{}, limit, offset int) response.PaginatedResponse {
 	products, total, err := s.productRepo.FindAll(filters, limit, offset)
 	if err != nil {
@@ -306,13 +355,20 @@ func (s *ProductService) CreateProduct(req CreateProductRequest, actorUserID, ac
 		}
 	}
 
-	var categoryID *uuid.UUID
-	if req.CategoryID != "" {
-		catID, err := uuid.Parse(req.CategoryID)
-		if err == nil {
-			categoryID = &catID
+	categoryID, category, err := s.resolveCategory(req.CategoryID)
+	if err != nil {
+		if errors.Is(err, ErrCategoryNotFound) {
+			return response.NewErrorResponse(ErrCategoryNotFound.Error())
 		}
+		return response.NewErrorResponse("Failed to validate category")
 	}
+
+	categoryType := models.CategoryProductTypeStockable
+	if category != nil {
+		categoryType = models.NormalizeCategoryProductType(category.ProductType)
+	}
+
+	costPrice, retailPrice, reorderPoint := normalizeProductValuesByCategory(categoryType, req.CostPrice, req.RetailPrice, req.ReorderPoint)
 
 	var companyID *uuid.UUID
 	if req.CompanyID != "" {
@@ -339,12 +395,12 @@ func (s *ProductService) CreateProduct(req CreateProductRequest, actorUserID, ac
 		Description:  req.Description,
 		CategoryID:   categoryID,
 		UnitID:       unitID,
-		CostPrice:    req.CostPrice,
-		RetailPrice:  req.RetailPrice,
+		CostPrice:    costPrice,
+		RetailPrice:  retailPrice,
 		Status:       legacyStatus,
 		IsActive:     isActive,
 		TaxRate:      req.TaxRate,
-		ReorderPoint: req.ReorderPoint,
+		ReorderPoint: reorderPoint,
 		CompanyID:    companyID,
 	}
 
@@ -373,7 +429,7 @@ func (s *ProductService) CreateProduct(req CreateProductRequest, actorUserID, ac
 	}, "Product created successfully")
 }
 
-func (s *ProductService) UpdateProduct(id string, req CreateProductRequest, actorUserID, actorCompanyID string) response.ApiResponse {
+func (s *ProductService) UpdateProduct(id string, req UpdateProductRequest, actorUserID, actorCompanyID string) response.ApiResponse {
 	productID, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Invalid product ID")
@@ -385,53 +441,91 @@ func (s *ProductService) UpdateProduct(id string, req CreateProductRequest, acto
 	}
 	oldProduct := *product
 
-	log.Printf("[DEBUG] UpdateProduct: current UnitID=%s, requested UnitID=%s", product.UnitID, req.UnitID)
+	requestedUnitID := ""
+	if req.UnitID != nil {
+		requestedUnitID = *req.UnitID
+	}
+	log.Printf("[DEBUG] UpdateProduct: current UnitID=%s, requested UnitID=%s", product.UnitID, requestedUnitID)
 
-	if req.SKU != "" && req.SKU != product.SKU {
-		existing, _ := s.productRepo.FindBySKU(req.SKU)
+	if req.SKU != nil && *req.SKU != "" && *req.SKU != product.SKU {
+		existing, _ := s.productRepo.FindBySKU(*req.SKU)
 		if existing != nil && existing.ID != productID {
 			return response.NewErrorResponse(ErrProductExists.Error())
 		}
-		product.SKU = req.SKU
+		product.SKU = *req.SKU
 	}
 
-	if req.Barcode != "" && req.Barcode != product.Barcode {
-		existing, _ := s.productRepo.FindByBarcode(req.Barcode)
+	if req.Barcode != nil && *req.Barcode != "" && *req.Barcode != product.Barcode {
+		existing, _ := s.productRepo.FindByBarcode(*req.Barcode)
 		if existing != nil && existing.ID != productID {
 			return response.NewErrorResponse(ErrProductExists.Error())
 		}
-		product.Barcode = req.Barcode
+		product.Barcode = *req.Barcode
 	}
 
-	if req.Name != "" {
-		product.Name = req.Name
+	if req.Name != nil && *req.Name != "" {
+		product.Name = *req.Name
 	}
-	if req.Description != "" {
-		product.Description = req.Description
-	}
-	if req.RetailPrice > 0 {
-		product.RetailPrice = req.RetailPrice
-	}
-	if req.TaxRate >= 0 {
-		product.TaxRate = req.TaxRate
-	}
-	if req.ReorderPoint >= 0 {
-		product.ReorderPoint = req.ReorderPoint
+	if req.Description != nil {
+		product.Description = *req.Description
 	}
 
-	if req.CategoryID != "" {
-		catID, err := uuid.Parse(req.CategoryID)
-		if err == nil {
-			product.CategoryID = &catID
+	resolvedCategoryID := product.CategoryID
+	categoryType := models.CategoryProductTypeStockable
+	if product.Category != nil {
+		categoryType = models.NormalizeCategoryProductType(product.Category.ProductType)
+	}
+
+	if req.CategoryID != nil {
+		categoryID, category, err := s.resolveCategory(*req.CategoryID)
+		if err != nil {
+			if errors.Is(err, ErrCategoryNotFound) {
+				return response.NewErrorResponse(ErrCategoryNotFound.Error())
+			}
+			return response.NewErrorResponse("Failed to validate category")
+		}
+		resolvedCategoryID = categoryID
+		if category != nil {
+			categoryType = models.NormalizeCategoryProductType(category.ProductType)
+		} else {
+			categoryType = models.CategoryProductTypeStockable
 		}
 	}
-	if req.UnitID != "" {
-		unitID, err := uuid.Parse(req.UnitID)
+	product.CategoryID = resolvedCategoryID
+
+	if req.UnitID != nil && *req.UnitID != "" {
+		unitID, err := uuid.Parse(*req.UnitID)
 		if err == nil {
+			unit, unitErr := s.unitRepo.FindByID(unitID)
+			if unitErr != nil || unit == nil {
+				return response.NewErrorResponse(ErrUnitNotFound.Error())
+			}
 			product.UnitID = unitID
 		} else {
-			log.Printf("[DEBUG] Failed to parse UnitID: %v, value: %s", err, req.UnitID)
+			log.Printf("[DEBUG] Failed to parse UnitID: %v, value: %s", err, *req.UnitID)
 		}
+	}
+
+	effectiveCostPrice := product.CostPrice
+	if req.CostPrice != nil {
+		effectiveCostPrice = *req.CostPrice
+	}
+	effectiveRetailPrice := product.RetailPrice
+	if req.RetailPrice != nil {
+		effectiveRetailPrice = *req.RetailPrice
+	}
+	effectiveReorderPoint := product.ReorderPoint
+	if req.ReorderPoint != nil {
+		effectiveReorderPoint = *req.ReorderPoint
+	}
+
+	effectiveCostPrice, effectiveRetailPrice, effectiveReorderPoint = normalizeProductValuesByCategory(categoryType, effectiveCostPrice, effectiveRetailPrice, effectiveReorderPoint)
+	product.CostPrice = effectiveCostPrice
+	product.RetailPrice = effectiveRetailPrice
+	product.ReorderPoint = effectiveReorderPoint
+
+	if req.TaxRate != nil {
+		product.TaxRate = *req.TaxRate
 	}
 	if req.IsActive != nil {
 		product.IsActive = *req.IsActive
@@ -553,6 +647,7 @@ func (s *ProductService) GetCategoryByID(id string) response.ApiResponse {
 type CreateCategoryInput struct {
 	Code        string
 	Name        string
+	ProductType string
 	Description *string
 	ParentID    *string
 	CompanyID   *string
@@ -590,6 +685,7 @@ func (s *ProductService) CreateCategory(input CreateCategoryInput, actorUserID, 
 		ID:          uuid.New(),
 		Code:        input.Code,
 		Name:        input.Name,
+		ProductType: models.NormalizeCategoryProductType(input.ProductType),
 		Description: "",
 		ParentID:    parentUUID,
 		CompanyID:   companyUUID,
@@ -614,6 +710,7 @@ func (s *ProductService) CreateCategory(input CreateCategoryInput, actorUserID, 
 type UpdateCategoryInput struct {
 	Code        *string
 	Name        *string
+	ProductType *string
 	Description *string
 	ParentID    *string
 	IsActive    *bool
@@ -641,6 +738,10 @@ func (s *ProductService) UpdateCategory(id string, input UpdateCategoryInput, ac
 	}
 	if input.Name != nil {
 		cat.Name = *input.Name
+		updated = true
+	}
+	if input.ProductType != nil {
+		cat.ProductType = models.NormalizeCategoryProductType(*input.ProductType)
 		updated = true
 	}
 	if input.Description != nil {
