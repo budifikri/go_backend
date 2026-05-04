@@ -68,6 +68,33 @@ func (s *CompanyService) loadActiveModuleCodes(companyID uuid.UUID) []string {
 	return moduleCodes
 }
 
+func (s *CompanyService) companyHasDependentData(tx *gorm.DB, companyID uuid.UUID) (bool, error) {
+	var dep struct {
+		HasDependentData bool `gorm:"column:has_dependent_data"`
+	}
+	err := tx.Raw(`
+		SELECT EXISTS(
+			SELECT 1 FROM warehouses WHERE company_id = ?
+			UNION ALL
+			SELECT 1 FROM users WHERE company_id = ?
+			UNION ALL
+			SELECT 1 FROM products WHERE company_id = ?
+			UNION ALL
+			SELECT 1 FROM customers WHERE company_id = ?
+			UNION ALL
+			SELECT 1 FROM suppliers WHERE company_id = ?
+			UNION ALL
+			SELECT 1 FROM sales WHERE company_id = ?
+			UNION ALL
+			SELECT 1 FROM purchase_orders WHERE company_id = ?
+		) AS has_dependent_data
+	`, companyID, companyID, companyID, companyID, companyID, companyID, companyID).Scan(&dep).Error
+	if err != nil {
+		return false, err
+	}
+	return dep.HasDependentData, nil
+}
+
 func (s *CompanyService) GetCompanies(companyID *uuid.UUID, search string, limit, offset int) response.PaginatedResponse {
 	var companies []models.Company
 	var total int64
@@ -226,10 +253,23 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 	if err := s.db.First(&company, "id = ?", companyID).Error; err != nil {
 		return response.NewErrorResponse("Company not found")
 	}
+	nextBusinessType := string(company.BusinessType)
+	businessTypeChanged := false
 	if input.BusinessType != nil {
-		nextBusinessType := normalizeCode(*input.BusinessType)
-		if nextBusinessType != "" && nextBusinessType != string(company.BusinessType) {
-			return response.NewErrorResponse("Business type cannot be changed after company creation")
+		normalizedBusinessType := normalizeCode(*input.BusinessType)
+		if normalizedBusinessType != "" && normalizedBusinessType != string(company.BusinessType) {
+			if err := validateBusinessType(s.db, normalizedBusinessType); err != nil {
+				return response.NewErrorResponse("Business type not found")
+			}
+			hasDependentData, err := s.companyHasDependentData(s.db, companyID)
+			if err != nil {
+				return response.NewErrorResponse("Failed to update company")
+			}
+			if hasDependentData {
+				return response.NewErrorResponse("Business type cannot be changed because company still has dependent data")
+			}
+			nextBusinessType = normalizedBusinessType
+			businessTypeChanged = true
 		}
 	}
 
@@ -257,6 +297,9 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 	}
 	if input.BusinessLicense != nil {
 		updates["business_license"] = input.BusinessLicense
+	}
+	if businessTypeChanged {
+		updates["business_type"] = nextBusinessType
 	}
 	if input.IsActive != nil {
 		updates["is_active"] = *input.IsActive
@@ -296,8 +339,16 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 				return res.Error
 			}
 		}
+		if businessTypeChanged {
+			if err := ensureCompanyModules(tx, companyID, nextBusinessType); err != nil {
+				return err
+			}
+		}
 		if input.ModuleCodes != nil {
-			return syncCompanyModules(tx, companyID, string(company.BusinessType), *input.ModuleCodes)
+			return syncCompanyModules(tx, companyID, nextBusinessType, *input.ModuleCodes)
+		}
+		if businessTypeChanged {
+			return syncCompanyModules(tx, companyID, nextBusinessType, nil)
 		}
 		return nil
 	})
@@ -328,29 +379,11 @@ func (s *CompanyService) DeleteCompany(id string) response.ApiResponse {
 		return response.NewErrorResponse("Company not found")
 	}
 
-	var dep struct {
-		HasDependentData bool `gorm:"column:has_dependent_data"`
-	}
-	if err := s.db.Raw(`
-		SELECT EXISTS(
-			SELECT 1 FROM warehouses WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM users WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM products WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM customers WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM suppliers WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM sales WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM purchase_orders WHERE company_id = ?
-		) AS has_dependent_data
-	`, companyID, companyID, companyID, companyID, companyID, companyID, companyID).Scan(&dep).Error; err != nil {
+	hasDependentData, err := s.companyHasDependentData(s.db, companyID)
+	if err != nil {
 		return response.NewErrorResponse("Failed to delete company")
 	}
-	if dep.HasDependentData {
+	if hasDependentData {
 		return response.NewErrorResponse("Cannot delete company: Company has dependent data (warehouses, users, products, customers, suppliers, sales, purchase orders)")
 	}
 

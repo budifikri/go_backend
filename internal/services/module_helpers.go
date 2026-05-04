@@ -118,6 +118,15 @@ func syncCompanyModules(tx *gorm.DB, companyID uuid.UUID, businessType string, r
 	for _, item := range existing {
 		existingByCode[strings.ToLower(item.ModuleCode)] = item
 	}
+	for code, item := range existingByCode {
+		if _, ok := allowed[code]; ok {
+			continue
+		}
+		if err := tx.Delete(&models.CompanyModule{}, "id = ?", item.ID).Error; err != nil {
+			return err
+		}
+		delete(existingByCode, code)
+	}
 	now := time.Now()
 	for _, pkg := range packages {
 		shouldBeActive := selected[pkg.Code]
