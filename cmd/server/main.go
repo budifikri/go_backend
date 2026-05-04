@@ -101,6 +101,8 @@ func main() {
 		&models.TelegramConfig{},
 		&models.Dokter{},
 		&models.JadwalDokter{},
+		&models.Paket{},
+		&models.DetailPaket{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -130,6 +132,7 @@ func main() {
 	telegramRepo := repository.NewTelegramRepository(db)
 	dokterRepo := repository.NewDokterRepository(db)
 	jadwalDokterRepo := repository.NewJadwalDokterRepository(db)
+	paketRepo := repository.NewPaketRepository(db)
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
@@ -153,6 +156,7 @@ func main() {
 	telegramService := services.NewTelegramService(db, telegramRepo)
 	dokterService := services.NewDokterService(dokterRepo)
 	jadwalDokterService := services.NewJadwalDokterService(jadwalDokterRepo)
+	paketService := services.NewPaketService(paketRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -179,6 +183,7 @@ func main() {
 	telegramHandler := handlers.NewTelegramHandler(telegramService)
 	dokterHandler := handlers.NewDokterHandler(dokterService)
 	jadwalDokterHandler := handlers.NewJadwalDokterHandler(jadwalDokterService)
+	paketHandler := handlers.NewPaketHandler(paketService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -351,6 +356,14 @@ func main() {
 	jadwalDokter.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateJadwalDokterRequest{} }), jadwalDokterHandler.CreateJadwalDokter)
 	jadwalDokter.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateJadwalDokterRequest{} }), jadwalDokterHandler.UpdateJadwalDokter)
 	jadwalDokter.Delete("/:id", jadwalDokterHandler.DeleteJadwalDokter)
+
+	// Paket routes
+	pakets := protected.Group("/paket")
+	pakets.Get("/", paketHandler.GetPakets)
+	pakets.Get("/:id", paketHandler.GetPaket)
+	pakets.Post("/", paketHandler.CreatePaket)
+	pakets.Put("/:id", paketHandler.UpdatePaket)
+	pakets.Delete("/:id", paketHandler.DeletePaket)
 
 	// Purchase order routes (TS parity: /api/purchases)
 	purchases := protected.Group("/purchases")
