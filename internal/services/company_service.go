@@ -123,6 +123,7 @@ type CreateCompanyInput struct {
 	Nama            string
 	Email           string
 	BusinessType    string
+	ModuleCodes     []string
 	Address         *string
 	Telp            *string
 	Website         *string
@@ -182,7 +183,10 @@ func (s *CompanyService) CreateCompany(input CreateCompanyInput) response.ApiRes
 		if err := tx.Create(&company).Error; err != nil {
 			return err
 		}
-		return ensureCompanyModules(tx, company.ID, businessType)
+		if err := ensureCompanyModules(tx, company.ID, businessType); err != nil {
+			return err
+		}
+		return syncCompanyModules(tx, company.ID, businessType, input.ModuleCodes)
 	})
 	if err != nil {
 		tx.Rollback()
@@ -202,6 +206,7 @@ type UpdateCompanyInput struct {
 	Nama            *string
 	Email           *string
 	BusinessType    *string
+	ModuleCodes     *[]string
 	Address         *string
 	Telp            *string
 	Logo            *string
@@ -261,20 +266,43 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 			updates["status"] = "inactive"
 		}
 	}
-	if len(updates) == 0 {
+	shouldUpdateCompany := len(updates) > 0
+	if !shouldUpdateCompany && input.ModuleCodes == nil {
 		return response.NewErrorResponse("No fields to update")
 	}
-	updates["updated_at"] = time.Now()
+	if shouldUpdateCompany {
+		updates["updated_at"] = time.Now()
+	}
+
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return response.NewErrorResponse("Failed to update company")
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
 
 	logInstance := applogger.Default()
-	err = applogger.AuditUpdate(s.db, logInstance, "companies", companyID.String(), "", "", func() error {
-		res := s.db.Model(&models.Company{}).Where("id = ?", companyID).Updates(updates)
-		if res.RowsAffected == 0 {
-			return gorm.ErrRecordNotFound
+	err = applogger.AuditUpdate(tx, logInstance, "companies", companyID.String(), "", "", func() error {
+		if shouldUpdateCompany {
+			res := tx.Model(&models.Company{}).Where("id = ?", companyID).Updates(updates)
+			if res.RowsAffected == 0 {
+				return gorm.ErrRecordNotFound
+			}
+			if res.Error != nil {
+				return res.Error
+			}
 		}
-		return res.Error
+		if input.ModuleCodes != nil {
+			return syncCompanyModules(tx, companyID, string(company.BusinessType), *input.ModuleCodes)
+		}
+		return nil
 	})
 	if err != nil {
+		tx.Rollback()
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return response.NewErrorResponse("Company not found")
 		}
@@ -282,6 +310,9 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return response.NewErrorResponse("Company email already exists")
 		}
+		return response.NewErrorResponse("Failed to update company")
+	}
+	if err := tx.Commit().Error; err != nil {
 		return response.NewErrorResponse("Failed to update company")
 	}
 
