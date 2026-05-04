@@ -68,15 +68,13 @@ func (s *CompanyService) loadActiveModuleCodes(companyID uuid.UUID) []string {
 	return moduleCodes
 }
 
-func (s *CompanyService) companyHasDependentData(tx *gorm.DB, companyID uuid.UUID) (bool, error) {
+func (s *CompanyService) companyHasDependentData(tx *gorm.DB, companyID uuid.UUID, includeUsers bool) (bool, error) {
 	var dep struct {
 		HasDependentData bool `gorm:"column:has_dependent_data"`
 	}
-	err := tx.Raw(`
+	query := `
 		SELECT EXISTS(
 			SELECT 1 FROM warehouses WHERE company_id = ?
-			UNION ALL
-			SELECT 1 FROM users WHERE company_id = ?
 			UNION ALL
 			SELECT 1 FROM products WHERE company_id = ?
 			UNION ALL
@@ -88,7 +86,14 @@ func (s *CompanyService) companyHasDependentData(tx *gorm.DB, companyID uuid.UUI
 			UNION ALL
 			SELECT 1 FROM purchase_orders WHERE company_id = ?
 		) AS has_dependent_data
-	`, companyID, companyID, companyID, companyID, companyID, companyID, companyID).Scan(&dep).Error
+	`
+	args := []interface{}{companyID}
+	if includeUsers {
+		query = strings.Replace(query, "\t\t\tSELECT 1 FROM products WHERE company_id = ?", "\t\t\tSELECT 1 FROM users WHERE company_id = ?\n\t\t\tUNION ALL\n\t\t\tSELECT 1 FROM products WHERE company_id = ?", 1)
+		args = append(args, companyID)
+	}
+	args = append(args, companyID, companyID, companyID, companyID, companyID, companyID)
+	err := tx.Raw(query, args...).Scan(&dep).Error
 	if err != nil {
 		return false, err
 	}
@@ -261,7 +266,7 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 			if err := validateBusinessType(s.db, normalizedBusinessType); err != nil {
 				return response.NewErrorResponse("Business type not found")
 			}
-			hasDependentData, err := s.companyHasDependentData(s.db, companyID)
+			hasDependentData, err := s.companyHasDependentData(s.db, companyID, false)
 			if err != nil {
 				return response.NewErrorResponse("Failed to update company")
 			}
@@ -379,7 +384,7 @@ func (s *CompanyService) DeleteCompany(id string) response.ApiResponse {
 		return response.NewErrorResponse("Company not found")
 	}
 
-	hasDependentData, err := s.companyHasDependentData(s.db, companyID)
+	hasDependentData, err := s.companyHasDependentData(s.db, companyID, true)
 	if err != nil {
 		return response.NewErrorResponse("Failed to delete company")
 	}
