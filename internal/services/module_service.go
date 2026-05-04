@@ -379,6 +379,9 @@ func (s *ModuleService) ToggleCompanyModule(companyID, moduleCode, actorUserID s
 	if pkg.BusinessType != company.BusinessType {
 		return response.NewErrorResponse("Module package does not match company business type")
 	}
+	if pkg.IsDefault && !isActive {
+		return response.NewErrorResponse("Default module package must remain active")
+	}
 	var activatedBy *uuid.UUID
 	if actorUserID != "" {
 		if userID, parseErr := uuid.Parse(actorUserID); parseErr == nil {

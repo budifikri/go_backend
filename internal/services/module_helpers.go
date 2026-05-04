@@ -103,6 +103,11 @@ func syncCompanyModules(tx *gorm.DB, companyID uuid.UUID, businessType string, r
 			}
 			selected[code] = true
 		}
+		for _, pkg := range packages {
+			if pkg.IsDefault {
+				selected[pkg.Code] = true
+			}
+		}
 	}
 
 	var existing []models.CompanyModule
