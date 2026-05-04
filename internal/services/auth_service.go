@@ -44,8 +44,9 @@ type LoginResponse struct {
 	ExpiresAt time.Time `json:"expires_at"`
 	LastLogin time.Time `json:"last_login"`
 	Company   struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+		ID           string `json:"id"`
+		Name         string `json:"name"`
+		BusinessType string `json:"business_type"`
 	} `json:"company"`
 }
 
@@ -100,15 +101,18 @@ func (s *AuthService) Login(username, password string) response.ApiResponse {
 	// Get company data
 	var company models.Company
 	companyData := struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+		ID           string `json:"id"`
+		Name         string `json:"name"`
+		BusinessType string `json:"business_type"`
 	}{
-		ID:   "",
-		Name: "",
+		ID:           "",
+		Name:         "",
+		BusinessType: "",
 	}
 	if err := s.db.First(&company, user.CompanyID).Error; err == nil {
 		companyData.ID = company.ID.String()
 		companyData.Name = company.Nama
+		companyData.BusinessType = string(company.BusinessType)
 	}
 
 	return response.NewSuccessResponse(LoginResponse{
@@ -127,11 +131,11 @@ func (s *AuthService) Login(username, password string) response.ApiResponse {
 
 // Register creates a new user
 func (s *AuthService) Register(req struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	FullName string `json:"full_name"`
-	Role     string `json:"role"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	FullName    string `json:"full_name"`
+	Role        string `json:"role"`
 	CompanyName string `json:"company_name"`
 }) response.ApiResponse {
 	var existingUser models.User
@@ -142,12 +146,13 @@ func (s *AuthService) Register(req struct {
 
 	// Create company first
 	company := models.Company{
-		ID:   uuid.New(),
-		Code: req.Username, // Use username as company code
-		Nama: req.CompanyName,
-		Email: req.Email,
-		Status: models.CompanyStatusActive,
-		IsActive: true,
+		ID:           uuid.New(),
+		Code:         req.Username,
+		Nama:         req.CompanyName,
+		Email:        req.Email,
+		BusinessType: models.BusinessTypeRetail,
+		Status:       models.CompanyStatusActive,
+		IsActive:     true,
 	}
 
 	// Use transaction to ensure consistency
@@ -162,6 +167,10 @@ func (s *AuthService) Register(req struct {
 	if err := tx.Create(&company).Error; err != nil {
 		tx.Rollback()
 		return response.NewErrorResponse("Failed to create company")
+	}
+	if err := ensureCompanyModules(tx, company.ID, string(company.BusinessType)); err != nil {
+		tx.Rollback()
+		return response.NewErrorResponse("Failed to create default company modules")
 	}
 
 	hashedPassword, err := utils.HashPassword(req.Password)
@@ -231,11 +240,13 @@ func (s *AuthService) Register(req struct {
 		ExpiresAt: expiresAt,
 		LastLogin: time.Now(),
 		Company: struct {
-			ID   string `json:"id"`
-			Name string `json:"name"`
+			ID           string `json:"id"`
+			Name         string `json:"name"`
+			BusinessType string `json:"business_type"`
 		}{
-			ID:   company.ID.String(),
-			Name: company.Nama,
+			ID:           company.ID.String(),
+			Name:         company.Nama,
+			BusinessType: string(company.BusinessType),
 		},
 	}, "Registration successful")
 }

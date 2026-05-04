@@ -10,24 +10,29 @@ import (
 // CompanyStatus enum
 type CompanyStatus string
 
+type BusinessTypeCode string
+
 const (
-	CompanyStatusActive    CompanyStatus = "active"
-	CompanyStatusInactive  CompanyStatus = "inactive"
-	CompanyStatusSuspended CompanyStatus = "suspended"
+	CompanyStatusActive    CompanyStatus    = "active"
+	CompanyStatusInactive  CompanyStatus    = "inactive"
+	CompanyStatusSuspended CompanyStatus    = "suspended"
+	BusinessTypeRetail     BusinessTypeCode = "retail"
+	BusinessTypeClinic     BusinessTypeCode = "clinic"
 )
 
 // Company model
 type Company struct {
-	ID              uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	Code            string    `gorm:"column:code;type:varchar(20);uniqueIndex;notNull" json:"code"`
-	Nama            string    `gorm:"column:nama;type:varchar(200);notNull" json:"nama"`
-	Email           string    `gorm:"column:email;type:varchar(100);uniqueIndex;notNull" json:"email"`
-	Address         *string   `gorm:"column:address;type:text" json:"address,omitempty"`
-	Telp            *string   `gorm:"column:telp;type:varchar(20)" json:"telp,omitempty"`
-	Logo            *string   `gorm:"column:logo;type:text" json:"logo,omitempty"`
-	Website         *string   `gorm:"column:website;type:varchar(255)" json:"website,omitempty"`
-	TaxID           *string   `gorm:"column:tax_id;type:varchar(50)" json:"tax_id,omitempty"`
-	BusinessLicense *string   `gorm:"column:business_license;type:varchar(100)" json:"business_license,omitempty"`
+	ID              uuid.UUID        `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Code            string           `gorm:"column:code;type:varchar(20);uniqueIndex;notNull" json:"code"`
+	Nama            string           `gorm:"column:nama;type:varchar(200);notNull" json:"nama"`
+	Email           string           `gorm:"column:email;type:varchar(100);uniqueIndex;notNull" json:"email"`
+	BusinessType    BusinessTypeCode `gorm:"column:business_type;type:varchar(50);notNull;default:'retail'" json:"business_type"`
+	Address         *string          `gorm:"column:address;type:text" json:"address,omitempty"`
+	Telp            *string          `gorm:"column:telp;type:varchar(20)" json:"telp,omitempty"`
+	Logo            *string          `gorm:"column:logo;type:text" json:"logo,omitempty"`
+	Website         *string          `gorm:"column:website;type:varchar(255)" json:"website,omitempty"`
+	TaxID           *string          `gorm:"column:tax_id;type:varchar(50)" json:"tax_id,omitempty"`
+	BusinessLicense *string          `gorm:"column:business_license;type:varchar(100)" json:"business_license,omitempty"`
 	// Legacy multi-status column kept for DB compatibility.
 	Status    CompanyStatus `gorm:"column:status;type:varchar(20);notNull;default:'active'" json:"-"`
 	IsActive  bool          `gorm:"column:is_active;notNull;default:true" json:"is_active"`

@@ -59,6 +59,9 @@ func main() {
 		&models.EmailVerification{},
 		&models.PasswordReset{},
 		&models.Company{},
+		&models.BusinessType{},
+		&models.ModulePackage{},
+		&models.CompanyModule{},
 		&models.Unit{},
 		&models.Category{},
 		&models.Warehouse{},
@@ -99,6 +102,9 @@ func main() {
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
+	if err := database.SeedModuleDefaults(db); err != nil {
+		log.Fatalf("Failed to seed module defaults: %v", err)
+	}
 
 	jwtUtil := utils.NewJWTUtil(cfg.JWT.Secret, cfg.JWT.ExpiresIn)
 
@@ -136,6 +142,7 @@ func main() {
 	financeService := services.NewFinanceService(db, financeRepo)
 	cashDrawerService := services.NewCashDrawerService(db, cashDrawerRepo, financeService, telegramRepo)
 	companyService := services.NewCompanyService(db)
+	moduleService := services.NewModuleService(db)
 	userService := services.NewUserService(db)
 	testDataService := services.NewTestDataService(db)
 	backupService := services.NewBackupService(db, backupRepo, cfg)
@@ -157,6 +164,7 @@ func main() {
 	financeHandler := handlers.NewFinanceHandler(financeService)
 	cashDrawerHandler := handlers.NewCashDrawerHandler(cashDrawerService)
 	companyHandler := handlers.NewCompanyHandler(companyService)
+	moduleHandler := handlers.NewModuleHandler(moduleService)
 	userHandler := handlers.NewUserHandler(userService)
 	healthHandler := handlers.NewHealthHandler(db, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
 	logHandler := handlers.NewLogHandler(crudLogger)
@@ -372,6 +380,23 @@ func main() {
 	companiesAdmin.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateCompanyRequest{} }), companyHandler.UpdateCompany)
 	companiesAdmin.Delete("/:id", companyHandler.DeleteCompany)
 	companiesAdmin.Post("/:id/logo", middleware.ValidateBody(func() interface{} { return &request.UploadCompanyLogoRequest{} }), companyHandler.UploadCompanyLogo)
+
+	// Business type routes
+	businessTypes := protected.Group("/business-types", middleware.RoleMiddleware("admin"))
+	businessTypes.Get("/", moduleHandler.GetBusinessTypes)
+	businessTypes.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateBusinessTypeRequest{} }), moduleHandler.CreateBusinessType)
+	businessTypes.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateBusinessTypeRequest{} }), moduleHandler.UpdateBusinessType)
+
+	// Module package routes
+	modulePackages := protected.Group("/module-packages", middleware.RoleMiddleware("admin"))
+	modulePackages.Get("/", moduleHandler.GetModulePackages)
+	modulePackages.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateModulePackageRequest{} }), moduleHandler.CreateModulePackage)
+	modulePackages.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateModulePackageRequest{} }), moduleHandler.UpdateModulePackage)
+
+	// Company module routes
+	protected.Get("/me/modules", moduleHandler.GetMyModules)
+	companiesAdmin.Get("/:id/modules", moduleHandler.GetCompanyModules)
+	companiesAdmin.Patch("/:id/modules/:code/toggle", middleware.ValidateBody(func() interface{} { return &request.ToggleCompanyModuleRequest{} }), moduleHandler.ToggleCompanyModule)
 
 	// Finance routes
 	invoices := protected.Group("/invoices")

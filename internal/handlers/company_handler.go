@@ -3,8 +3,8 @@ package handlers
 import (
 	"strconv"
 
-	"github.com/google/uuid"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
 	"github.com/pos-retail/go_backend/internal/types/request"
@@ -35,7 +35,7 @@ func NewCompanyHandler(companyService *services.CompanyService) *CompanyHandler 
 func (h *CompanyHandler) GetCompanies(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
-	
+
 	// Get company_id from user context - users can only see their own company
 	var companyID *uuid.UUID
 	user := middleware.GetUserFromContext(c)
@@ -45,7 +45,7 @@ func (h *CompanyHandler) GetCompanies(c *fiber.Ctx) error {
 			companyID = &id
 		}
 	}
-	
+
 	result := h.companyService.GetCompanies(companyID, c.Query("search"), limit, offset)
 	return c.JSON(result)
 }
@@ -122,6 +122,7 @@ func (h *CompanyHandler) CreateCompany(c *fiber.Ctx) error {
 		Code:            req.Code,
 		Nama:            req.Nama,
 		Email:           req.Email,
+		BusinessType:    req.BusinessType,
 		Address:         req.Address,
 		Telp:            req.Telp,
 		Website:         req.Website,
@@ -168,6 +169,7 @@ func (h *CompanyHandler) UpdateCompany(c *fiber.Ctx) error {
 	result := h.companyService.UpdateCompany(c.Params("id"), services.UpdateCompanyInput{
 		Nama:            req.Nama,
 		Email:           req.Email,
+		BusinessType:    req.BusinessType,
 		Address:         req.Address,
 		Telp:            req.Telp,
 		Logo:            req.Logo,

@@ -21,6 +21,53 @@ func NewCompanyService(db *gorm.DB) *CompanyService {
 	return &CompanyService{db: db}
 }
 
+type CompanyResponse struct {
+	ID              uuid.UUID               `json:"id"`
+	Code            string                  `json:"code"`
+	Nama            string                  `json:"nama"`
+	Email           string                  `json:"email"`
+	BusinessType    models.BusinessTypeCode `json:"business_type"`
+	Address         *string                 `json:"address,omitempty"`
+	Telp            *string                 `json:"telp,omitempty"`
+	Logo            *string                 `json:"logo,omitempty"`
+	Website         *string                 `json:"website,omitempty"`
+	TaxID           *string                 `json:"tax_id,omitempty"`
+	BusinessLicense *string                 `json:"business_license,omitempty"`
+	IsActive        bool                    `json:"is_active"`
+	CreatedAt       time.Time               `json:"created_at"`
+	UpdatedAt       time.Time               `json:"updated_at"`
+	Modules         []string                `json:"modules,omitempty"`
+}
+
+func buildCompanyResponse(company models.Company, modules []string) CompanyResponse {
+	return CompanyResponse{
+		ID:              company.ID,
+		Code:            company.Code,
+		Nama:            company.Nama,
+		Email:           company.Email,
+		BusinessType:    company.BusinessType,
+		Address:         company.Address,
+		Telp:            company.Telp,
+		Logo:            company.Logo,
+		Website:         company.Website,
+		TaxID:           company.TaxID,
+		BusinessLicense: company.BusinessLicense,
+		IsActive:        company.IsActive,
+		CreatedAt:       company.CreatedAt,
+		UpdatedAt:       company.UpdatedAt,
+		Modules:         modules,
+	}
+}
+
+func (s *CompanyService) loadActiveModuleCodes(companyID uuid.UUID) []string {
+	var moduleCodes []string
+	_ = s.db.Model(&models.CompanyModule{}).
+		Where("company_id = ? AND is_active = ?", companyID, true).
+		Order("module_code").
+		Pluck("module_code", &moduleCodes).Error
+	return moduleCodes
+}
+
 func (s *CompanyService) GetCompanies(companyID *uuid.UUID, search string, limit, offset int) response.PaginatedResponse {
 	var companies []models.Company
 	var total int64
@@ -43,12 +90,16 @@ func (s *CompanyService) GetCompanies(companyID *uuid.UUID, search string, limit
 	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
-
 	if err := query.Order("nama").Limit(limit).Offset(offset).Find(&companies).Error; err != nil {
 		return response.PaginatedResponse{Success: false, Data: []interface{}{}, Pagination: response.Pagination{Total: 0, Limit: limit, Offset: offset, HasMore: false}}
 	}
 
-	return response.NewPaginatedResponse(companies, total, limit, offset)
+	items := make([]CompanyResponse, 0, len(companies))
+	for _, company := range companies {
+		items = append(items, buildCompanyResponse(company, s.loadActiveModuleCodes(company.ID)))
+	}
+
+	return response.NewPaginatedResponse(items, total, limit, offset)
 }
 
 func (s *CompanyService) GetCompanyByID(id string) response.ApiResponse {
@@ -60,11 +111,10 @@ func (s *CompanyService) GetCompanyByID(id string) response.ApiResponse {
 	if err := s.db.First(&company, "id = ?", companyID).Error; err != nil {
 		return response.NewErrorResponse("Company not found")
 	}
-	return response.NewSuccessResponse(company, "")
+	return response.NewSuccessResponse(buildCompanyResponse(company, s.loadActiveModuleCodes(company.ID)), "")
 }
 
 func (s *CompanyService) GetCompanyByUserCompanyID(companyID string) response.ApiResponse {
-	// In TS they join users -> companies by userId. In Go JWT already contains companyId.
 	return s.GetCompanyByID(companyID)
 }
 
@@ -72,6 +122,7 @@ type CreateCompanyInput struct {
 	Code            string
 	Nama            string
 	Email           string
+	BusinessType    string
 	Address         *string
 	Telp            *string
 	Website         *string
@@ -81,6 +132,14 @@ type CreateCompanyInput struct {
 }
 
 func (s *CompanyService) CreateCompany(input CreateCompanyInput) response.ApiResponse {
+	businessType := normalizeCode(input.BusinessType)
+	if businessType == "" {
+		businessType = string(models.BusinessTypeRetail)
+	}
+	if err := validateBusinessType(s.db, businessType); err != nil {
+		return response.NewErrorResponse("Business type not found")
+	}
+
 	isActive := true
 	if input.IsActive != nil {
 		isActive = *input.IsActive
@@ -95,6 +154,7 @@ func (s *CompanyService) CreateCompany(input CreateCompanyInput) response.ApiRes
 		Code:            input.Code,
 		Nama:            input.Nama,
 		Email:           input.Email,
+		BusinessType:    models.BusinessTypeCode(businessType),
 		Address:         input.Address,
 		Telp:            input.Telp,
 		Website:         input.Website,
@@ -106,23 +166,42 @@ func (s *CompanyService) CreateCompany(input CreateCompanyInput) response.ApiRes
 		UpdatedAt:       time.Now(),
 	}
 
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return response.NewErrorResponse("Failed to create company")
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+
 	logInstance := applogger.Default()
-	err := applogger.AuditCreate(s.db, logInstance, "companies", company.ID.String(), "", "", func() error {
-		return s.db.Create(&company).Error
+	err := applogger.AuditCreate(tx, logInstance, "companies", company.ID.String(), "", "", func() error {
+		if err := tx.Create(&company).Error; err != nil {
+			return err
+		}
+		return ensureCompanyModules(tx, company.ID, businessType)
 	})
 	if err != nil {
+		tx.Rollback()
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return response.NewErrorResponse("Company code or email already exists")
 		}
 		return response.NewErrorResponse("Failed to create company")
 	}
-	return response.NewSuccessResponse(company, "")
+	if err := tx.Commit().Error; err != nil {
+		return response.NewErrorResponse("Failed to create company")
+	}
+	return response.NewSuccessResponse(buildCompanyResponse(company, s.loadActiveModuleCodes(company.ID)), "")
 }
 
 type UpdateCompanyInput struct {
 	Nama            *string
 	Email           *string
+	BusinessType    *string
 	Address         *string
 	Telp            *string
 	Logo            *string
@@ -136,6 +215,17 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 	companyID, err := uuid.Parse(id)
 	if err != nil {
 		return response.NewErrorResponse("Company not found")
+	}
+
+	var company models.Company
+	if err := s.db.First(&company, "id = ?", companyID).Error; err != nil {
+		return response.NewErrorResponse("Company not found")
+	}
+	if input.BusinessType != nil {
+		nextBusinessType := normalizeCode(*input.BusinessType)
+		if nextBusinessType != "" && nextBusinessType != string(company.BusinessType) {
+			return response.NewErrorResponse("Business type cannot be changed after company creation")
+		}
 	}
 
 	updates := map[string]interface{}{}
@@ -171,7 +261,6 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 			updates["status"] = "inactive"
 		}
 	}
-
 	if len(updates) == 0 {
 		return response.NewErrorResponse("No fields to update")
 	}
@@ -196,11 +285,10 @@ func (s *CompanyService) UpdateCompany(id string, input UpdateCompanyInput) resp
 		return response.NewErrorResponse("Failed to update company")
 	}
 
-	var company models.Company
 	if err := s.db.First(&company, "id = ?", companyID).Error; err != nil {
 		return response.NewErrorResponse("Company not found")
 	}
-	return response.NewSuccessResponse(company, "")
+	return response.NewSuccessResponse(buildCompanyResponse(company, s.loadActiveModuleCodes(company.ID)), "")
 }
 
 func (s *CompanyService) DeleteCompany(id string) response.ApiResponse {
@@ -209,7 +297,6 @@ func (s *CompanyService) DeleteCompany(id string) response.ApiResponse {
 		return response.NewErrorResponse("Company not found")
 	}
 
-	// Check dependent data.
 	var dep struct {
 		HasDependentData bool `gorm:"column:has_dependent_data"`
 	}
@@ -266,5 +353,5 @@ func (s *CompanyService) UploadCompanyLogo(id string, logoPath string) response.
 	if err := s.db.First(&company, "id = ?", companyID).Error; err != nil {
 		return response.NewErrorResponse("Company not found")
 	}
-	return response.NewSuccessResponse(company, "")
+	return response.NewSuccessResponse(buildCompanyResponse(company, s.loadActiveModuleCodes(company.ID)), "")
 }
