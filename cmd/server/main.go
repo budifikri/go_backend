@@ -100,6 +100,7 @@ func main() {
 		&models.BackupSchedule{},
 		&models.TelegramConfig{},
 		&models.Dokter{},
+		&models.JadwalDokter{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -128,6 +129,7 @@ func main() {
 	backupRepo := repository.NewBackupRepository(db)
 	telegramRepo := repository.NewTelegramRepository(db)
 	dokterRepo := repository.NewDokterRepository(db)
+	jadwalDokterRepo := repository.NewJadwalDokterRepository(db)
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
@@ -150,6 +152,7 @@ func main() {
 	backupService := services.NewBackupService(db, backupRepo, cfg)
 	telegramService := services.NewTelegramService(db, telegramRepo)
 	dokterService := services.NewDokterService(dokterRepo)
+	jadwalDokterService := services.NewJadwalDokterService(jadwalDokterRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -175,6 +178,7 @@ func main() {
 	backupHandler := handlers.NewBackupHandler(backupService)
 	telegramHandler := handlers.NewTelegramHandler(telegramService)
 	dokterHandler := handlers.NewDokterHandler(dokterService)
+	jadwalDokterHandler := handlers.NewJadwalDokterHandler(jadwalDokterService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -339,6 +343,14 @@ func main() {
 	dokters.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateDokterRequest{} }), dokterHandler.CreateDokter)
 	dokters.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateDokterRequest{} }), dokterHandler.UpdateDokter)
 	dokters.Delete("/:id", dokterHandler.DeleteDokter)
+
+	// Jadwal Dokter routes
+	jadwalDokter := protected.Group("/jadwal-dokter")
+	jadwalDokter.Get("/", jadwalDokterHandler.GetJadwals)
+	jadwalDokter.Get("/:id", jadwalDokterHandler.GetJadwalDokter)
+	jadwalDokter.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateJadwalDokterRequest{} }), jadwalDokterHandler.CreateJadwalDokter)
+	jadwalDokter.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateJadwalDokterRequest{} }), jadwalDokterHandler.UpdateJadwalDokter)
+	jadwalDokter.Delete("/:id", jadwalDokterHandler.DeleteJadwalDokter)
 
 	// Purchase order routes (TS parity: /api/purchases)
 	purchases := protected.Group("/purchases")
