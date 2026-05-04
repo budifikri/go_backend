@@ -143,9 +143,9 @@ func (s *PaketService) UpdatePaket(id string, input request.UpdatePaketRequest, 
 		paket.IsActive = *input.IsActive
 	}
 
-	// Build details if provided
+	// Build details only when the request explicitly includes items.
 	var details []models.DetailPaket
-	if len(input.Items) > 0 {
+	if input.Items != nil {
 		details = make([]models.DetailPaket, 0, len(input.Items))
 		for _, item := range input.Items {
 			produkID, err := uuid.Parse(item.IDProduk)
@@ -171,8 +171,8 @@ func (s *PaketService) UpdatePaket(id string, input request.UpdatePaketRequest, 
 		return response.NewErrorResponse("Failed to update paket: " + err.Error())
 	}
 
-	// Calculate and update harga_paket if items were updated
-	if len(input.Items) > 0 {
+	// Calculate and update harga_paket only if details were explicitly updated.
+	if input.Items != nil {
 		if err := s.calculateAndUpdateHarga(paket.ID); err != nil {
 			return response.NewErrorResponse("Paket updated but failed to calculate harga: " + err.Error())
 		}
@@ -207,9 +207,5 @@ func (s *PaketService) calculateAndUpdateHarga(paketID uuid.UUID) error {
 		return err
 	}
 
-	// Update harga_paket directly using repo
-	return s.paketRepo.Update(&models.Paket{
-		ID:         paketID,
-		HargaPaket: total,
-	}, nil)
+	return s.paketRepo.UpdateHarga(paketID, total)
 }

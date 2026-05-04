@@ -82,23 +82,40 @@ func (r *PaketRepository) GetAll(companyID string, filters map[string]interface{
 // Update paket and replace details in transaction
 func (r *PaketRepository) Update(paket *models.Paket, details []models.DetailPaket) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		// Update header
-		if err := tx.Save(paket).Error; err != nil {
+		updates := map[string]interface{}{
+			"kode_paket": paket.KodePaket,
+			"nm_paket":   paket.NmPaket,
+			"deskripsi":  paket.Deskripsi,
+			"is_active":  paket.IsActive,
+			"company_id": paket.CompanyID,
+			"updated_at": gorm.Expr("NOW()"),
+		}
+
+		if err := tx.Model(&models.Paket{}).Where("id = ?", paket.ID).Updates(updates).Error; err != nil {
 			return err
 		}
-		// Delete old details
-		if err := tx.Where("id_paket = ?", paket.ID).Delete(&models.DetailPaket{}).Error; err != nil {
-			return err
-		}
-		// Insert new details
-		for i := range details {
-			details[i].IDPaket = paket.ID
-			if err := tx.Create(&details[i]).Error; err != nil {
+
+		if details != nil {
+			// Delete old details only when caller explicitly wants to replace them.
+			if err := tx.Where("id_paket = ?", paket.ID).Delete(&models.DetailPaket{}).Error; err != nil {
 				return err
 			}
+
+			for i := range details {
+				details[i].IDPaket = paket.ID
+				if err := tx.Create(&details[i]).Error; err != nil {
+					return err
+				}
+			}
 		}
+
 		return nil
 	})
+}
+
+// UpdateHarga updates only harga_paket and keeps the rest untouched.
+func (r *PaketRepository) UpdateHarga(id uuid.UUID, total float64) error {
+	return r.db.Model(&models.Paket{}).Where("id = ?", id).Update("harga_paket", total).Error
 }
 
 // Delete paket (details will be cascade deleted)
