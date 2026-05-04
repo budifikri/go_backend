@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/pos-retail/go_backend/internal/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -114,4 +115,16 @@ func (r *JadwalDokterRepository) Delete(id string, companyID uuid.UUID) error {
 
 func (r *JadwalDokterRepository) CheckDependencies(id string, companyID uuid.UUID) (bool, error) {
 	return false, nil
+}
+
+func (r *JadwalDokterRepository) IsEligibleDokter(dokterID, companyID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.Dokter{}).
+		Where("id = ? AND company_id = ? AND active = ? AND tipe = ?", dokterID, companyID, true, models.TipeDokterDokter).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

@@ -62,6 +62,14 @@ func (s *JadwalDokterService) CreateJadwalDokter(input request.CreateJadwalDokte
 		return response.NewErrorResponse("jam_mulai must be before jam_selesai")
 	}
 
+	eligible, err := s.repo.IsEligibleDokter(dokterID, cid)
+	if err != nil {
+		return response.NewErrorResponse(fmt.Sprintf("Failed to validate dokter: %v", err))
+	}
+	if !eligible {
+		return response.NewErrorResponse("Dokter tidak valid. Hanya dokter aktif dengan tipe Dokter yang bisa dipilih")
+	}
+
 	data := map[string]interface{}{
 		"dokter_id":   dokterID,
 		"company_id":  cid,
@@ -128,6 +136,13 @@ func (s *JadwalDokterService) UpdateJadwalDokter(id string, input request.Update
 		dokterID, err := uuid.Parse(*input.DokterID)
 		if err != nil {
 			return response.NewErrorResponse("Invalid dokter_id format")
+		}
+		eligible, err := s.repo.IsEligibleDokter(dokterID, cid)
+		if err != nil {
+			return response.NewErrorResponse(fmt.Sprintf("Failed to validate dokter: %v", err))
+		}
+		if !eligible {
+			return response.NewErrorResponse("Dokter tidak valid. Hanya dokter aktif dengan tipe Dokter yang bisa dipilih")
 		}
 		updates["dokter_id"] = dokterID
 	}
