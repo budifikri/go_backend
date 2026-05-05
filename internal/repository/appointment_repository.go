@@ -84,10 +84,12 @@ func (r *AppointmentRepository) Delete(id, companyID string) error {
 
 func (r *AppointmentRepository) CheckConflict(therapistID, bookingDate string, startTime, endTime models.ClockTime, excludeID string) (bool, error) {
 	var count int64
+	startValue := startTime.Format("15:04:05")
+	endValue := endTime.Format("15:04:05")
 	query := r.db.Model(&models.Appointment{}).
 		Where("therapist_id = ? AND booking_date = ? AND status NOT IN ('cancelled')", therapistID, bookingDate).
-		Where("(start_time < ? AND end_time > ?) OR (start_time < ? AND end_time > ?) OR (start_time >= ? AND end_time <= ?)",
-			endTime, startTime, endTime, startTime, startTime, endTime)
+		Where("(CAST(start_time AS time) < CAST(? AS time) AND CAST(end_time AS time) > CAST(? AS time)) OR (CAST(start_time AS time) < CAST(? AS time) AND CAST(end_time AS time) > CAST(? AS time)) OR (CAST(start_time AS time) >= CAST(? AS time) AND CAST(end_time AS time) <= CAST(? AS time))",
+			endValue, startValue, endValue, startValue, startValue, endValue)
 
 	if excludeID != "" {
 		query = query.Where("id != ?", excludeID)

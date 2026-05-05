@@ -77,11 +77,60 @@ func AutoMigrate(models ...interface{}) error {
 	if err := DB.AutoMigrate(models...); err != nil {
 		return err
 	}
+	if err := ensureAppointmentTimeColumns(DB); err != nil {
+		return err
+	}
 	if err := ensureAppointmentConstraints(DB); err != nil {
 		return err
 	}
 	// Best-effort backfill for master is_active fields.
 	_ = BackfillMasterIsActive(DB)
+	return nil
+}
+
+func ensureAppointmentTimeColumns(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+
+	type columnInfo struct {
+		DataType string `gorm:"column:data_type"`
+	}
+
+	columns := []string{"start_time", "end_time"}
+	for _, column := range columns {
+		var info columnInfo
+		err := db.Raw(`
+			SELECT data_type
+			FROM information_schema.columns
+			WHERE table_schema = CURRENT_SCHEMA()
+			  AND table_name = 'appointments'
+			  AND column_name = ?
+		`, column).Scan(&info).Error
+		if err != nil {
+			return err
+		}
+		if info.DataType == "" || info.DataType == "time without time zone" {
+			continue
+		}
+
+		stmt := fmt.Sprintf(`
+			ALTER TABLE appointments
+			ALTER COLUMN %s TYPE time without time zone
+			USING (
+				CASE
+					WHEN pg_typeof(%s)::text = 'timestamp with time zone' THEN (%s AT TIME ZONE 'Asia/Jakarta')::time
+					WHEN pg_typeof(%s)::text = 'timestamp without time zone' THEN %s::time
+					ELSE %s::time
+				END
+			)
+		`, column, column, column, column, column, column)
+
+		if err := db.Exec(stmt).Error; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

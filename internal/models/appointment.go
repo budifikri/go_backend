@@ -25,8 +25,8 @@ type Appointment struct {
 	TreatmentID uuid.UUID         `gorm:"type:uuid;notNull;index" json:"treatment_id"`
 	TherapistID uuid.UUID         `gorm:"type:uuid;notNull;index" json:"therapist_id"`
 	BookingDate time.Time         `gorm:"column:booking_date;type:date;notNull;index" json:"booking_date"`
-	StartTime   ClockTime         `gorm:"column:start_time;type:time;notNull" json:"start_time"`
-	EndTime     ClockTime         `gorm:"column:end_time;type:time;notNull" json:"end_time"`
+	StartTime   ClockTime         `gorm:"column:start_time;type:time without time zone;notNull" json:"start_time"`
+	EndTime     ClockTime         `gorm:"column:end_time;type:time without time zone;notNull" json:"end_time"`
 	Status      AppointmentStatus `gorm:"column:status;type:varchar(20);notNull;default:'scheduled'" json:"status"`
 	Notes       string            `gorm:"column:notes;type:text" json:"notes"`
 	CreatedAt   time.Time         `gorm:"column:created_at;autoCreateTime" json:"created_at"`
