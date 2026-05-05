@@ -55,6 +55,7 @@ type DatabaseConfig struct {
 	Password       string
 	MaxConnections int
 	SSLMode        string
+	TimeZone       string
 }
 
 type JWTConfig struct {
@@ -106,6 +107,7 @@ func Load() (*Config, error) {
 			Password:       getEnv("DB_PASSWORD", "postgres"),
 			MaxConnections: getEnvAsInt("DB_MAX_CONNECTIONS", 10),
 			SSLMode:        getEnv("DB_SSL_MODE", "disable"),
+			TimeZone:       getEnv("DB_TIME_ZONE", "Asia/Jakarta"),
 		},
 		JWT: JWTConfig{
 			Secret:    getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
