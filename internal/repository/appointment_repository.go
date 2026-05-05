@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-	"time"
 
 	"github.com/pos-retail/go_backend/internal/models"
 	"gorm.io/gorm"
@@ -83,7 +82,7 @@ func (r *AppointmentRepository) Delete(id, companyID string) error {
 	return nil
 }
 
-func (r *AppointmentRepository) CheckConflict(therapistID, bookingDate string, startTime, endTime time.Time, excludeID string) (bool, error) {
+func (r *AppointmentRepository) CheckConflict(therapistID, bookingDate string, startTime, endTime models.ClockTime, excludeID string) (bool, error) {
 	var count int64
 	query := r.db.Model(&models.Appointment{}).
 		Where("therapist_id = ? AND booking_date = ? AND status NOT IN ('cancelled')", therapistID, bookingDate).

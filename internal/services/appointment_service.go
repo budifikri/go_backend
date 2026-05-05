@@ -102,33 +102,23 @@ func parseAppointmentDate(value string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("invalid date format")
 }
 
-func parseAppointmentTime(value string) (time.Time, error) {
+func parseAppointmentTime(value string) (models.ClockTime, error) {
 	trimmed := strings.TrimSpace(value)
 	if trimmed == "" {
-		return time.Time{}, fmt.Errorf("empty time")
+		return models.ClockTime{}, fmt.Errorf("empty time")
 	}
-	if parsed, err := time.ParseInLocation("15:04", trimmed, appointmentLocation); err == nil {
-		return parsed, nil
+	parsed, err := models.ParseClockTime(trimmed)
+	if err != nil {
+		return models.ClockTime{}, fmt.Errorf("invalid time format")
 	}
-	if parsed, err := time.ParseInLocation("15:04:05", trimmed, appointmentLocation); err == nil {
-		return parsed, nil
-	}
-	if parsed, err := time.ParseInLocation("2006-01-02T15:04:05", trimmed, appointmentLocation); err == nil {
-		return parsed, nil
-	}
-	if parsed, err := time.Parse(time.RFC3339, trimmed); err == nil {
-		return parsed.In(appointmentLocation), nil
-	}
-
-	return time.Time{}, fmt.Errorf("invalid time format")
+	return parsed, nil
 }
 
-func formatAppointmentTime(value time.Time) string {
+func formatAppointmentTime(value models.ClockTime) string {
 	if value.IsZero() {
 		return ""
 	}
-	localized := time.Date(2000, time.January, 1, value.Hour(), value.Minute(), 0, 0, appointmentLocation)
-	return localized.Format("15:04")
+	return value.Format("15:04")
 }
 
 func NewAppointmentService(
