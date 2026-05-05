@@ -112,7 +112,7 @@ func (s *AppointmentService) CreateAppointment(input request.CreateAppointmentRe
 		if err != nil {
 			return response.NewErrorResponse("Invalid treatment id")
 		}
-		appointment.TreatmentID = &parsedTreatmentID
+		appointment.TreatmentID = parsedTreatmentID
 	}
 
 	if input.TherapistID != "" {
@@ -120,7 +120,7 @@ func (s *AppointmentService) CreateAppointment(input request.CreateAppointmentRe
 		if err != nil {
 			return response.NewErrorResponse("Invalid therapist id")
 		}
-		appointment.TherapistID = &parsedTherapistID
+		appointment.TherapistID = parsedTherapistID
 
 		// Check conflict
 		hasConflict, err := s.appointmentRepo.CheckConflict(input.TherapistID, input.BookingDate, startTime, endTime, "")
@@ -183,25 +183,25 @@ func (s *AppointmentService) UpdateAppointment(id string, input request.UpdateAp
 
 	if input.TreatmentID != nil {
 		if *input.TreatmentID == "" {
-			appointment.TreatmentID = nil
+			appointment.TreatmentID = uuid.Nil
 		} else {
 			parsedTreatmentID, err := uuid.Parse(*input.TreatmentID)
 			if err != nil {
 				return response.NewErrorResponse("Invalid treatment id")
 			}
-			appointment.TreatmentID = &parsedTreatmentID
+			appointment.TreatmentID = parsedTreatmentID
 		}
 	}
 
 	if input.TherapistID != nil {
 		if *input.TherapistID == "" {
-			appointment.TherapistID = nil
+			appointment.TherapistID = uuid.Nil
 		} else {
 			parsedTherapistID, err := uuid.Parse(*input.TherapistID)
 			if err != nil {
 				return response.NewErrorResponse("Invalid therapist id")
 			}
-			appointment.TherapistID = &parsedTherapistID
+			appointment.TherapistID = parsedTherapistID
 		}
 	}
 
@@ -241,7 +241,7 @@ func (s *AppointmentService) UpdateAppointment(id string, input request.UpdateAp
 		return response.NewErrorResponse("End time harus lebih besar dari start time")
 	}
 
-	if appointment.TherapistID != nil {
+	if appointment.TherapistID != uuid.Nil {
 		therapistID := appointment.TherapistID.String()
 		bookingDate := appointment.BookingDate.Format("2006-01-02")
 		hasConflict, err := s.appointmentRepo.CheckConflict(therapistID, bookingDate, appointment.StartTime, appointment.EndTime, id)

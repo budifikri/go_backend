@@ -22,8 +22,8 @@ type Appointment struct {
 	ID          uuid.UUID         `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	CompanyID   uuid.UUID         `gorm:"type:uuid;notNull;index" json:"company_id"`
 	PatientID   uuid.UUID         `gorm:"type:uuid;notNull;index" json:"patient_id"`
-	TreatmentID *uuid.UUID        `gorm:"type:uuid;index" json:"treatment_id"`
-	TherapistID *uuid.UUID        `gorm:"type:uuid;index" json:"therapist_id"`
+	TreatmentID uuid.UUID         `gorm:"type:uuid;notNull;index" json:"treatment_id"`
+	TherapistID uuid.UUID         `gorm:"type:uuid;notNull;index" json:"therapist_id"`
 	BookingDate time.Time         `gorm:"column:booking_date;type:date;notNull;index" json:"booking_date"`
 	StartTime   time.Time         `gorm:"column:start_time;type:time;notNull" json:"start_time"`
 	EndTime     time.Time         `gorm:"column:end_time;type:time;notNull" json:"end_time"`
