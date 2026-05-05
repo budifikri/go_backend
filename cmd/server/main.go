@@ -104,6 +104,9 @@ func main() {
 		&models.Paket{},
 		&models.DetailPaket{},
 		&models.Appointment{},
+		&models.Treatment{},
+		&models.TreatmentTag{},
+		&models.TreatmentTagRelation{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -135,6 +138,7 @@ func main() {
 	jadwalDokterRepo := repository.NewJadwalDokterRepository(db)
 	paketRepo := repository.NewPaketRepository(db)
 	appointmentRepo := repository.NewAppointmentRepository(db)
+	treatmentRepo := repository.NewTreatmentRepository(db)
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
@@ -160,6 +164,7 @@ func main() {
 	jadwalDokterService := services.NewJadwalDokterService(jadwalDokterRepo)
 	paketService := services.NewPaketService(paketRepo)
 	appointmentService := services.NewAppointmentService(appointmentRepo)
+	treatmentService := services.NewTreatmentService(treatmentRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -188,6 +193,7 @@ func main() {
 	jadwalDokterHandler := handlers.NewJadwalDokterHandler(jadwalDokterService)
 	paketHandler := handlers.NewPaketHandler(paketService)
 	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
+	treatmentHandler := handlers.NewTreatmentHandler(treatmentService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -376,6 +382,21 @@ func main() {
 	appointments.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateAppointmentRequest{} }), appointmentHandler.CreateAppointment)
 	appointments.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateAppointmentRequest{} }), appointmentHandler.UpdateAppointment)
 	appointments.Delete("/:id", appointmentHandler.DeleteAppointment)
+
+	// Treatment routes
+	treatments := protected.Group("/treatments")
+	treatments.Get("/", treatmentHandler.GetTreatments)
+	treatments.Get("/:id", treatmentHandler.GetTreatment)
+	treatments.Post("/", treatmentHandler.CreateTreatment)
+	treatments.Put("/:id", treatmentHandler.UpdateTreatment)
+	treatments.Delete("/:id", treatmentHandler.DeleteTreatment)
+
+	// Treatment Tags routes
+	treatmentTags := protected.Group("/treatment-tags")
+	treatmentTags.Get("/", treatmentHandler.GetTags)
+	treatmentTags.Post("/", treatmentHandler.CreateTag)
+	treatmentTags.Put("/:id", treatmentHandler.UpdateTag)
+	treatmentTags.Delete("/:id", treatmentHandler.DeleteTag)
 
 	// Purchase order routes (TS parity: /api/purchases)
 	purchases := protected.Group("/purchases")
