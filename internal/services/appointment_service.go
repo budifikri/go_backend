@@ -20,6 +20,59 @@ type AppointmentService struct {
 	treatmentRepo   *repository.TreatmentRepository
 }
 
+type AppointmentResponse struct {
+	ID          uuid.UUID                `json:"id"`
+	CompanyID   uuid.UUID                `json:"company_id"`
+	PatientID   uuid.UUID                `json:"patient_id"`
+	TreatmentID uuid.UUID                `json:"treatment_id"`
+	TherapistID uuid.UUID                `json:"therapist_id"`
+	BookingDate string                   `json:"booking_date"`
+	StartTime   string                   `json:"start_time"`
+	EndTime     string                   `json:"end_time"`
+	Status      models.AppointmentStatus `json:"status"`
+	Notes       string                   `json:"notes"`
+	CreatedAt   string                   `json:"created_at"`
+	UpdatedAt   string                   `json:"updated_at"`
+	Patient     *models.Customer         `json:"patient,omitempty"`
+	Treatment   *models.Treatment        `json:"treatment,omitempty"`
+	Therapist   *models.Dokter           `json:"therapist,omitempty"`
+}
+
+func toAppointmentResponse(appointment *models.Appointment) *AppointmentResponse {
+	if appointment == nil {
+		return nil
+	}
+
+	return &AppointmentResponse{
+		ID:          appointment.ID,
+		CompanyID:   appointment.CompanyID,
+		PatientID:   appointment.PatientID,
+		TreatmentID: appointment.TreatmentID,
+		TherapistID: appointment.TherapistID,
+		BookingDate: appointment.BookingDate.Format("2006-01-02"),
+		StartTime:   appointment.StartTime.Format("15:04"),
+		EndTime:     appointment.EndTime.Format("15:04"),
+		Status:      appointment.Status,
+		Notes:       appointment.Notes,
+		CreatedAt:   appointment.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   appointment.UpdatedAt.Format(time.RFC3339),
+		Patient:     appointment.Patient,
+		Treatment:   appointment.Treatment,
+		Therapist:   appointment.Therapist,
+	}
+}
+
+func toAppointmentResponseList(appointments []models.Appointment) []AppointmentResponse {
+	items := make([]AppointmentResponse, 0, len(appointments))
+	for i := range appointments {
+		mapped := toAppointmentResponse(&appointments[i])
+		if mapped != nil {
+			items = append(items, *mapped)
+		}
+	}
+	return items
+}
+
 func parseAppointmentDate(value string) (time.Time, error) {
 	trimmed := strings.TrimSpace(value)
 	if trimmed == "" {
@@ -48,19 +101,18 @@ func parseAppointmentTime(value string) (time.Time, error) {
 	if trimmed == "" {
 		return time.Time{}, fmt.Errorf("empty time")
 	}
-
-	layouts := []string{
-		"15:04",
-		"15:04:05",
-		"2006-01-02T15:04:05",
-		time.RFC3339,
+	location := time.Local
+	if parsed, err := time.ParseInLocation("15:04", trimmed, location); err == nil {
+		return parsed, nil
 	}
-
-	for _, layout := range layouts {
-		parsed, err := time.Parse(layout, trimmed)
-		if err == nil {
-			return parsed, nil
-		}
+	if parsed, err := time.ParseInLocation("15:04:05", trimmed, location); err == nil {
+		return parsed, nil
+	}
+	if parsed, err := time.ParseInLocation("2006-01-02T15:04:05", trimmed, location); err == nil {
+		return parsed, nil
+	}
+	if parsed, err := time.Parse(time.RFC3339, trimmed); err == nil {
+		return parsed, nil
 	}
 
 	return time.Time{}, fmt.Errorf("invalid time format")
@@ -166,7 +218,12 @@ func (s *AppointmentService) CreateAppointment(input request.CreateAppointmentRe
 		return response.NewErrorResponse("Failed to create appointment: " + err.Error())
 	}
 
-	return response.NewSuccessResponse(appointment, "Appointment created successfully")
+	created, fetchErr := s.appointmentRepo.GetByID(appointment.ID.String(), companyID)
+	if fetchErr == nil && created != nil {
+		return response.NewSuccessResponse(toAppointmentResponse(created), "Appointment created successfully")
+	}
+
+	return response.NewSuccessResponse(toAppointmentResponse(appointment), "Appointment created successfully")
 }
 
 func (s *AppointmentService) GetAppointments(companyID string, filters map[string]interface{}, limit, offset int) response.PaginatedResponse {
@@ -178,7 +235,7 @@ func (s *AppointmentService) GetAppointments(companyID string, filters map[strin
 	hasMore := int64(offset+limit) < total
 	return response.PaginatedResponse{
 		Success: true,
-		Data:    appointments,
+		Data:    toAppointmentResponseList(appointments),
 		Pagination: response.Pagination{
 			Total:   total,
 			Limit:   limit,
@@ -194,7 +251,7 @@ func (s *AppointmentService) GetAppointmentByID(id, companyID string) response.A
 		return response.NewErrorResponse(err.Error())
 	}
 
-	return response.NewSuccessResponse(appointment, "Appointment fetched successfully")
+	return response.NewSuccessResponse(toAppointmentResponse(appointment), "Appointment fetched successfully")
 }
 
 func (s *AppointmentService) UpdateAppointment(id string, input request.UpdateAppointmentRequest, companyID string) response.ApiResponse {
@@ -300,7 +357,12 @@ func (s *AppointmentService) UpdateAppointment(id string, input request.UpdateAp
 		return response.NewErrorResponse("Failed to update appointment: " + err.Error())
 	}
 
-	return response.NewSuccessResponse(appointment, "Appointment updated successfully")
+	updated, fetchErr := s.appointmentRepo.GetByID(appointment.ID.String(), companyID)
+	if fetchErr == nil && updated != nil {
+		return response.NewSuccessResponse(toAppointmentResponse(updated), "Appointment updated successfully")
+	}
+
+	return response.NewSuccessResponse(toAppointmentResponse(appointment), "Appointment updated successfully")
 }
 
 func (s *AppointmentService) DeleteAppointment(id, companyID string) response.ApiResponse {
