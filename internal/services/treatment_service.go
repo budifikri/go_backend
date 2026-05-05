@@ -387,6 +387,14 @@ func (s *TreatmentService) DeleteTag(id string) response.ApiResponse {
 		}
 	}
 
+	if err := s.treatmentRepo.DeleteTagRelationsByTagID(tagID); err != nil {
+		log.Println("Failed to delete tag relations:", err)
+		return response.ApiResponse{
+			Success: false,
+			Message: "Failed to delete tag",
+		}
+	}
+
 	if err := s.treatmentRepo.DeleteTag(tagID); err != nil {
 		log.Println("Failed to delete tag:", err)
 		return response.ApiResponse{

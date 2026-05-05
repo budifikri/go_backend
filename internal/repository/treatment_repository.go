@@ -104,6 +104,10 @@ func (r *TreatmentRepository) DeleteTagRelationsByTreatmentID(treatmentID uuid.U
 	return r.db.Delete(&models.TreatmentTagRelation{}, "treatment_id = ?", treatmentID).Error
 }
 
+func (r *TreatmentRepository) DeleteTagRelationsByTagID(tagID uuid.UUID) error {
+	return r.db.Delete(&models.TreatmentTagRelation{}, "tag_id = ?", tagID).Error
+}
+
 func (r *TreatmentRepository) CreateTagRelation(relation *models.TreatmentTagRelation) error {
 	return r.db.Create(relation).Error
 }

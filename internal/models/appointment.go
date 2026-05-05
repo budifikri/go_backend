@@ -33,9 +33,9 @@ type Appointment struct {
 	UpdatedAt   time.Time         `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 
 	// Relations
-	Patient   *Customer `gorm:"foreignKey:PatientID;references:ID" json:"patient,omitempty"`
-	Treatment *Product  `gorm:"foreignKey:TreatmentID;references:ID" json:"treatment,omitempty"`
-	Therapist *Dokter   `gorm:"foreignKey:TherapistID;references:ID" json:"therapist,omitempty"`
+	Patient   *Customer  `gorm:"foreignKey:PatientID;references:ID" json:"patient,omitempty"`
+	Treatment *Treatment `gorm:"foreignKey:TreatmentID;references:ID" json:"treatment,omitempty"`
+	Therapist *Dokter    `gorm:"foreignKey:TherapistID;references:ID" json:"therapist,omitempty"`
 }
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {

@@ -19,7 +19,7 @@ type Treatment struct {
 	CreatedAt   time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
 
-	Tags []TreatmentTag `gorm:"many2many:treatment_tag_relations;" json:"tags,omitempty"`
+	Tags []TreatmentTag `gorm:"many2many:treatment_tag_relations;joinForeignKey:TreatmentID;joinReferences:TagID;foreignKey:ID;references:ID" json:"tags,omitempty"`
 }
 
 func (t *Treatment) BeforeCreate(tx *gorm.DB) error {
