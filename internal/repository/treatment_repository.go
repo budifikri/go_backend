@@ -57,6 +57,21 @@ func (r *TreatmentRepository) FindByID(id uuid.UUID) (*models.Treatment, error) 
 	return &treatment, nil
 }
 
+func (r *TreatmentRepository) FindByIDForCompany(id uuid.UUID, companyID string) (*models.Treatment, error) {
+	var treatment models.Treatment
+	query := r.db.Preload("Tags").Where("id = ?", id)
+	if companyID != "" {
+		query = query.Where("company_id = ? OR company_id IS NULL", companyID)
+	}
+	if err := query.First(&treatment).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &treatment, nil
+}
+
 func (r *TreatmentRepository) Create(treatment *models.Treatment) error {
 	return r.db.Create(treatment).Error
 }

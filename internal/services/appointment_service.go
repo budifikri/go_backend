@@ -15,6 +15,9 @@ import (
 
 type AppointmentService struct {
 	appointmentRepo *repository.AppointmentRepository
+	customerRepo    *repository.CustomerRepository
+	dokterRepo      *repository.DokterRepository
+	treatmentRepo   *repository.TreatmentRepository
 }
 
 func parseAppointmentDate(value string) (time.Time, error) {
@@ -63,8 +66,18 @@ func parseAppointmentTime(value string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("invalid time format")
 }
 
-func NewAppointmentService(appointmentRepo *repository.AppointmentRepository) *AppointmentService {
-	return &AppointmentService{appointmentRepo: appointmentRepo}
+func NewAppointmentService(
+	appointmentRepo *repository.AppointmentRepository,
+	customerRepo *repository.CustomerRepository,
+	dokterRepo *repository.DokterRepository,
+	treatmentRepo *repository.TreatmentRepository,
+) *AppointmentService {
+	return &AppointmentService{
+		appointmentRepo: appointmentRepo,
+		customerRepo:    customerRepo,
+		dokterRepo:      dokterRepo,
+		treatmentRepo:   treatmentRepo,
+	}
 }
 
 func (s *AppointmentService) CreateAppointment(input request.CreateAppointmentRequest, companyID string) response.ApiResponse {
@@ -76,6 +89,13 @@ func (s *AppointmentService) CreateAppointment(input request.CreateAppointmentRe
 	parsedPatientID, err := uuid.Parse(input.PatientID)
 	if err != nil {
 		return response.NewErrorResponse("Invalid patient id")
+	}
+	patient, err := s.customerRepo.GetCustomerByID(parsedPatientID, parsedCompanyID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to validate patient: " + err.Error())
+	}
+	if patient == nil {
+		return response.NewErrorResponse("Patient tidak ditemukan untuk company ini")
 	}
 
 	bookingDate, err := parseAppointmentDate(input.BookingDate)
@@ -107,29 +127,39 @@ func (s *AppointmentService) CreateAppointment(input request.CreateAppointmentRe
 		Notes:       input.Notes,
 	}
 
-	if input.TreatmentID != "" {
-		parsedTreatmentID, err := uuid.Parse(input.TreatmentID)
-		if err != nil {
-			return response.NewErrorResponse("Invalid treatment id")
-		}
-		appointment.TreatmentID = parsedTreatmentID
+	parsedTreatmentID, err := uuid.Parse(input.TreatmentID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid treatment id")
 	}
+	treatment, err := s.treatmentRepo.FindByIDForCompany(parsedTreatmentID, companyID)
+	if err != nil {
+		return response.NewErrorResponse("Failed to validate treatment: " + err.Error())
+	}
+	if treatment == nil {
+		return response.NewErrorResponse("Treatment tidak ditemukan untuk company ini")
+	}
+	appointment.TreatmentID = parsedTreatmentID
 
-	if input.TherapistID != "" {
-		parsedTherapistID, err := uuid.Parse(input.TherapistID)
-		if err != nil {
-			return response.NewErrorResponse("Invalid therapist id")
-		}
-		appointment.TherapistID = parsedTherapistID
+	parsedTherapistID, err := uuid.Parse(input.TherapistID)
+	if err != nil {
+		return response.NewErrorResponse("Invalid therapist id")
+	}
+	therapist, err := s.dokterRepo.GetByID(input.TherapistID, companyID)
+	if err != nil {
+		return response.NewErrorResponse("Therapist tidak ditemukan untuk company ini")
+	}
+	if therapist == nil {
+		return response.NewErrorResponse("Therapist tidak ditemukan untuk company ini")
+	}
+	appointment.TherapistID = parsedTherapistID
 
-		// Check conflict
-		hasConflict, err := s.appointmentRepo.CheckConflict(input.TherapistID, input.BookingDate, startTime, endTime, "")
-		if err != nil {
-			return response.NewErrorResponse("Failed to check conflict: " + err.Error())
-		}
-		if hasConflict {
-			return response.NewErrorResponse("Therapist sudah memiliki appointment pada waktu tersebut")
-		}
+	// Check conflict
+	hasConflict, err := s.appointmentRepo.CheckConflict(input.TherapistID, input.BookingDate, startTime, endTime, "")
+	if err != nil {
+		return response.NewErrorResponse("Failed to check conflict: " + err.Error())
+	}
+	if hasConflict {
+		return response.NewErrorResponse("Therapist sudah memiliki appointment pada waktu tersebut")
 	}
 
 	if err := s.appointmentRepo.Create(appointment); err != nil {
@@ -178,31 +208,44 @@ func (s *AppointmentService) UpdateAppointment(id string, input request.UpdateAp
 		if err != nil {
 			return response.NewErrorResponse("Invalid patient id")
 		}
+		patient, err := s.customerRepo.GetCustomerByID(parsedPatientID, appointment.CompanyID)
+		if err != nil {
+			return response.NewErrorResponse("Failed to validate patient: " + err.Error())
+		}
+		if patient == nil {
+			return response.NewErrorResponse("Patient tidak ditemukan untuk company ini")
+		}
 		appointment.PatientID = parsedPatientID
 	}
 
 	if input.TreatmentID != nil {
-		if *input.TreatmentID == "" {
-			appointment.TreatmentID = uuid.Nil
-		} else {
-			parsedTreatmentID, err := uuid.Parse(*input.TreatmentID)
-			if err != nil {
-				return response.NewErrorResponse("Invalid treatment id")
-			}
-			appointment.TreatmentID = parsedTreatmentID
+		parsedTreatmentID, err := uuid.Parse(*input.TreatmentID)
+		if err != nil {
+			return response.NewErrorResponse("Invalid treatment id")
 		}
+		treatment, err := s.treatmentRepo.FindByIDForCompany(parsedTreatmentID, companyID)
+		if err != nil {
+			return response.NewErrorResponse("Failed to validate treatment: " + err.Error())
+		}
+		if treatment == nil {
+			return response.NewErrorResponse("Treatment tidak ditemukan untuk company ini")
+		}
+		appointment.TreatmentID = parsedTreatmentID
 	}
 
 	if input.TherapistID != nil {
-		if *input.TherapistID == "" {
-			appointment.TherapistID = uuid.Nil
-		} else {
-			parsedTherapistID, err := uuid.Parse(*input.TherapistID)
-			if err != nil {
-				return response.NewErrorResponse("Invalid therapist id")
-			}
-			appointment.TherapistID = parsedTherapistID
+		parsedTherapistID, err := uuid.Parse(*input.TherapistID)
+		if err != nil {
+			return response.NewErrorResponse("Invalid therapist id")
 		}
+		therapist, err := s.dokterRepo.GetByID(*input.TherapistID, companyID)
+		if err != nil {
+			return response.NewErrorResponse("Therapist tidak ditemukan untuk company ini")
+		}
+		if therapist == nil {
+			return response.NewErrorResponse("Therapist tidak ditemukan untuk company ini")
+		}
+		appointment.TherapistID = parsedTherapistID
 	}
 
 	if input.BookingDate != nil {

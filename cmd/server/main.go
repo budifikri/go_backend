@@ -163,7 +163,7 @@ func main() {
 	dokterService := services.NewDokterService(dokterRepo)
 	jadwalDokterService := services.NewJadwalDokterService(jadwalDokterRepo)
 	paketService := services.NewPaketService(paketRepo)
-	appointmentService := services.NewAppointmentService(appointmentRepo)
+	appointmentService := services.NewAppointmentService(appointmentRepo, customerRepo, dokterRepo, treatmentRepo)
 	treatmentService := services.NewTreatmentService(treatmentRepo)
 
 	// Initialize handlers

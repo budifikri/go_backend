@@ -76,8 +76,27 @@ func AutoMigrate(models ...interface{}) error {
 	if err := DB.AutoMigrate(models...); err != nil {
 		return err
 	}
+	if err := ensureAppointmentConstraints(DB); err != nil {
+		return err
+	}
 	// Best-effort backfill for master is_active fields.
 	_ = BackfillMasterIsActive(DB)
+	return nil
+}
+
+func ensureAppointmentConstraints(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+	stmts := []string{
+		`ALTER TABLE appointments DROP CONSTRAINT IF EXISTS fk_appointments_treatment;`,
+		`ALTER TABLE appointments ADD CONSTRAINT fk_appointments_treatment FOREIGN KEY (treatment_id) REFERENCES treatments(id);`,
+	}
+	for _, stmt := range stmts {
+		if err := db.Exec(stmt).Error; err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

@@ -4,8 +4,8 @@ import "github.com/pos-retail/go_backend/internal/models"
 
 type CreateAppointmentRequest struct {
 	PatientID   string `json:"patient_id" validate:"required,uuid4"`
-	TreatmentID string `json:"treatment_id" validate:"omitempty,uuid4"`
-	TherapistID string `json:"therapist_id" validate:"omitempty,uuid4"`
+	TreatmentID string `json:"treatment_id" validate:"required,uuid4"`
+	TherapistID string `json:"therapist_id" validate:"required,uuid4"`
 	BookingDate string `json:"booking_date" validate:"required,datetime=2006-01-02"`
 	StartTime   string `json:"start_time" validate:"required,datetime=15:04"`
 	EndTime     string `json:"end_time" validate:"required,datetime=15:04"`
