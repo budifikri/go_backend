@@ -103,6 +103,7 @@ func main() {
 		&models.JadwalDokter{},
 		&models.Paket{},
 		&models.DetailPaket{},
+		&models.Appointment{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -133,6 +134,7 @@ func main() {
 	dokterRepo := repository.NewDokterRepository(db)
 	jadwalDokterRepo := repository.NewJadwalDokterRepository(db)
 	paketRepo := repository.NewPaketRepository(db)
+	appointmentRepo := repository.NewAppointmentRepository(db)
 
 	// Initialize services
 	productService := services.NewProductService(productRepo, categoryRepo, unitRepo)
@@ -157,6 +159,7 @@ func main() {
 	dokterService := services.NewDokterService(dokterRepo)
 	jadwalDokterService := services.NewJadwalDokterService(jadwalDokterRepo)
 	paketService := services.NewPaketService(paketRepo)
+	appointmentService := services.NewAppointmentService(appointmentRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -184,6 +187,7 @@ func main() {
 	dokterHandler := handlers.NewDokterHandler(dokterService)
 	jadwalDokterHandler := handlers.NewJadwalDokterHandler(jadwalDokterService)
 	paketHandler := handlers.NewPaketHandler(paketService)
+	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtUtil)
@@ -364,6 +368,14 @@ func main() {
 	pakets.Post("/", paketHandler.CreatePaket)
 	pakets.Put("/:id", paketHandler.UpdatePaket)
 	pakets.Delete("/:id", paketHandler.DeletePaket)
+
+	// Appointment routes
+	appointments := protected.Group("/appointments")
+	appointments.Get("/", appointmentHandler.GetAppointments)
+	appointments.Get("/:id", appointmentHandler.GetAppointment)
+	appointments.Post("/", middleware.ValidateBody(func() interface{} { return &request.CreateAppointmentRequest{} }), appointmentHandler.CreateAppointment)
+	appointments.Put("/:id", middleware.ValidateBody(func() interface{} { return &request.UpdateAppointmentRequest{} }), appointmentHandler.UpdateAppointment)
+	appointments.Delete("/:id", appointmentHandler.DeleteAppointment)
 
 	// Purchase order routes (TS parity: /api/purchases)
 	purchases := protected.Group("/purchases")

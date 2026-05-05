@@ -50,6 +50,7 @@ type Customer struct {
 	BankAccountNumber string `gorm:"column:bank_account_number;type:varchar(30)" json:"bank_account_number,omitempty"`
 	BankAccountName   string `gorm:"column:bank_account_name;type:varchar(100)" json:"bank_account_name,omitempty"`
 	BankBranch        string `gorm:"column:bank_branch;type:varchar(50)" json:"bank_branch,omitempty"`
+	Allergies         string `gorm:"column:allergies;type:text" json:"allergies,omitempty"`
 
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
