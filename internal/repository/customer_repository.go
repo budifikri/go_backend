@@ -57,7 +57,7 @@ func (r *CustomerRepository) FindCustomers(filters map[string]interface{}, limit
 	}
 	if v, ok := filters["search"].(string); ok && v != "" {
 		like := fmt.Sprintf("%%%s%%", v)
-		base = base.Where("(c.name ILIKE ? OR c.email ILIKE ? OR c.phone ILIKE ?)", like, like, like)
+		base = base.Where("(c.name ILIKE ? OR c.no_rm ILIKE ? OR c.no_nik ILIKE ? OR c.email ILIKE ? OR c.phone ILIKE ?)", like, like, like, like, like)
 	}
 	if v, ok := filters["min_loyalty_points"].(int); ok {
 		base = base.Where("c.loyalty_points >= ?", v)
