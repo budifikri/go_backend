@@ -13,6 +13,8 @@ type CustomerRow struct {
 	ID                uuid.UUID  `json:"id" gorm:"column:id"`
 	CustomerCode      string     `json:"customer_code" gorm:"column:customer_code"`
 	Name              string     `json:"name" gorm:"column:name"`
+	NoRM              *string    `json:"no_rm,omitempty" gorm:"column:no_rm"`
+	NoNIK             *string    `json:"no_nik,omitempty" gorm:"column:no_nik"`
 	Email             *string    `json:"email" gorm:"column:email"`
 	Phone             *string    `json:"phone" gorm:"column:phone"`
 	Address           *string    `json:"address" gorm:"column:address"`
@@ -68,7 +70,7 @@ func (r *CustomerRepository) FindCustomers(filters map[string]interface{}, limit
 		return nil, 0, err
 	}
 
-	selectClause := "c.id, c.customer_code, c.name, c.email, c.phone, c.address, c.city, c.tier, c.is_active, c.loyalty_points, c.credit_limit, c.credit_balance, c.total_purchases, c.\"lastPurchaseDate\", c.bank_name, c.bank_account_number, c.bank_account_name, c.bank_branch, c.created_at, c.updated_at, c.company_id"
+	selectClause := "c.id, c.customer_code, c.name, c.no_rm, c.no_nik, c.email, c.phone, c.address, c.city, c.tier, c.is_active, c.loyalty_points, c.credit_limit, c.credit_balance, c.total_purchases, c.\"lastPurchaseDate\", c.bank_name, c.bank_account_number, c.bank_account_name, c.bank_branch, c.created_at, c.updated_at, c.company_id"
 	if err := base.Select(selectClause).Order("c.created_at DESC").Limit(limit).Offset(offset).Scan(&rows).Error; err != nil {
 		return nil, 0, err
 	}
@@ -79,7 +81,7 @@ func (r *CustomerRepository) FindCustomers(filters map[string]interface{}, limit
 func (r *CustomerRepository) GetCustomerByID(id uuid.UUID, companyID uuid.UUID) (*CustomerRow, error) {
 	var row CustomerRow
 
-	selectClause := "c.id, c.customer_code, c.name, c.email, c.phone, c.address, c.city, c.tier, c.is_active, c.loyalty_points, c.credit_limit, c.credit_balance, c.total_purchases, c.\"lastPurchaseDate\", c.bank_name, c.bank_account_number, c.bank_account_name, c.bank_branch, c.created_at, c.updated_at, c.company_id"
+	selectClause := "c.id, c.customer_code, c.name, c.no_rm, c.no_nik, c.email, c.phone, c.address, c.city, c.tier, c.is_active, c.loyalty_points, c.credit_limit, c.credit_balance, c.total_purchases, c.\"lastPurchaseDate\", c.bank_name, c.bank_account_number, c.bank_account_name, c.bank_branch, c.created_at, c.updated_at, c.company_id"
 	err := r.db.Table("customers c").
 		Select(selectClause).
 		Where("c.id = ? AND c.company_id = ?", id, companyID).

@@ -2,6 +2,8 @@ package request
 
 type CreateCustomerRequest struct {
 	Name              string  `json:"name"`
+	NoRM              string  `json:"no_rm"`
+	NoNIK             string  `json:"no_nik"`
 	Email             string  `json:"email"`
 	Phone             string  `json:"phone"`
 	Address           string  `json:"address"`
@@ -16,6 +18,8 @@ type CreateCustomerRequest struct {
 
 type UpdateCustomerRequest struct {
 	Name              *string  `json:"name"`
+	NoRM              *string  `json:"no_rm"`
+	NoNIK             *string  `json:"no_nik"`
 	Email             *string  `json:"email"`
 	Phone             *string  `json:"phone"`
 	Address           *string  `json:"address"`

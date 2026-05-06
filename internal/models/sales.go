@@ -31,6 +31,8 @@ type Customer struct {
 	ID           uuid.UUID    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	CustomerCode string       `gorm:"column:customer_code;type:varchar(20);uniqueIndex;notNull" json:"customer_code"`
 	Name         string       `gorm:"type:varchar(100);notNull" json:"name"`
+	NoRM         string       `gorm:"column:no_rm;type:varchar(50);uniqueIndex" json:"no_rm,omitempty"`
+	NoNIK        string       `gorm:"column:no_nik;type:varchar(16);uniqueIndex" json:"no_nik,omitempty"`
 	Email        string       `gorm:"type:varchar(100)" json:"email,omitempty"`
 	Phone        string       `gorm:"type:varchar(20)" json:"phone,omitempty"`
 	Address      string       `gorm:"type:text" json:"address,omitempty"`

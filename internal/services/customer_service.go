@@ -1,9 +1,12 @@
 package services
 
 import (
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgconn"
 	applogger "github.com/pos-retail/go_backend/internal/logger"
 	"github.com/pos-retail/go_backend/internal/repository"
 	"github.com/pos-retail/go_backend/internal/types/response"
@@ -93,7 +96,7 @@ func (s *CustomerService) CreateCustomer(input map[string]interface{}, companyID
 		if l := applogger.Default(); l != nil {
 			l.LogError(applogger.ActionCreate, "customers", "", companyID, "", err)
 		}
-		return response.NewErrorResponse(err.Error())
+		return response.NewErrorResponse(mapCustomerPersistenceError(err))
 	}
 	if l := applogger.Default(); l != nil {
 		l.Log(applogger.ActionCreate, "customers", "", companyID, created.ID.String(), nil, created)
@@ -118,7 +121,7 @@ func (s *CustomerService) UpdateCustomer(id string, companyID string, updates ma
 		if l := applogger.Default(); l != nil {
 			l.LogError(applogger.ActionUpdate, "customers", "", companyID, uid.String(), err)
 		}
-		return response.NewErrorResponse(err.Error())
+		return response.NewErrorResponse(mapCustomerPersistenceError(err))
 	}
 	if row == nil {
 		return response.NewErrorResponse("Customer not found")
@@ -127,6 +130,26 @@ func (s *CustomerService) UpdateCustomer(id string, companyID string, updates ma
 		l.Log(applogger.ActionUpdate, "customers", "", companyID, uid.String(), oldRow, row)
 	}
 	return response.NewSuccessResponse(row, "Customer updated successfully")
+}
+
+func mapCustomerPersistenceError(err error) string {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		constraint := strings.ToLower(pgErr.ConstraintName)
+		detail := strings.ToLower(pgErr.Detail)
+		if strings.Contains(constraint, "no_nik") || strings.Contains(detail, "no_nik") {
+			return "KTP sudah digunakan customer lain"
+		}
+		if strings.Contains(constraint, "no_rm") || strings.Contains(detail, "no_rm") {
+			return "NO RM sudah digunakan customer lain"
+		}
+		if strings.Contains(constraint, "customer_code") || strings.Contains(detail, "customer_code") {
+			return "Kode customer sudah digunakan"
+		}
+		return "Data customer sudah digunakan"
+	}
+
+	return err.Error()
 }
 
 func (s *CustomerService) DeleteCustomer(id string, companyID string) response.ApiResponse {

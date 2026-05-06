@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/pos-retail/go_backend/internal/middleware"
@@ -13,6 +15,8 @@ import (
 type CustomerHandler struct {
 	customerService *services.CustomerService
 }
+
+var customerNikPattern = regexp.MustCompile(`^\d{16}$`)
 
 func NewCustomerHandler(customerService *services.CustomerService) *CustomerHandler {
 	return &CustomerHandler{customerService: customerService}
@@ -36,13 +40,22 @@ func (h *CustomerHandler) CreateCustomer(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("Invalid request body"))
 	}
 
+	name := strings.TrimSpace(req.Name)
+	noRM := strings.TrimSpace(req.NoRM)
+	noNIK := strings.TrimSpace(req.NoNIK)
+	if noNIK != "" && !customerNikPattern.MatchString(noNIK) {
+		return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("KTP harus 16 digit angka"))
+	}
+
 	user := middleware.GetUserFromContext(c)
 	if user == nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(response.NewErrorResponse("Unauthorized"))
 	}
 
 	data := map[string]interface{}{
-		"name":                req.Name,
+		"name":                name,
+		"no_rm":               nil,
+		"no_nik":              nil,
 		"email":               nil,
 		"phone":               nil,
 		"address":             nil,
@@ -54,32 +67,38 @@ func (h *CustomerHandler) CreateCustomer(c *fiber.Ctx) error {
 		"bank_account_name":   nil,
 		"bank_branch":         nil,
 	}
+	if noRM != "" {
+		data["no_rm"] = noRM
+	}
+	if noNIK != "" {
+		data["no_nik"] = noNIK
+	}
 	if req.Email != "" {
-		data["email"] = req.Email
+		data["email"] = strings.TrimSpace(req.Email)
 	}
 	if req.Phone != "" {
-		data["phone"] = req.Phone
+		data["phone"] = strings.TrimSpace(req.Phone)
 	}
 	if req.Address != "" {
-		data["address"] = req.Address
+		data["address"] = strings.TrimSpace(req.Address)
 	}
 	if req.City != "" {
-		data["city"] = req.City
+		data["city"] = strings.TrimSpace(req.City)
 	}
 	if req.Tier != "" {
-		data["tier"] = req.Tier
+		data["tier"] = strings.TrimSpace(req.Tier)
 	}
 	if req.BankName != "" {
-		data["bank_name"] = req.BankName
+		data["bank_name"] = strings.TrimSpace(req.BankName)
 	}
 	if req.BankAccountNumber != "" {
-		data["bank_account_number"] = req.BankAccountNumber
+		data["bank_account_number"] = strings.TrimSpace(req.BankAccountNumber)
 	}
 	if req.BankAccountName != "" {
-		data["bank_account_name"] = req.BankAccountName
+		data["bank_account_name"] = strings.TrimSpace(req.BankAccountName)
 	}
 	if req.BankBranch != "" {
-		data["bank_branch"] = req.BankBranch
+		data["bank_branch"] = strings.TrimSpace(req.BankBranch)
 	}
 
 	result := h.customerService.CreateCustomer(data, user.CompanyID)
@@ -200,22 +219,41 @@ func (h *CustomerHandler) UpdateCustomer(c *fiber.Ctx) error {
 
 	updates := map[string]interface{}{}
 	if req.Name != nil {
-		updates["name"] = *req.Name
+		updates["name"] = strings.TrimSpace(*req.Name)
+	}
+	if req.NoRM != nil {
+		noRM := strings.TrimSpace(*req.NoRM)
+		if noRM == "" {
+			updates["no_rm"] = nil
+		} else {
+			updates["no_rm"] = noRM
+		}
+	}
+	if req.NoNIK != nil {
+		noNIK := strings.TrimSpace(*req.NoNIK)
+		if noNIK != "" && !customerNikPattern.MatchString(noNIK) {
+			return c.Status(fiber.StatusBadRequest).JSON(response.NewErrorResponse("KTP harus 16 digit angka"))
+		}
+		if noNIK == "" {
+			updates["no_nik"] = nil
+		} else {
+			updates["no_nik"] = noNIK
+		}
 	}
 	if req.Email != nil {
-		updates["email"] = *req.Email
+		updates["email"] = strings.TrimSpace(*req.Email)
 	}
 	if req.Phone != nil {
-		updates["phone"] = *req.Phone
+		updates["phone"] = strings.TrimSpace(*req.Phone)
 	}
 	if req.Address != nil {
-		updates["address"] = *req.Address
+		updates["address"] = strings.TrimSpace(*req.Address)
 	}
 	if req.City != nil {
-		updates["city"] = *req.City
+		updates["city"] = strings.TrimSpace(*req.City)
 	}
 	if req.Tier != nil {
-		updates["tier"] = *req.Tier
+		updates["tier"] = strings.TrimSpace(*req.Tier)
 	}
 	if req.IsActive != nil {
 		updates["is_active"] = *req.IsActive
@@ -229,16 +267,16 @@ func (h *CustomerHandler) UpdateCustomer(c *fiber.Ctx) error {
 		updates["credit_limit"] = *req.CreditLimit
 	}
 	if req.BankName != nil {
-		updates["bank_name"] = *req.BankName
+		updates["bank_name"] = strings.TrimSpace(*req.BankName)
 	}
 	if req.BankAccountNumber != nil {
-		updates["bank_account_number"] = *req.BankAccountNumber
+		updates["bank_account_number"] = strings.TrimSpace(*req.BankAccountNumber)
 	}
 	if req.BankAccountName != nil {
-		updates["bank_account_name"] = *req.BankAccountName
+		updates["bank_account_name"] = strings.TrimSpace(*req.BankAccountName)
 	}
 	if req.BankBranch != nil {
-		updates["bank_branch"] = *req.BankBranch
+		updates["bank_branch"] = strings.TrimSpace(*req.BankBranch)
 	}
 
 	result := h.customerService.UpdateCustomer(c.Params("id"), user.CompanyID, updates)
