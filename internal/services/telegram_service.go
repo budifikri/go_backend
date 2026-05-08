@@ -185,20 +185,28 @@ func (s *TelegramService) FormatPenjualanMessageRow(sale *repository.SaleWithNam
 	buffer.WriteString(fmt.Sprintf("🏷️ No: %s\n", sale.SaleNumber))
 
 	if len(items) > 0 {
-		buffer.WriteString("\n📦 *Detail Produk:*\n")
+		buffer.WriteString("\n📦 *Detail Item:*\n")
 		buffer.WriteString("━━━━━━━━━━━━━━━━━━━━━━━\n")
 
 		maxItems := 5
 		if len(items) > maxItems {
 			for i := 0; i < maxItems; i++ {
 				lineTotal := items[i].UnitPrice * float64(items[i].Quantity)
-				buffer.WriteString(fmt.Sprintf("• %s × %d = Rp %.0f\n", items[i].ProductName, items[i].Quantity, lineTotal))
+				itemName := items[i].ItemName
+				if itemName == "" {
+					itemName = items[i].ProductName
+				}
+				buffer.WriteString(fmt.Sprintf("• %s × %d = Rp %.0f\n", itemName, items[i].Quantity, lineTotal))
 			}
 			buffer.WriteString(fmt.Sprintf("\n...dan %d item lainnya\n", len(items)-maxItems))
 		} else {
 			for _, item := range items {
 				lineTotal := item.UnitPrice * float64(item.Quantity)
-				buffer.WriteString(fmt.Sprintf("• %s × %d = Rp %.0f\n", item.ProductName, item.Quantity, lineTotal))
+				itemName := item.ItemName
+				if itemName == "" {
+					itemName = item.ProductName
+				}
+				buffer.WriteString(fmt.Sprintf("• %s × %d = Rp %.0f\n", itemName, item.Quantity, lineTotal))
 			}
 		}
 

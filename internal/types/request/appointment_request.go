@@ -16,6 +16,7 @@ type UpdateAppointmentRequest struct {
 	PatientID   *string                   `json:"patient_id" validate:"omitempty,uuid4"`
 	TreatmentID *string                   `json:"treatment_id" validate:"omitempty,uuid4"`
 	TherapistID *string                   `json:"therapist_id" validate:"omitempty,uuid4"`
+	SalesID     *string                   `json:"sales_id" validate:"omitempty,uuid4"`
 	BookingDate *string                   `json:"booking_date" validate:"omitempty,datetime=2006-01-02"`
 	StartTime   *string                   `json:"start_time" validate:"omitempty,datetime=15:04"`
 	EndTime     *string                   `json:"end_time" validate:"omitempty,datetime=15:04"`

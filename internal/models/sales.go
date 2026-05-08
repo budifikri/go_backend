@@ -97,6 +97,7 @@ type Sale struct {
 	SaleNumber            string     `gorm:"column:sale_number;type:varchar(50);uniqueIndex;notNull" json:"sale_number"`
 	WarehouseID           uuid.UUID  `gorm:"type:uuid;notNull;index" json:"warehouse_id"`
 	CustomerID            *uuid.UUID `gorm:"type:uuid;index" json:"customer_id,omitempty"`
+	AppointmentID         *uuid.UUID `gorm:"column:appointment_id;type:uuid;index" json:"appointment_id,omitempty"`
 	CashierID             uuid.UUID  `gorm:"type:uuid;notNull;index" json:"cashier_id"`
 	CompanyID             uuid.UUID  `gorm:"type:uuid;notNull;index" json:"company_id"`
 	CashDrawerID          *uuid.UUID `gorm:"type:uuid;index" json:"cash_drawer_id,omitempty"`
@@ -114,10 +115,11 @@ type Sale struct {
 	CreatedAt             time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt             time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
 
-	Warehouse *Warehouse    `gorm:"foreignKey:WarehouseID" json:"warehouse,omitempty"`
-	Customer  *Customer     `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
-	Items     []SaleItem    `gorm:"foreignKey:SaleID" json:"items,omitempty"`
-	Payments  []SalePayment `gorm:"foreignKey:SaleID" json:"payments,omitempty"`
+	Warehouse   *Warehouse    `gorm:"foreignKey:WarehouseID" json:"warehouse,omitempty"`
+	Customer    *Customer     `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
+	Appointment *Appointment  `gorm:"foreignKey:AppointmentID;references:ID" json:"appointment,omitempty"`
+	Items       []SaleItem    `gorm:"foreignKey:SaleID" json:"items,omitempty"`
+	Payments    []SalePayment `gorm:"foreignKey:SaleID" json:"payments,omitempty"`
 }
 
 func (s *Sale) BeforeCreate(tx *gorm.DB) error {
@@ -131,20 +133,32 @@ func (Sale) TableName() string {
 	return "sales"
 }
 
+type SaleItemType string
+
+const (
+	SaleItemTypeProduct   SaleItemType = "product"
+	SaleItemTypeTreatment SaleItemType = "treatment"
+)
+
 // SaleItem model
 type SaleItem struct {
-	ID             uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	SaleID         uuid.UUID  `gorm:"type:uuid;notNull;index" json:"sale_id"`
-	ProductID      uuid.UUID  `gorm:"type:uuid;notNull;index" json:"product_id"`
-	Quantity       int        `gorm:"notNull" json:"quantity"`
-	UnitPrice      float64    `gorm:"column:unit_price;type:decimal(15,2);notNull" json:"unit_price"`
-	OriginalPrice  float64    `gorm:"column:original_price;type:decimal(15,2);notNull" json:"original_price"`
-	CostPrice      float64    `gorm:"column:cost_price;type:decimal(15,2);notNull;default:0" json:"cost_price"`
-	DiscountAmount float64    `gorm:"column:discount_amount;type:decimal(15,2);notNull;default:0" json:"discount_amount"`
-	TaxRate        float64    `gorm:"column:tax_rate;type:decimal(5,2);default:0" json:"tax_rate"`
-	PriceTierID    *uuid.UUID `gorm:"column:price_tier_id;type:uuid" json:"price_tier_id,omitempty"`
-	PromotionID    *uuid.UUID `gorm:"column:promotion_id;type:uuid" json:"promotion_id,omitempty"`
-	Notes          string     `gorm:"type:text" json:"notes,omitempty"`
+	ID             uuid.UUID    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	SaleID         uuid.UUID    `gorm:"type:uuid;notNull;index" json:"sale_id"`
+	ItemType       SaleItemType `gorm:"column:item_type;type:varchar(20);notNull;default:'product'" json:"item_type"`
+	ProductID      *uuid.UUID   `gorm:"type:uuid;index" json:"product_id,omitempty"`
+	TreatmentID    *uuid.UUID   `gorm:"column:treatment_id;type:uuid;index" json:"treatment_id,omitempty"`
+	Quantity       int          `gorm:"notNull" json:"quantity"`
+	UnitPrice      float64      `gorm:"column:unit_price;type:decimal(15,2);notNull" json:"unit_price"`
+	OriginalPrice  float64      `gorm:"column:original_price;type:decimal(15,2);notNull" json:"original_price"`
+	CostPrice      float64      `gorm:"column:cost_price;type:decimal(15,2);notNull;default:0" json:"cost_price"`
+	DiscountAmount float64      `gorm:"column:discount_amount;type:decimal(15,2);notNull;default:0" json:"discount_amount"`
+	TaxRate        float64      `gorm:"column:tax_rate;type:decimal(5,2);default:0" json:"tax_rate"`
+	PriceTierID    *uuid.UUID   `gorm:"column:price_tier_id;type:uuid" json:"price_tier_id,omitempty"`
+	PromotionID    *uuid.UUID   `gorm:"column:promotion_id;type:uuid" json:"promotion_id,omitempty"`
+	Notes          string       `gorm:"type:text" json:"notes,omitempty"`
+
+	Product   *Product   `gorm:"foreignKey:ProductID" json:"product,omitempty"`
+	Treatment *Treatment `gorm:"foreignKey:TreatmentID" json:"treatment,omitempty"`
 }
 
 func (si *SaleItem) BeforeCreate(tx *gorm.DB) error {

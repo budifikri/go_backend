@@ -83,6 +83,15 @@ func AutoMigrate(models ...interface{}) error {
 	if err := ensureAppointmentConstraints(DB); err != nil {
 		return err
 	}
+	if err := ensureAppointmentSalesColumn(DB); err != nil {
+		return err
+	}
+	if err := ensureSaleAppointmentColumn(DB); err != nil {
+		return err
+	}
+	if err := ensureSaleItemGenericColumns(DB); err != nil {
+		return err
+	}
 	// Best-effort backfill for master is_active fields.
 	_ = BackfillMasterIsActive(DB)
 	return nil
@@ -147,6 +156,111 @@ func ensureAppointmentConstraints(db *gorm.DB) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func ensureAppointmentSalesColumn(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+
+	type columnInfo struct {
+		DataType string `gorm:"column:data_type"`
+	}
+
+	var info columnInfo
+	err := db.Raw(`
+		SELECT data_type
+		FROM information_schema.columns
+		WHERE table_schema = CURRENT_SCHEMA()
+		  AND table_name = 'appointments'
+		  AND column_name = 'sales_id'
+	`).Scan(&info).Error
+	if err != nil {
+		return err
+	}
+
+	if info.DataType == "" {
+		if err := db.Exec(`ALTER TABLE appointments ADD COLUMN sales_id uuid NULL;`).Error; err != nil {
+			return err
+		}
+	}
+
+	stmts := []string{
+		`CREATE INDEX IF NOT EXISTS idx_appointments_sales_id ON appointments (sales_id);`,
+		`ALTER TABLE appointments DROP CONSTRAINT IF EXISTS fk_appointments_sale;`,
+		`ALTER TABLE appointments ADD CONSTRAINT fk_appointments_sale FOREIGN KEY (sales_id) REFERENCES sales(id);`,
+	}
+	for _, stmt := range stmts {
+		if err := db.Exec(stmt).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ensureSaleAppointmentColumn(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+
+	type columnInfo struct {
+		DataType string `gorm:"column:data_type"`
+	}
+
+	var info columnInfo
+	err := db.Raw(`
+		SELECT data_type
+		FROM information_schema.columns
+		WHERE table_schema = CURRENT_SCHEMA()
+		  AND table_name = 'sales'
+		  AND column_name = 'appointment_id'
+	`).Scan(&info).Error
+	if err != nil {
+		return err
+	}
+
+	if info.DataType == "" {
+		if err := db.Exec(`ALTER TABLE sales ADD COLUMN appointment_id uuid NULL;`).Error; err != nil {
+			return err
+		}
+	}
+
+	stmts := []string{
+		`CREATE INDEX IF NOT EXISTS idx_sales_appointment_id ON sales (appointment_id);`,
+		`ALTER TABLE sales DROP CONSTRAINT IF EXISTS fk_sales_appointment;`,
+		`ALTER TABLE sales ADD CONSTRAINT fk_sales_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(id);`,
+	}
+	for _, stmt := range stmts {
+		if err := db.Exec(stmt).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ensureSaleItemGenericColumns(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+
+	statements := []string{
+		`ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS item_type varchar(20) NOT NULL DEFAULT 'product';`,
+		`ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS treatment_id uuid NULL;`,
+		`ALTER TABLE sale_items ALTER COLUMN product_id DROP NOT NULL;`,
+		`CREATE INDEX IF NOT EXISTS idx_sale_items_treatment_id ON sale_items (treatment_id);`,
+		`ALTER TABLE sale_items DROP CONSTRAINT IF EXISTS fk_sale_items_treatment;`,
+		`ALTER TABLE sale_items ADD CONSTRAINT fk_sale_items_treatment FOREIGN KEY (treatment_id) REFERENCES treatments(id);`,
+	}
+
+	for _, stmt := range statements {
+		if err := db.Exec(stmt).Error; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

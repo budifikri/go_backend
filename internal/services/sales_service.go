@@ -30,7 +30,9 @@ func NewSalesServiceWithTelegram(db *gorm.DB, salesRepo *repository.SalesReposit
 }
 
 type CreateSaleItemInput struct {
+	ItemType      string
 	ProductID     string
+	TreatmentID   string
 	Quantity      int
 	PromotionCode string
 }
@@ -45,6 +47,7 @@ type CreateSalePaymentInput struct {
 type CreateSaleInput struct {
 	WarehouseID         string
 	CustomerID          string
+	AppointmentID       string
 	CashDrawerID        string
 	Status              string
 	Items               []CreateSaleItemInput
@@ -55,17 +58,20 @@ type CreateSaleInput struct {
 }
 
 type ProcessedSaleItem struct {
-	ProductID      uuid.UUID  `json:"product_id"`
-	Quantity       int        `json:"quantity"`
-	UnitPrice      float64    `json:"unit_price"`
-	OriginalPrice  float64    `json:"original_price"`
-	CostPrice      float64    `json:"cost_price"`
-	DiscountAmount float64    `json:"discount_amount"`
-	TaxRate        float64    `json:"tax_rate"`
-	LineTotal      float64    `json:"line_total"`
-	PromotionID    *uuid.UUID `json:"promotion_id,omitempty"`
-	PriceTierID    *uuid.UUID `json:"price_tier_id,omitempty"`
-	Notes          string     `json:"notes,omitempty"`
+	ItemType       models.SaleItemType `json:"item_type"`
+	ProductID      *uuid.UUID          `json:"product_id,omitempty"`
+	TreatmentID    *uuid.UUID          `json:"treatment_id,omitempty"`
+	ItemName       string              `json:"item_name,omitempty"`
+	Quantity       int                 `json:"quantity"`
+	UnitPrice      float64             `json:"unit_price"`
+	OriginalPrice  float64             `json:"original_price"`
+	CostPrice      float64             `json:"cost_price"`
+	DiscountAmount float64             `json:"discount_amount"`
+	TaxRate        float64             `json:"tax_rate"`
+	LineTotal      float64             `json:"line_total"`
+	PromotionID    *uuid.UUID          `json:"promotion_id,omitempty"`
+	PriceTierID    *uuid.UUID          `json:"price_tier_id,omitempty"`
+	Notes          string              `json:"notes,omitempty"`
 }
 
 type promotionRow struct {
@@ -96,6 +102,15 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			return response.NewErrorResponse("Invalid customer ID")
 		}
 		customerID = &cid
+	}
+
+	var appointmentID *uuid.UUID
+	if input.AppointmentID != "" {
+		apid, err := uuid.Parse(input.AppointmentID)
+		if err != nil {
+			return response.NewErrorResponse("Invalid appointment ID")
+		}
+		appointmentID = &apid
 	}
 
 	companyID, err := uuid.Parse(input.CompanyID)
@@ -132,12 +147,54 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 		taxTotal := 0.0
 
 		for _, item := range input.Items {
+			if item.Quantity <= 0 {
+				return fmt.Errorf("Invalid quantity")
+			}
+
+			itemType := models.SaleItemType(item.ItemType)
+			if itemType == "" {
+				if item.TreatmentID != "" && item.ProductID == "" {
+					itemType = models.SaleItemTypeTreatment
+				} else {
+					itemType = models.SaleItemTypeProduct
+				}
+			}
+
+			if itemType == models.SaleItemTypeTreatment {
+				tid, err := uuid.Parse(item.TreatmentID)
+				if err != nil {
+					return fmt.Errorf("Invalid treatment ID")
+				}
+
+				var treatment models.Treatment
+				if err := tx.First(&treatment, "id = ?", tid).Error; err != nil {
+					return fmt.Errorf("Treatment %s not found or inactive", item.TreatmentID)
+				}
+				if !treatment.IsActive {
+					return fmt.Errorf("Treatment %s not found or inactive", item.TreatmentID)
+				}
+
+				lineNet := treatment.Price * float64(item.Quantity)
+				subtotal += lineNet
+
+				processed = append(processed, ProcessedSaleItem{
+					ItemType:       models.SaleItemTypeTreatment,
+					TreatmentID:    &tid,
+					ItemName:       treatment.Name,
+					Quantity:       item.Quantity,
+					UnitPrice:      treatment.Price,
+					OriginalPrice:  treatment.Price,
+					CostPrice:      0,
+					DiscountAmount: 0,
+					TaxRate:        0,
+					LineTotal:      lineNet,
+				})
+				continue
+			}
+
 			pid, err := uuid.Parse(item.ProductID)
 			if err != nil {
 				return fmt.Errorf("Invalid product ID")
-			}
-			if item.Quantity <= 0 {
-				return fmt.Errorf("Invalid quantity")
 			}
 
 			var product models.Product
@@ -148,7 +205,6 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				return fmt.Errorf("Product %s not found or inactive", item.ProductID)
 			}
 
-			// Lock inventory row to avoid oversell
 			var inv models.Inventory
 			invErr := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&inv, "product_id = ? AND warehouse_id = ?", pid, warehouseID).Error
 			if invErr != nil {
@@ -174,8 +230,8 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			if tier.ID != uuid.Nil {
 				tierPrice = tier.UnitPrice
 				tierNotes = fmt.Sprintf("Grosir %d", tier.MinQuantity)
-				tid := tier.ID
-				priceTierID = &tid
+				tierID := tier.ID
+				priceTierID = &tierID
 				hasTier = true
 			}
 
@@ -183,14 +239,12 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			promoNotes := ""
 			var promotionID *uuid.UUID
 			if item.PromotionCode != "" {
-				fmt.Printf("[PROMO] Looking for promo: %s\n", item.PromotionCode)
 				var promo promotionRow
 				pErr := tx.Raw(
 					"SELECT id, code, name, promotion_type, discount_value, buy_quantity, get_quantity FROM promotions WHERE LOWER(code) = LOWER(?) AND is_active = true LIMIT 1",
 					item.PromotionCode,
 				).Scan(&promo).Error
 				if pErr == nil && promo.ID != uuid.Nil {
-					fmt.Printf("[PROMO] Found: %s - %s, discount: %v\n", promo.Code, promo.Name, promo.DiscountValue)
 					switch promo.PromotionType {
 					case "PERCENTAGE":
 						discountPerUnit = retailPrice * (promo.DiscountValue / 100.0)
@@ -208,9 +262,8 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 					default:
 						discountPerUnit = retailPrice * (promo.DiscountValue / 100.0)
 					}
-					fmt.Printf("[PROMO] Discount: %v\n", discountPerUnit)
-					pid := promo.ID
-					promotionID = &pid
+					promoID := promo.ID
+					promotionID = &promoID
 					promoNotes = fmt.Sprintf("%s - %s", promo.Code, promo.Name)
 				}
 			}
@@ -221,7 +274,6 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 
 			finalUnitPrice := retailPrice
 			note := ""
-
 			if discountPerUnit > 0 {
 				finalUnitPrice = retailPrice - discountPerUnit
 				note = promoNotes
@@ -244,7 +296,9 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			taxTotal += lineTax
 
 			processed = append(processed, ProcessedSaleItem{
-				ProductID:      pid,
+				ItemType:       models.SaleItemTypeProduct,
+				ProductID:      &pid,
+				ItemName:       product.Name,
 				Quantity:       item.Quantity,
 				UnitPrice:      finalUnitPrice,
 				OriginalPrice:  retailPrice,
@@ -286,6 +340,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			SaleNumber:            saleNumber,
 			WarehouseID:           warehouseID,
 			CustomerID:            customerID,
+			AppointmentID:         appointmentID,
 			CashierID:             cashierUUID,
 			CompanyID:             companyID,
 			CashDrawerID:          cashDrawerID,
@@ -310,7 +365,9 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 			si := models.SaleItem{
 				ID:             uuid.New(),
 				SaleID:         createdSale.ID,
+				ItemType:       item.ItemType,
 				ProductID:      item.ProductID,
+				TreatmentID:    item.TreatmentID,
 				Quantity:       item.Quantity,
 				UnitPrice:      item.UnitPrice,
 				OriginalPrice:  item.OriginalPrice,
@@ -400,8 +457,12 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 
 		// Decrease inventory and create stock movement records
 		for _, item := range processed {
+			if item.ItemType != models.SaleItemTypeProduct || item.ProductID == nil {
+				continue
+			}
+
 			if err := tx.Model(&models.Inventory{}).
-				Where("product_id = ? AND warehouse_id = ?", item.ProductID, warehouseID).
+				Where("product_id = ? AND warehouse_id = ?", *item.ProductID, warehouseID).
 				Updates(map[string]interface{}{
 					"quantity":           gorm.Expr("quantity - ?", item.Quantity),
 					"available_quantity": gorm.Expr("available_quantity - ?", item.Quantity),
@@ -411,7 +472,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 
 			movement := models.StockMovement{
 				ID:            uuid.New(),
-				ProductID:     item.ProductID,
+				ProductID:     *item.ProductID,
 				WarehouseID:   warehouseID,
 				MovementType:  models.MovementTypeSale,
 				Quantity:      item.Quantity,
@@ -524,6 +585,7 @@ func (s *SalesService) GetSaleByID(id string) response.ApiResponse {
 	data["sale_number"] = sale.SaleNumber
 	data["warehouse_id"] = sale.WarehouseID
 	data["customer_id"] = sale.CustomerID
+	data["appointment_id"] = sale.AppointmentID
 	data["cashier_id"] = sale.CashierID
 	data["company_id"] = sale.CompanyID
 	data["cash_drawer_id"] = sale.CashDrawerID

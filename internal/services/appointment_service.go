@@ -34,6 +34,7 @@ type AppointmentResponse struct {
 	PatientID   uuid.UUID                `json:"patient_id"`
 	TreatmentID uuid.UUID                `json:"treatment_id"`
 	TherapistID uuid.UUID                `json:"therapist_id"`
+	SalesID     *uuid.UUID               `json:"sales_id,omitempty"`
 	BookingDate string                   `json:"booking_date"`
 	StartTime   string                   `json:"start_time"`
 	EndTime     string                   `json:"end_time"`
@@ -44,6 +45,13 @@ type AppointmentResponse struct {
 	Patient     *models.Customer         `json:"patient,omitempty"`
 	Treatment   *models.Treatment        `json:"treatment,omitempty"`
 	Therapist   *models.Dokter           `json:"therapist,omitempty"`
+	Sale        *AppointmentSaleSummary  `json:"sale,omitempty"`
+}
+
+type AppointmentSaleSummary struct {
+	ID         uuid.UUID         `json:"id"`
+	SaleNumber string            `json:"sale_number"`
+	Status     models.SaleStatus `json:"status"`
 }
 
 func toAppointmentResponse(appointment *models.Appointment) *AppointmentResponse {
@@ -57,6 +65,7 @@ func toAppointmentResponse(appointment *models.Appointment) *AppointmentResponse
 		PatientID:   appointment.PatientID,
 		TreatmentID: appointment.TreatmentID,
 		TherapistID: appointment.TherapistID,
+		SalesID:     appointment.SalesID,
 		BookingDate: appointment.BookingDate.In(appointmentLocation).Format("2006-01-02"),
 		StartTime:   formatAppointmentTime(appointment.StartTime),
 		EndTime:     formatAppointmentTime(appointment.EndTime),
@@ -67,6 +76,19 @@ func toAppointmentResponse(appointment *models.Appointment) *AppointmentResponse
 		Patient:     appointment.Patient,
 		Treatment:   appointment.Treatment,
 		Therapist:   appointment.Therapist,
+		Sale:        toAppointmentSaleSummary(appointment.Sale),
+	}
+}
+
+func toAppointmentSaleSummary(sale *models.Sale) *AppointmentSaleSummary {
+	if sale == nil {
+		return nil
+	}
+
+	return &AppointmentSaleSummary{
+		ID:         sale.ID,
+		SaleNumber: sale.SaleNumber,
+		Status:     sale.Status,
 	}
 }
 
@@ -306,6 +328,19 @@ func (s *AppointmentService) UpdateAppointment(id string, input request.UpdateAp
 			return response.NewErrorResponse("Therapist tidak ditemukan untuk company ini")
 		}
 		appointment.TherapistID = parsedTherapistID
+	}
+
+	if input.SalesID != nil {
+		trimmedSalesID := strings.TrimSpace(*input.SalesID)
+		if trimmedSalesID == "" {
+			appointment.SalesID = nil
+		} else {
+			parsedSalesID, err := uuid.Parse(trimmedSalesID)
+			if err != nil {
+				return response.NewErrorResponse("Invalid sales id")
+			}
+			appointment.SalesID = &parsedSalesID
+		}
 	}
 
 	if input.BookingDate != nil {

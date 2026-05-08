@@ -21,7 +21,7 @@ func (r *AppointmentRepository) Create(appointment *models.Appointment) error {
 
 func (r *AppointmentRepository) GetByID(id, companyID string) (*models.Appointment, error) {
 	var appointment models.Appointment
-	err := r.db.Preload("Patient").Preload("Treatment").Preload("Therapist").
+	err := r.db.Preload("Patient").Preload("Treatment").Preload("Therapist").Preload("Sale").
 		Where("id = ? AND company_id = ?", id, companyID).First(&appointment).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -59,7 +59,7 @@ func (r *AppointmentRepository) GetAll(companyID string, filters map[string]inte
 		return nil, 0, err
 	}
 
-	if err := query.Preload("Patient").Preload("Treatment").Preload("Therapist").
+	if err := query.Preload("Patient").Preload("Treatment").Preload("Therapist").Preload("Sale").
 		Limit(limit).Offset(offset).Order("booking_date DESC, start_time ASC").Find(&appointments).Error; err != nil {
 		return nil, 0, err
 	}

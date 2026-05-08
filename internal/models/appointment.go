@@ -24,6 +24,7 @@ type Appointment struct {
 	PatientID   uuid.UUID         `gorm:"type:uuid;notNull;index" json:"patient_id"`
 	TreatmentID uuid.UUID         `gorm:"type:uuid;notNull;index" json:"treatment_id"`
 	TherapistID uuid.UUID         `gorm:"type:uuid;notNull;index" json:"therapist_id"`
+	SalesID     *uuid.UUID        `gorm:"column:sales_id;type:uuid;index" json:"sales_id,omitempty"`
 	BookingDate time.Time         `gorm:"column:booking_date;type:date;notNull;index" json:"booking_date"`
 	StartTime   ClockTime         `gorm:"column:start_time;type:time without time zone;notNull" json:"start_time"`
 	EndTime     ClockTime         `gorm:"column:end_time;type:time without time zone;notNull" json:"end_time"`
@@ -36,6 +37,7 @@ type Appointment struct {
 	Patient   *Customer  `gorm:"foreignKey:PatientID;references:ID" json:"patient,omitempty"`
 	Treatment *Treatment `gorm:"foreignKey:TreatmentID;references:ID" json:"treatment,omitempty"`
 	Therapist *Dokter    `gorm:"foreignKey:TherapistID;references:ID" json:"therapist,omitempty"`
+	Sale      *Sale      `gorm:"foreignKey:SalesID;references:ID" json:"sale,omitempty"`
 }
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {

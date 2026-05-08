@@ -56,7 +56,9 @@ func (h *SalesHandler) CreateSale(c *fiber.Ctx) error {
 	items := make([]services.CreateSaleItemInput, 0, len(req.Items))
 	for _, it := range req.Items {
 		items = append(items, services.CreateSaleItemInput{
+			ItemType:      it.ItemType,
 			ProductID:     it.ProductID,
+			TreatmentID:   it.TreatmentID,
 			Quantity:      it.Quantity,
 			PromotionCode: it.PromotionCode,
 		})
@@ -75,6 +77,7 @@ func (h *SalesHandler) CreateSale(c *fiber.Ctx) error {
 	result := h.salesService.CreateSale(services.CreateSaleInput{
 		WarehouseID:         req.WarehouseID,
 		CustomerID:          req.CustomerID,
+		AppointmentID:       req.AppointmentID,
 		CashDrawerID:        req.CashDrawerID,
 		Status:              req.Status,
 		Items:               items,
