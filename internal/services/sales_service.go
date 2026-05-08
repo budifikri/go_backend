@@ -62,6 +62,7 @@ type ProcessedSaleItem struct {
 	ProductID      *uuid.UUID          `json:"product_id,omitempty"`
 	TreatmentID    *uuid.UUID          `json:"treatment_id,omitempty"`
 	ItemName       string              `json:"item_name,omitempty"`
+	TrackInventory bool                `json:"track_inventory"`
 	Quantity       int                 `json:"quantity"`
 	UnitPrice      float64             `json:"unit_price"`
 	OriginalPrice  float64             `json:"original_price"`
@@ -205,14 +206,33 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				return fmt.Errorf("Product %s not found or inactive", item.ProductID)
 			}
 
-			var inv models.Inventory
-			invErr := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&inv, "product_id = ? AND warehouse_id = ?", pid, warehouseID).Error
-			if invErr != nil {
-				return fmt.Errorf("Insufficient stock for product %s", product.Name)
+			productType := models.CategoryProductTypeStockable
+			if product.CategoryID != nil {
+				var category models.Category
+				categoryErr := tx.First(&category, "id = ?", *product.CategoryID).Error
+				if categoryErr != nil && categoryErr != gorm.ErrRecordNotFound {
+					return categoryErr
+				}
+				if categoryErr == nil {
+					productType = models.NormalizeCategoryProductType(category.ProductType)
+				}
 			}
-			available := inv.Quantity - inv.ReservedQuantity
-			if available < item.Quantity {
-				return fmt.Errorf("Insufficient stock for product %s", product.Name)
+
+			if productType == models.CategoryProductTypeConsumable {
+				return fmt.Errorf("Consumable product %s cannot be sold", product.Name)
+			}
+
+			trackInventory := productType != models.CategoryProductTypeService
+			if trackInventory {
+				var inv models.Inventory
+				invErr := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&inv, "product_id = ? AND warehouse_id = ?", pid, warehouseID).Error
+				if invErr != nil {
+					return fmt.Errorf("Insufficient stock for product %s", product.Name)
+				}
+				available := inv.Quantity - inv.ReservedQuantity
+				if available < item.Quantity {
+					return fmt.Errorf("Insufficient stock for product %s", product.Name)
+				}
 			}
 
 			retailPrice := product.RetailPrice
@@ -299,6 +319,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 				ItemType:       models.SaleItemTypeProduct,
 				ProductID:      &pid,
 				ItemName:       product.Name,
+				TrackInventory: trackInventory,
 				Quantity:       item.Quantity,
 				UnitPrice:      finalUnitPrice,
 				OriginalPrice:  retailPrice,
@@ -457,7 +478,7 @@ func (s *SalesService) CreateSale(input CreateSaleInput, cashierID string) respo
 
 		// Decrease inventory and create stock movement records
 		for _, item := range processed {
-			if item.ItemType != models.SaleItemTypeProduct || item.ProductID == nil {
+			if item.ItemType != models.SaleItemTypeProduct || item.ProductID == nil || !item.TrackInventory {
 				continue
 			}
 
