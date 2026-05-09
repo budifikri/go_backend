@@ -188,8 +188,6 @@ func ensureAppointmentSalesColumn(db *gorm.DB) error {
 
 	stmts := []string{
 		`CREATE INDEX IF NOT EXISTS idx_appointments_sales_id ON appointments (sales_id);`,
-		`ALTER TABLE appointments DROP CONSTRAINT IF EXISTS fk_appointments_sale;`,
-		`ALTER TABLE appointments ADD CONSTRAINT fk_appointments_sale FOREIGN KEY (sales_id) REFERENCES sales(id);`,
 	}
 	for _, stmt := range stmts {
 		if err := db.Exec(stmt).Error; err != nil {

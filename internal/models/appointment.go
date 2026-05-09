@@ -37,7 +37,7 @@ type Appointment struct {
 	Patient   *Customer  `gorm:"foreignKey:PatientID;references:ID" json:"patient,omitempty"`
 	Treatment *Treatment `gorm:"foreignKey:TreatmentID;references:ID" json:"treatment,omitempty"`
 	Therapist *Dokter    `gorm:"foreignKey:TherapistID;references:ID" json:"therapist,omitempty"`
-	Sale      *Sale      `gorm:"foreignKey:SalesID;references:ID" json:"sale,omitempty"`
+	Sale      *Sale      `gorm:"-" json:"sale,omitempty"`
 }
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
