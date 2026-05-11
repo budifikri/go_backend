@@ -42,3 +42,7 @@ logs/
 # Documentation generated files
 docs/swagger.json
 docs/swagger.yaml
+prod
+document
+backup
+documentation
