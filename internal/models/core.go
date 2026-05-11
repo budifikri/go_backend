@@ -11,10 +11,11 @@ import (
 type UserRole string
 
 const (
-	RoleAdmin   UserRole = "admin"
-	RoleManager UserRole = "manager"
-	RoleCashier UserRole = "cashier"
-	RoleStaff   UserRole = "staff"
+	RoleSuperuser UserRole = "superuser"
+	RoleAdmin     UserRole = "admin"
+	RoleManager   UserRole = "manager"
+	RoleCashier   UserRole = "cashier"
+	RoleStaff     UserRole = "staff"
 )
 
 // UserStatus enum

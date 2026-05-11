@@ -105,6 +105,11 @@ func RoleMiddleware(allowedRoles ...string) fiber.Handler {
 			}
 		}
 
+		// Superuser bypasses all role checks
+		if user.Role == "superuser" {
+			return c.Next()
+		}
+
 		return c.Status(fiber.StatusForbidden).JSON(response.ApiResponse{
 			Success: false,
 			Error:   "Forbidden: Insufficient permissions",

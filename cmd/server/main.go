@@ -116,6 +116,10 @@ func main() {
 
 	jwtUtil := utils.NewJWTUtil(cfg.JWT.Secret, cfg.JWT.ExpiresIn)
 
+	if err := database.SeedSuperUser(db); err != nil {
+		log.Fatalf("Failed to seed super user: %v", err)
+	}
+
 	// Initialize repositories
 	authService := services.NewAuthService(db, jwtUtil)
 	productRepo := repository.NewProductRepository(db)

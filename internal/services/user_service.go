@@ -56,7 +56,7 @@ func (s *UserService) GetUsers(companyID string, search, role string, isActive *
 		offset = 0
 	}
 
-	query := s.db.Model(&models.User{}).Where("company_id = ?", companyUUID)
+	query := s.db.Model(&models.User{}).Where("company_id = ? AND role != ?", companyUUID, "superuser")
 
 	if search != "" {
 		q := "%" + strings.ToLower(search) + "%"

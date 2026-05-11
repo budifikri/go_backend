@@ -6,7 +6,7 @@ type CreateUserRequest struct {
 	Password string `json:"password" validate:"required,min=6,max=128"`
 	FullName string `json:"full_name" validate:"required,min=2,max=100"`
 	Phone    string `json:"phone" validate:"omitempty,max=20"`
-	Role     string `json:"role" validate:"omitempty,oneof=admin manager cashier staff"`
+	Role     string `json:"role" validate:"omitempty,oneof=superuser admin manager cashier staff"`
 	IsActive *bool  `json:"is_active" validate:"omitempty"`
 }
 
