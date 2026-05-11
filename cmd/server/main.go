@@ -239,6 +239,8 @@ func main() {
 
 	// Protected routes
 	protected := api.Group("", authMiddleware.Handler())
+	// Auth (protected)
+	protected.Get("/auth/me", authHandler.GetMe)
 	// Log routes
 	logs := protected.Group("/logs", middleware.RoleMiddleware("admin", "manager"))
 	logs.Get("/summary", logHandler.GetSummary)

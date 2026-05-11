@@ -251,6 +251,47 @@ func (s *AuthService) Register(req struct {
 	}, "Registration successful")
 }
 
+// MeResponse represents the current user profile
+type MeResponse struct {
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	Company  struct {
+		ID           string `json:"id"`
+		Name         string `json:"name"`
+		BusinessType string `json:"business_type"`
+	} `json:"company"`
+}
+
+// GetMe returns the current authenticated user's profile
+func (s *AuthService) GetMe(payload *utils.JWTPayload) response.ApiResponse {
+	companyData := struct {
+		ID           string `json:"id"`
+		Name         string `json:"name"`
+		BusinessType string `json:"business_type"`
+	}{
+		ID:           "",
+		Name:         "",
+		BusinessType: "",
+	}
+
+	var company models.Company
+	if err := s.db.First(&company, "id = ?", payload.CompanyID).Error; err == nil {
+		companyData.ID = company.ID.String()
+		companyData.Name = company.Nama
+		companyData.BusinessType = string(company.BusinessType)
+	}
+
+	return response.NewSuccessResponse(MeResponse{
+		UserID:   payload.UserID,
+		Username: payload.Username,
+		Email:    payload.Email,
+		Role:     payload.Role,
+		Company:  companyData,
+	}, "OK")
+}
+
 // Logout invalidates user session
 func (s *AuthService) Logout(token string) response.ApiResponse {
 	result := s.db.Where("token = ?", token).Delete(&models.UserSession{})

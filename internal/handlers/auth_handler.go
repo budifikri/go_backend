@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/pos-retail/go_backend/internal/middleware"
 	"github.com/pos-retail/go_backend/internal/services"
 	"github.com/pos-retail/go_backend/internal/types/request"
 	"github.com/pos-retail/go_backend/internal/types/response"
@@ -62,18 +63,18 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	}
 
 	result := h.authService.Register(struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
-		FullName string `json:"full_name"`
-		Role     string `json:"role"`
+		Username    string `json:"username"`
+		Email       string `json:"email"`
+		Password    string `json:"password"`
+		FullName    string `json:"full_name"`
+		Role        string `json:"role"`
 		CompanyName string `json:"company_name"`
 	}{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: req.Password,
-		FullName: req.FullName,
-		Role:     req.Role,
+		Username:    req.Username,
+		Email:       req.Email,
+		Password:    req.Password,
+		FullName:    req.FullName,
+		Role:        req.Role,
 		CompanyName: req.CompanyName,
 	})
 
@@ -82,6 +83,25 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(result)
+}
+
+// GetMe godoc
+// @Summary Get current user
+// @Description Get authenticated user's profile
+// @Tags Authentication
+// @Produce json
+// @Success 200 {object} response.ApiResponse
+// @Failure 401 {object} response.ApiResponse
+// @Security BearerAuth
+// @Router /api/auth/me [get]
+func (h *AuthHandler) GetMe(c *fiber.Ctx) error {
+	payload := middleware.GetUserFromContext(c)
+	if payload == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.NewErrorResponse("Unauthorized"))
+	}
+
+	result := h.authService.GetMe(payload)
+	return c.Status(fiber.StatusOK).JSON(result)
 }
 
 // Logout godoc

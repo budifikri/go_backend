@@ -1,0 +1,1 @@
+go build -o prod/GriyaBuku.exe ./cmd/server/main.go
