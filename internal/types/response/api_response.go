@@ -12,6 +12,7 @@ type ApiResponse struct {
 type PaginatedResponse struct {
 	Success    bool        `json:"success"`
 	Data       interface{} `json:"data"`
+	Error      string      `json:"error,omitempty"`
 	Pagination Pagination  `json:"pagination"`
 }
 

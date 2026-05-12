@@ -254,7 +254,12 @@ func (s *AppointmentService) CreateAppointment(input request.CreateAppointmentRe
 func (s *AppointmentService) GetAppointments(companyID string, filters map[string]interface{}, limit, offset int) response.PaginatedResponse {
 	appointments, total, err := s.appointmentRepo.GetAll(companyID, filters, limit, offset)
 	if err != nil {
-		return response.PaginatedResponse{Success: false, Data: nil, Pagination: response.Pagination{}}
+		return response.PaginatedResponse{
+			Success:    false,
+			Data:       []interface{}{},
+			Error:      "Failed to load appointments: " + err.Error(),
+			Pagination: response.Pagination{},
+		}
 	}
 
 	hasMore := int64(offset+limit) < total

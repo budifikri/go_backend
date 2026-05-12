@@ -45,6 +45,9 @@ func (h *AppointmentHandler) GetAppointments(c *fiber.Ctx) error {
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 
 	result := h.appointmentService.GetAppointments(user.CompanyID, filters, limit, offset)
+	if !result.Success {
+		return c.Status(fiber.StatusInternalServerError).JSON(result)
+	}
 	return c.JSON(result)
 }
 
